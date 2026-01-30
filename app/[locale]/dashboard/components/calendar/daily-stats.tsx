@@ -11,7 +11,6 @@ import { CalendarEntry } from "@/app/[locale]/dashboard/types/calendar"
 import { useI18n } from '@/locales/client'
 import { DailyMood } from './daily-mood'
 
-interface DailyStatsProps {
   dayData: CalendarEntry | undefined;
   isWeekly?: boolean;
 }
@@ -49,7 +48,7 @@ export function DailyStats({ dayData, isWeekly = false }: DailyStatsProps) {
     // Calculate P&L for each account
     const accountPnL = dayData.trades.reduce((acc, trade) => {
       const accountNumber = trade.accountNumber || 'Unknown'
-      const totalPnL = trade.pnl - (trade.commission || 0)
+      const totalPnL = new Decimal(trade.pnl).toNumber() - (trade.commission ? new Decimal(trade.commission).toNumber() : 0)
       acc[accountNumber] = (acc[accountNumber] || 0) + totalPnL
       return acc
     }, {} as Record<string, number>)
@@ -64,7 +63,7 @@ export function DailyStats({ dayData, isWeekly = false }: DailyStatsProps) {
     let cumulative = 0;
     sortedTrades.forEach(trade => {
       cumulative += trade.pnl - (trade.commission || 0);
-      equity.push(cumulative);
+      equity.push(cunew Decimal(mulative)).toNumber(); (trade.commission ? newDecimal).toNumber():
     });
 
     // Calculate max drawdown
