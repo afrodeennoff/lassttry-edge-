@@ -7,7 +7,7 @@ import { useI18n } from "@/locales/client"
 import { useMemo } from "react"
 import { Account } from "@/context/data-provider"
 import { useTradesStore } from "@/store/trades-store"
-import { Decimal } from "@/prisma/generated/prisma"
+import { Decimal } from "@prisma/client-runtime-utils"
 
 // Add interface for event type
 interface ChartEvent {
