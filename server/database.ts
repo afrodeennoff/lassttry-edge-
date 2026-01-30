@@ -44,7 +44,33 @@ export interface PaginatedTrades {
   }
 }
 
-// Helper to serialize Prisma objects (handle Decimals and Dates)
+interface SaveLayoutResult {
+  success: boolean
+  error?: string
+}
+
+const saveLocks = new Map<string, Promise<SaveLayoutResult>>()
+
+function validateLayouts(layouts: DashboardLayout): boolean {
+  if (!layouts || typeof layouts !== 'object') return false
+  
+  const validateArray = (arr: unknown): arr is Prisma.JsonArray => {
+    if (!Array.isArray(arr)) return false
+    return arr.every(item => 
+      item && 
+      typeof item === 'object' && 
+      'i' in item && 
+      'type' in item && 
+      'x' in item && 
+      'y' in item && 
+      'w' in item && 
+      'h' in item
+    )
+  }
+  
+  return validateArray(layouts.desktop) && validateArray(layouts.mobile)
+}
+
 function serializeTrade(trade: Trade): SerializedTrade {
   return {
     ...trade,
@@ -140,9 +166,6 @@ export async function saveTradesAction(
   }
 }
 
-/**
- * Validated and Paginated Get Trades Action
- */
 export async function getTradesAction(
   userId: string | null = null,
   page: number = 1,
@@ -193,7 +216,7 @@ export async function getTradesAction(
     }
   } catch (error) {
     logger.error('getTradesAction failed', { error })
-    throw error // Let UI handle error
+    throw error
   }
 }
 
@@ -313,26 +336,68 @@ export async function loadDashboardLayoutAction(): Promise<Layouts | null> {
   }
 }
 
-export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promise<void> {
+export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promise<SaveLayoutResult> {
   const userId = await getUserId()
-  if (!layouts) return
+  
+  if (!userId) {
+    return { success: false, error: 'User not authenticated' }
+  }
+  
+  if (!layouts) {
+    return { success: false, error: 'Layouts data is required' }
+  }
+  
+  if (!validateLayouts(layouts)) {
+    logger.error('[saveDashboardLayout] Validation failed', { userId })
+    return { success: false, error: 'Invalid layout structure' }
+  }
 
+  const lockKey = `layout:${userId}`
+  
+  if (saveLocks.has(lockKey)) {
+    logger.info('[saveDashboardLayout] Debouncing concurrent save', { userId })
+    return { success: true }
+  }
+
+  const savePromise = (async (): Promise<SaveLayoutResult> => {
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.dashboardLayout.upsert({
+          where: { userId },
+          update: {
+            desktop: layouts.desktop as unknown as Prisma.JsonArray,
+            mobile: layouts.mobile as unknown as Prisma.JsonArray,
+            updatedAt: new Date()
+          },
+          create: {
+            userId,
+            desktop: layouts.desktop as unknown as Prisma.JsonArray,
+            mobile: layouts.mobile as unknown as Prisma.JsonArray
+          },
+        })
+      })
+
+      updateTag(`dashboard-${userId}`)
+      revalidatePath('/')
+      
+      logger.info('[saveDashboardLayout] Success', { userId })
+      return { success: true }
+    } catch (error) {
+      logger.error('[saveDashboardLayout] Error', { error, userId })
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown database error' 
+      }
+    }
+  })()
+
+  saveLocks.set(lockKey, savePromise)
+  
   try {
-    await prisma.dashboardLayout.upsert({
-      where: { userId },
-      update: {
-        desktop: layouts.desktop as unknown as Prisma.JsonArray,
-        mobile: layouts.mobile as unknown as Prisma.JsonArray,
-        updatedAt: new Date()
-      },
-      create: {
-        userId,
-        desktop: layouts.desktop as unknown as Prisma.JsonArray,
-        mobile: layouts.mobile as unknown as Prisma.JsonArray
-      },
-    })
-  } catch (error) {
-    logger.error('[saveDashboardLayout] Error', { error })
+    const result = await savePromise
+    return result
+  } finally {
+    saveLocks.delete(lockKey)
   }
 }
 

@@ -65,6 +65,7 @@ import { useMoodStore } from "@/store/mood-store";
 import { useSubscriptionStore } from "@/store/subscription-store";
 import { getSubscriptionData } from "@/server/billing";
 import { defaultLayouts } from "@/lib/default-layouts";
+import { Decimal } from "@prisma/client-runtime-utils";
 
 // Types from trades-data.tsx
 type StatisticsProps = {
@@ -834,8 +835,8 @@ export const DataProvider: React.FC<{
 
         // PnL range filter
         if (
-          (pnlRange.min !== undefined && trade.pnl < pnlRange.min) ||
-          (pnlRange.max !== undefined && trade.pnl > pnlRange.max)
+          (pnlRange.min !== undefined && new Decimal(trade.pnl).toNumber() < pnlRange.min) ||
+          (pnlRange.max !== undefined && new Decimal(trade.pnl).toNumber() > pnlRange.max)
         ) {
           return false;
         }
@@ -921,13 +922,13 @@ export const DataProvider: React.FC<{
 
     // Calculate gross profits and gross losses including commissions
     const grossProfits = formattedTrades.reduce((sum, trade) => {
-      const totalPnL = trade.pnl - trade.commission;
+      const totalPnL = new Decimal(trade.pnl).toNumber() - new Decimal(trade.commission).toNumber();
       return totalPnL > 0 ? sum + totalPnL : sum;
     }, 0);
 
     const grossLosses = Math.abs(
       formattedTrades.reduce((sum, trade) => {
-        const totalPnL = trade.pnl - trade.commission;
+        const totalPnL = new Decimal(trade.pnl).toNumber() - new Decimal(trade.commission).toNumber();
         return totalPnL < 0 ? sum + totalPnL : sum;
       }, 0)
     );
@@ -1596,7 +1597,11 @@ export const DataProvider: React.FC<{
 
       try {
         setDashboardLayout(layout as unknown as DashboardLayoutWithWidgets);
-        await saveDashboardLayoutAction(layout);
+        const result = await saveDashboardLayoutAction(layout);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to save dashboard layout');
+        }
       } catch (error) {
         console.error("Error saving dashboard layout:", error);
         throw error;
