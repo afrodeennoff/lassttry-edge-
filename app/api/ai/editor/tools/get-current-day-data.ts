@@ -43,12 +43,12 @@ export const getCurrentDayData = tool({
     inputSchema: z.object({}),
     execute: async () => {
       console.log("Called tool getCurrentDayData")
-        const trades = await getTradesAction();
-        const filteredTrades = trades.filter(trade => {
+        const paginatedTrades = await getTradesAction();
+        const filteredTrades = paginatedTrades.trades.filter(trade => {
             const tradeDate = new Date(trade.entryDate);
             return isToday(tradeDate);
         })
-        
+
         return {
             summary: generateTradeSummary(filteredTrades)
         };

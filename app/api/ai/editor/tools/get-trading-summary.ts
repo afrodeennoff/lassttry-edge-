@@ -45,12 +45,12 @@ export const getDayData = tool({
     }),
     execute: async ({ date }) => {
       console.log("Called tool getDayData for day", date)
-        const trades = await getTradesAction();
-        const filteredTrades = trades.filter(trade => {
+        const paginatedTrades = await getTradesAction();
+        const filteredTrades = paginatedTrades.trades.filter(trade => {
             const tradeDate = new Date(trade.entryDate);
             return isSameDay(tradeDate, new Date(date));
         })
-        
+
         return {
             summary: generateTradeSummary(filteredTrades)
         };

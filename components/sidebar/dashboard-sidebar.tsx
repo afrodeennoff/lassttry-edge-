@@ -25,7 +25,7 @@ import { checkAdminStatus } from "@/app/[locale]/dashboard/settings/actions"
 
 export function DashboardSidebar() {
   const { refreshAllData } = useData()
-  const { theme, setTheme, intensity, setIntensity } = useTheme()
+  const { intensity, setIntensity } = useTheme()
   const user = useUserStore(state => state.supabaseUser)
   const timezone = useUserStore(state => state.timezone)
   const setTimezone = useUserStore(state => state.setTimezone)
@@ -161,10 +161,6 @@ export function DashboardSidebar() {
         value: timezone,
         options: timezones,
         onChange: setTimezone
-      }}
-      theme={{
-        value: theme,
-        onChange: () => setTheme(theme === 'dark' ? 'light' : 'dark')
       }}
       onLogout={handleLogout}
     />
