@@ -161,7 +161,7 @@ export class OptimisticWidgetManager extends OptimisticUpdateManager {
     })
     
     try {
-      const results = await Promise.all(operations)
+      const results = await Promise.all(operations.map(operation => operation()))
       this.markSuccess(updateId)
       
       options?.onSuccess?.(results)
