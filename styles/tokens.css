@@ -154,7 +154,7 @@
 
   .glass-subtle {
     background: hsl(var(--glass-bg-subtle));
-    backdrop-filter: var(--glass-blur));
+    backdrop-filter: var(--glass-blur);
     border: 1px solid hsl(var(--glass-border));
   }
 
