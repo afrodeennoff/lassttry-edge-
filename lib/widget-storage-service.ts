@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/prisma/generated/prisma"
-import { DashboardLayoutWithWidgets } from "@/store/user-store"
+import { DashboardLayoutWithWidgets, type Widget } from "@/store/user-store"
 import type { Prisma } from "@/prisma/generated/prisma"
 
 export interface StorageResult {
