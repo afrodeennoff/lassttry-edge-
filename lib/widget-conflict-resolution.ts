@@ -116,8 +116,8 @@ export class WidgetConflictResolver {
       if (!existing) {
         widgetMap.set(widget.i, widget)
       } else {
-        const localModified = new Date((existing as any).updatedAt || (existing as any).createdAt || 0).getTime()
-        const remoteModified = new Date((widget as any).updatedAt || (widget as any).createdAt || Date.now()).getTime()
+        const localModified = new Date(existing.updatedAt || 0).getTime()
+        const remoteModified = new Date(widget.updatedAt || 0).getTime()
 
         if (remoteModified > localModified) {
           widgetMap.set(widget.i, widget)
