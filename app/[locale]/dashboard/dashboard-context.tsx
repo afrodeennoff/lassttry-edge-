@@ -105,12 +105,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
     const activeLayout = useMemo(() => isMobile ? 'mobile' : 'desktop', [isMobile])
 
-    const toggleCustomizing = useCallback(() => setIsCustomizing(prev => !prev), [])
-
-    const currentLayout = useMemo(() => {
-        return layouts?.[activeLayout] || []
-    }, [layouts, activeLayout])
-
     const {
         triggerSave,
         flushPending,
@@ -133,14 +127,32 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         maxRetries: 5,
         onSaved: (duration) => {
             console.log('[Dashboard] Auto-save completed', { duration })
+            toast.success(t('dashboard.saveSuccess') || 'Layout saved', {
+                description: t('dashboard.saveSuccessDesc') || 'Your dashboard layout has been updated.'
+            })
         },
         onError: (error) => {
             console.error('[Dashboard] Auto-save failed', { error: error.message })
+            toast.error(t('dashboard.saveError') || 'Save failed', {
+                description: error.message
+            })
         },
         onSaveStart: () => {
             console.log('[Dashboard] Auto-save started')
         },
     })
+
+    const currentLayout = useMemo(() => {
+        return layouts?.[activeLayout] || []
+    }, [layouts, activeLayout])
+
+    const toggleCustomizing = useCallback(async () => {
+        if (isCustomizing) {
+            // Flush any pending saves when locking the grid
+            await flushPending()
+        }
+        setIsCustomizing(prev => !prev)
+    }, [isCustomizing, flushPending])
 
     const handleLayoutChange = useCallback((layout: LayoutItem[]) => {
         const userId = user?.id || supabaseUser?.id

@@ -141,6 +141,9 @@ export default {
   "dashboard.noLanguageFound": "No language found.",
   "dashboard.timezone": "Timezone",
   "dashboard.settings": "Settings",
+  "dashboard.saveSuccess": "Layout saved",
+  "dashboard.saveSuccessDesc": "Your dashboard layout has been updated.",
+  "dashboard.saveError": "Save failed",
   "dashboard.settings.description":
     "Manage your account settings and preferences",
   "dashboard.teams": "Teams",

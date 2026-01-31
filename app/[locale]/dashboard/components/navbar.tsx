@@ -7,7 +7,9 @@ import {
   RefreshCw,
   Sparkles,
   LayoutDashboard,
-  Settings2
+  Settings2,
+  CloudUpload,
+  CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
@@ -32,7 +34,9 @@ export default function Navbar() {
     isCustomizing,
     toggleCustomizing,
     addWidget,
-    layouts
+    layouts,
+    autoSaveStatus,
+    flushPendingSaves
   } = useDashboard()
   const { refreshAllData, isPlusUser, isLoading } = useData()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -89,6 +93,25 @@ export default function Navbar() {
                 <Pencil className={cn("w-3.5 h-3.5", isCustomizing && "animate-pulse")} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{isCustomizing ? "Lock Grid" : "Edit Layout"}</span>
               </Button>
+
+              {isCustomizing && autoSaveStatus.hasPending && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={flushPendingSaves}
+                  className="h-9 px-3 gap-2 rounded-xl text-accent-teal hover:bg-accent-teal/10 transition-all border border-accent-teal/20"
+                >
+                  <CloudUpload className="w-3.5 h-3.5 animate-bounce" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Save Now</span>
+                </Button>
+              )}
+
+              {!autoSaveStatus.hasPending && isCustomizing && (
+                <div className="flex items-center gap-2 px-3 text-accent-teal/60">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Saved</span>
+                </div>
+              )}
 
               <AddWidgetSheet onAddWidget={addWidget} isCustomizing={isCustomizing} />
 

@@ -139,6 +139,9 @@ export default {
   "dashboard.noLanguageFound": "Aucune langue trouvée.",
   "dashboard.timezone": "Fuseau horaire",
   "dashboard.settings": "Paramètres",
+  "dashboard.saveSuccess": "Disposition enregistrée",
+  "dashboard.saveSuccessDesc": "La disposition de votre tableau de bord a été mise à jour.",
+  "dashboard.saveError": "Échec de l'enregistrement",
   "dashboard.settings.description":
     "Gérez vos paramètres de compte et préférences",
   "dashboard.teams": "Équipe",
@@ -1379,14 +1382,14 @@ export default {
     deleteSuccess: "Trades Supprimés",
     deleteSuccessDescription: "{count} trade(s) ont été supprimé(s).",
     deleteError: "Échec de la Suppression des Trades",
-     deleteErrorDescription:
-       "Une erreur s'est produite lors de la suppression des trades. Veuillez réessayer.",
-     deleteConfirmTitle: "Supprimer les trades sélectionnés",
-     deleteConfirmDescription:
-       "Êtes-vous sûr de vouloir supprimer {count} trade(s) sélectionné(s) ? Cette action est irréversible.",
-     deleteConfirmCancel: "Annuler",
-     deleteConfirmConfirm: "Supprimer",
-     deleteAllImages: "Supprimer toutes les images",
+    deleteErrorDescription:
+      "Une erreur s'est produite lors de la suppression des trades. Veuillez réessayer.",
+    deleteConfirmTitle: "Supprimer les trades sélectionnés",
+    deleteConfirmDescription:
+      "Êtes-vous sûr de vouloir supprimer {count} trade(s) sélectionné(s) ? Cette action est irréversible.",
+    deleteConfirmCancel: "Annuler",
+    deleteConfirmConfirm: "Supprimer",
+    deleteAllImages: "Supprimer toutes les images",
 
     allImagesDeleted: "Toutes les images ont été supprimées avec succès",
     resetConfig: "Réinitialiser la Configuration",
