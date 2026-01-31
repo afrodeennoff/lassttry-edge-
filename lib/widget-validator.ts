@@ -170,7 +170,7 @@ class WidgetValidator {
       })
     }
 
-    if (!WIDGET_REGISTRY[widget.type]) {
+    if (!WIDGET_REGISTRY[widget.type as WidgetType]) {
       warnings.push({
         field: 'type',
         message: `Widget type "${widget.type}" is not registered in WIDGET_REGISTRY`,
@@ -204,7 +204,7 @@ class WidgetValidator {
       })
     }
 
-    const config = WIDGET_REGISTRY[widget.type]
+    const config = WIDGET_REGISTRY[widget.type as WidgetType]
     if (config && config.allowedSizes && !config.allowedSizes.includes(widget.size)) {
       errors.push({
         field: 'size',
