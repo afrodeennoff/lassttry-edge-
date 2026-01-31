@@ -242,7 +242,7 @@ class WidgetPersistenceManager {
           localVersion: remoteLayout.version || 1,
           remoteVersion: remoteLayout.version || 1,
           lastModified: new Date(remoteLayout.updatedAt || Date.now()).getTime(),
-          deviceId: remoteLayout.deviceId || 'unknown'
+          deviceId: 'unknown'
         }
       )
 
@@ -260,7 +260,7 @@ class WidgetPersistenceManager {
             localVersion: remoteLayout.version || 1,
             remoteVersion: remoteLayout.version || 1,
             lastModified: new Date(remoteLayout.updatedAt || Date.now()).getTime(),
-            deviceId: remoteLayout.deviceId || 'unknown'
+            deviceId: 'unknown'
           }
         )
 
