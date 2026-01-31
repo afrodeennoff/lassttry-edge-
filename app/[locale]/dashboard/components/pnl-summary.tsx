@@ -8,6 +8,7 @@ import { TrendingUp, TrendingDown, Target, Zap } from "lucide-react"
 import { startOfDay, isWithinInterval, endOfDay, parseISO } from "date-fns"
 
 export function PnLSummary() {
+  return null;
   const { calendarData, statistics: overallStats } = useData()
 
   const stats = useMemo(() => {
