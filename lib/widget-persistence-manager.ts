@@ -226,7 +226,7 @@ class WidgetPersistenceManager {
     if (!this.config.enableConflictResolution) return false
 
     try {
-      const remoteLayout = await widgetStorageService['loadFromDatabase'](userId)
+      const remoteLayout = await widgetStorageService.load(userId)
       if (!remoteLayout) return false
 
       const hasConflict = widgetConflictResolver.detectConflict(
