@@ -31,7 +31,7 @@ export type SerializedTrade = Omit<Trade, 'entryPrice' | 'closePrice' | 'pnl' | 
   pnl: number
   commission: number
   entryDate: string
-  closeDate: string | null
+  closeDate: string
 }
 
 export interface PaginatedTrades {
@@ -74,12 +74,12 @@ function validateLayouts(layouts: DashboardLayout): boolean {
 function serializeTrade(trade: Trade): SerializedTrade {
   return {
     ...trade,
-    entryPrice: new Decimal(trade.entryPrice).toNumber(),
-    closePrice: new Decimal(trade.closePrice).toNumber(),
-    pnl: new Decimal(trade.pnl).toNumber(),
-    commission: new Decimal(trade.commission).toNumber(),
+    entryPrice: trade.entryPrice,
+    closePrice: trade.closePrice,
+    pnl: trade.pnl,
+    commission: trade.commission,
     entryDate: new Date(trade.entryDate).toISOString(),
-    closeDate: trade.closeDate ? new Date(trade.closeDate).toISOString() : null,
+    closeDate: new Date(trade.closeDate).toISOString(),
   }
 }
 
