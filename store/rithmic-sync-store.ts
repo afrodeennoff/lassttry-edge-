@@ -58,6 +58,8 @@ interface RithmicSyncState {
   // Auto-sync functionality
   isAutoSyncing: boolean
   setIsAutoSyncing: (syncing: boolean) => void
+  autoSyncEnabled: boolean
+  setAutoSyncEnabled: (enabled: boolean) => void
 }
 
 export const useRithmicSyncStore = create<RithmicSyncState>()(
@@ -119,12 +121,15 @@ export const useRithmicSyncStore = create<RithmicSyncState>()(
       // Auto-sync functionality
       isAutoSyncing: false,
       setIsAutoSyncing: (syncing) => set({ isAutoSyncing: syncing }),
+      autoSyncEnabled: true,
+      setAutoSyncEnabled: (enabled) => set({ autoSyncEnabled: enabled }),
     }),
     {
       name: 'rithmic-sync-settings',
       // Only persist sync settings, not runtime state
       partialize: (state) => ({
-        syncInterval: state.syncInterval
+        syncInterval: state.syncInterval,
+        autoSyncEnabled: state.autoSyncEnabled
       })
     }
   )

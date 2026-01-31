@@ -32,9 +32,12 @@ export function SyncCountdown({ lastSyncTime, isAutoSyncing, credentialId }: Syn
 
       if (diff <= 0) {
         setTimeLeft('Ready')
-        
+
         // Trigger immediate sync check when ready (only once per ready state)
-        if (!hasTriggeredSyncRef.current && credentialId && !isAutoSyncing) {
+        // Check if auto sync is enabled globally
+        const { autoSyncEnabled } = useRithmicSyncStore.getState();
+
+        if (!hasTriggeredSyncRef.current && credentialId && !isAutoSyncing && autoSyncEnabled) {
           hasTriggeredSyncRef.current = true
           console.log('Countdown reached Ready state, triggering immediate sync check for credential:', credentialId)
 

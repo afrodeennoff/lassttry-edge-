@@ -61,12 +61,12 @@ interface RithmicSyncContextType {
   authenticateAndGetAccounts: (credentials: RithmicCredentials) => Promise<
     | { success: false; rateLimited: boolean; message: string }
     | {
-        success: true;
-        rateLimited: boolean;
-        token: string;
-        websocket_url: string;
-        accounts: { account_id: string; fcm_id: string }[];
-      }
+      success: true;
+      rateLimited: boolean;
+      token: string;
+      websocket_url: string;
+      accounts: { account_id: string; fcm_id: string }[];
+    }
   >;
   getWebSocketUrl: (baseUrl: string) => string;
 }
@@ -604,8 +604,8 @@ export function RithmicSyncContextProvider({
         const accountsToSync = savedData.allAccounts
           ? data.accounts.map((acc: any) => acc.account_id)
           : savedData.selectedAccounts.filter((account: string) =>
-              data.accounts.some((acc: any) => acc.account_id === account)
-            );
+            data.accounts.some((acc: any) => acc.account_id === account)
+          );
 
         setAvailableAccounts(data.accounts);
         const wsUrl = getWebSocketUrl(data.websocket_url);
@@ -805,9 +805,13 @@ export function RithmicSyncContextProvider({
   );
 
   // Auto-sync checking
+  const { autoSyncEnabled } = useRithmicSyncStore();
+
   const checkAndPerformSyncs = useCallback(async () => {
     // If we are still loading trades, return
     if (isLoading) return;
+    // If auto-sync is disabled, return
+    if (!autoSyncEnabled) return;
     // If we are already syncing, return
     if (isAutoSyncing) return;
     try {
@@ -839,7 +843,7 @@ export function RithmicSyncContextProvider({
     } catch (error) {
       console.warn("Error during rithmic auto-sync check:", error);
     }
-  }, [syncInterval, isAutoSyncing, performSyncForCredential]);
+  }, [syncInterval, autoSyncEnabled, isAutoSyncing, performSyncForCredential]);
 
   // Auto-sync checking interval
   useEffect(() => {
@@ -853,7 +857,7 @@ export function RithmicSyncContextProvider({
     return () => {
       clearInterval(intervalId);
     };
-  }, [syncInterval]);
+  }, [checkAndPerformSyncs]);
 
   return (
     <RithmicSyncContext.Provider

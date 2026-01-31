@@ -1,9 +1,9 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
 import { useData } from "@/context/data-provider";
 import Link from 'next/link';
@@ -24,14 +24,32 @@ import {
     RefreshCw,
     Settings,
     CreditCard,
-    Shield
+    Shield,
+    Mail,
+    Send,
+    Users
 } from "lucide-react";
 import TradeExportDialog from '@/components/export-button';
+
+interface SidebarItem {
+    label: string;
+    href: string;
+    icon: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+}
+
+interface SidebarGroup {
+    title: string;
+    items: SidebarItem[];
+}
 
 export function AIModelSidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const params = useParams();
+    const slug = params?.slug as string | undefined;
     const { refreshAllData, formattedTrades } = useData();
     const user = useUserStore(state => state.supabaseUser);
     const resetUser = useUserStore(state => state.resetUser);
@@ -52,22 +70,35 @@ export function AIModelSidebar() {
     useEffect(() => {
         const tab = searchParams.get('tab');
 
-        if (pathname === '/dashboard' || pathname.includes('/dashboard')) {
-            if (tab === 'table') setActiveTab('Journal');
+        if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+            if (tab === 'table') setActiveTab('Trades');
             else if (tab === 'accounts') setActiveTab('Accounts');
-            else if (pathname.includes('strategies')) setActiveTab('Strategies');
+            else if (pathname.includes('strategies')) setActiveTab('Journal');
             else if (pathname.includes('reports')) setActiveTab('Reports');
             else if (pathname.includes('behavior')) setActiveTab('Behavior');
             else if (pathname.includes('data')) setActiveTab('Data');
             else if (pathname.includes('settings')) setActiveTab('Settings');
             else if (pathname.includes('billing')) setActiveTab('Billing');
             else if (tab === 'widgets' || pathname === '/dashboard') setActiveTab('Dashboard');
-        } else if (pathname.includes('teams')) {
-            setActiveTab('Team');
-        } else if (pathname.includes('propfirms')) {
+        }
+
+        if (pathname.includes('/teams')) {
+            if (pathname.includes('analytics')) setActiveTab('Team Analytics');
+            else if (pathname.includes('traders')) setActiveTab('Team Traders');
+            else if (pathname.includes('members')) setActiveTab('Team Members');
+            else setActiveTab('Team Overview');
+        }
+
+        if (pathname.includes('/admin')) {
+            if (pathname.includes('newsletter-builder')) setActiveTab('Newsletter Builder');
+            else if (pathname.includes('weekly-recap')) setActiveTab('Weekly Recap');
+            else if (pathname.includes('welcome-email')) setActiveTab('Welcome Email');
+            else if (pathname.includes('send-email')) setActiveTab('Send Email');
+            else setActiveTab('Admin');
+        }
+
+        if (pathname.includes('/propfirms')) {
             setActiveTab('Prop Firms');
-        } else if (pathname.includes('admin')) {
-            setActiveTab('Admin');
         }
     }, [pathname, searchParams]);
 
@@ -76,47 +107,78 @@ export function AIModelSidebar() {
         await signOut();
     };
 
-    const menuGroups = [
-        {
-            title: 'Inventory',
-            items: [
-                { label: 'Dashboard', href: '/dashboard?tab=widgets', icon: <LayoutDashboard className="w-5 h-5" /> },
-                { label: 'Journal', href: '/dashboard?tab=table', icon: <TrendingUp className="w-5 h-5" /> },
-                { label: 'Accounts', href: '/dashboard?tab=accounts', icon: <Activity className="w-5 h-5" /> },
-                { label: 'Strategies', href: '/dashboard/strategies', icon: <BookOpen className="w-5 h-5" /> },
-            ]
-        },
-        {
-            title: 'Insights',
-            items: [
-                { label: 'Reports', href: '/dashboard/reports', icon: <BarChart3 className="w-5 h-5" /> },
-                { label: 'Behavior', href: '/dashboard/behavior', icon: <Brain className="w-5 h-5" /> },
-            ]
-        },
-        {
-            title: 'Social',
-            items: [
-                { label: 'Team', href: '/teams/dashboard', icon: <Building2 className="w-5 h-5" /> },
-                { label: 'Prop Firms', href: '/propfirms', icon: <Globe className="w-5 h-5" /> },
-            ]
-        },
-        {
-            title: 'System',
-            items: [
-                { label: 'Data', href: '/dashboard/data', icon: <Database className="w-5 h-5" /> },
-                { label: 'Export', href: '#', icon: <Download className="w-5 h-5" />, onClick: () => setIsExportOpen(true) },
-                { label: 'Sync', href: '#', icon: <RefreshCw className="w-5 h-5" />, onClick: () => refreshAllData({ force: true }) },
-                { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="w-5 h-5" /> },
-                { label: 'Billing', href: '/dashboard/billing', icon: <CreditCard className="w-5 h-5" /> },
-            ]
-        }
-    ];
+    const menuGroups = useMemo<SidebarGroup[]>(() => {
+        const groups: SidebarGroup[] = [
+            {
+                title: 'Inventory',
+                items: [
+                    { label: 'Dashboard', href: '/dashboard?tab=widgets', icon: <LayoutDashboard className="w-5 h-5" /> },
+                    { label: 'Trades', href: '/dashboard?tab=table', icon: <TrendingUp className="w-5 h-5" /> },
+                    { label: 'Accounts', href: '/dashboard?tab=accounts', icon: <Activity className="w-5 h-5" /> },
+                    { label: 'Journal', href: '/dashboard/strategies', icon: <BookOpen className="w-5 h-5" /> },
+                ]
+            }
+        ];
 
-    if (isAdmin) {
-        menuGroups[3].items.push({
-            label: 'Admin', href: '/admin', icon: <Shield className="w-5 h-5" />
-        });
-    }
+        if (pathname.includes('/teams')) {
+            groups.push({
+                title: 'Team Management',
+                items: [
+                    { label: 'Team Overview', href: slug ? `/teams/dashboard/${slug}` : "/teams/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+                    { label: 'Team Analytics', href: slug ? `/teams/dashboard/${slug}/analytics` : "/teams/dashboard", icon: <BarChart3 className="w-5 h-5" />, disabled: !slug },
+                    { label: 'Team Traders', href: slug ? `/teams/dashboard/${slug}/traders` : "/teams/dashboard", icon: <TrendingUp className="w-5 h-5" />, disabled: !slug },
+                    { label: 'Team Members', href: slug ? `/teams/dashboard/${slug}/members` : "/teams/manage", icon: <Users className="w-5 h-5" /> },
+                ]
+            });
+        }
+
+        if (pathname.includes('/admin')) {
+            groups.push({
+                title: 'Admin Panel',
+                items: [
+                    { label: 'Newsletter Builder', href: '/admin/newsletter-builder', icon: <Mail className="w-5 h-5" /> },
+                    { label: 'Weekly Recap', href: '/admin/weekly-recap', icon: <BarChart3 className="w-5 h-5" /> },
+                    { label: 'Welcome Email', href: '/admin/welcome-email', icon: <Users className="w-5 h-5" /> },
+                    { label: 'Send Email', href: '/admin/send-email', icon: <Send className="w-5 h-5" /> },
+                ]
+            });
+        }
+
+        groups.push(
+            {
+                title: 'Insights',
+                items: [
+                    { label: 'Reports', href: '/dashboard/reports', icon: <BarChart3 className="w-5 h-5" /> },
+                    { label: 'Behavior', href: '/dashboard/behavior', icon: <Brain className="w-5 h-5" /> },
+                ]
+            },
+            {
+                title: 'Social',
+                items: [
+                    { label: 'Team', href: '/teams/dashboard', icon: <Building2 className="w-5 h-5" /> },
+                    { label: 'Prop Firms', href: '/propfirms', icon: <Globe className="w-5 h-5" /> },
+                ]
+            },
+            {
+                title: 'System',
+                items: [
+                    { label: 'Data', href: '/dashboard/data', icon: <Database className="w-5 h-5" /> },
+                    { label: 'Export', href: '#', icon: <Download className="w-5 h-5" />, onClick: () => setIsExportOpen(true) },
+                    { label: 'Sync', href: '#', icon: <RefreshCw className="w-5 h-5" />, onClick: () => refreshAllData({ force: true }) },
+                    { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="w-5 h-5" /> },
+                    { label: 'Billing', href: '/dashboard/billing', icon: <CreditCard className="w-5 h-5" /> },
+                ]
+            }
+        );
+
+        if (isAdmin && !pathname.includes('/admin')) {
+            groups[groups.length - 1].items.push({
+                label: 'Admin', href: '/admin', icon: <Shield className="w-5 h-5" />
+            });
+        }
+
+        return groups;
+    }, [pathname, slug, isAdmin, refreshAllData]);
 
     return (
         <>
@@ -180,17 +242,27 @@ export function AIModelSidebar() {
                     </div>
 
                     <nav className="flex-grow px-3 space-y-8 mt-4 overflow-y-auto no-scrollbar">
-                        {menuGroups.map((group, groupIdx) => {
+                        {menuGroups.map((group: SidebarGroup, groupIdx: number) => {
                             return (
                                 <div key={groupIdx}>
+                                    {(open || isMobile) && (
+                                        <div className="px-3 mb-2">
+                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{group.title}</span>
+                                        </div>
+                                    )}
                                     <div className="space-y-1">
-                                        {group.items.map((item) => {
+                                        {group.items.map((item: SidebarItem) => {
                                             const isActive = activeTab === item.label;
+                                            const disabled = item.disabled;
                                             return (
                                                 <Link
                                                     key={item.label}
-                                                    href={item.href}
+                                                    href={disabled ? '#' : item.href}
                                                     onClick={(e) => {
+                                                        if (disabled) {
+                                                            e.preventDefault();
+                                                            return;
+                                                        }
                                                         if (item.onClick) {
                                                             e.preventDefault();
                                                             item.onClick();
@@ -206,6 +278,7 @@ export function AIModelSidebar() {
                                                             : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
                                                         }
                                             ${!open && !isMobile ? 'justify-center' : ''}
+                                            ${disabled ? 'opacity-30 cursor-not-allowed grayscale' : ''}
                                         `}
                                                 >
                                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-teal-500 rounded-r-full shadow-[0_0_10px_#2dd4bf]"></div>}

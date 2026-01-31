@@ -3,8 +3,8 @@
 import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { SidebarNav } from "./components/sidebar-nav";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AIModelSidebar } from "@/components/sidebar/aimodel-sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/context/theme-provider";
 
 export default function RootLayout(
@@ -12,7 +12,7 @@ export default function RootLayout(
     children: React.ReactNode;
   }>
 ) {
-  
+
   const {
     children
   } = props;
@@ -35,14 +35,14 @@ export default function RootLayout(
 
   return (
     <ThemeProvider>
-      <SidebarProvider defaultOpen>
-        <div className="flex min-h-screen w-screen">
-          <SidebarNav />
-          <main className="flex-1 overflow-y-auto p-6">
-              {children}
+      <div className="flex min-h-screen w-full bg-[#020202] text-white">
+        <AIModelSidebar />
+        <SidebarInset className="flex-1 relative overflow-hidden bg-transparent">
+          <main className="flex-1 overflow-y-auto p-6 relative z-10">
+            {children}
           </main>
-        </div>
-      </SidebarProvider>
+        </SidebarInset>
+      </div>
     </ThemeProvider>
   );
 }

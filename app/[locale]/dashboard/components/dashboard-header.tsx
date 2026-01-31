@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useDashboard } from '@/app/[locale]/dashboard/dashboard-context';
 import { AddWidgetSheet } from '@/app/[locale]/dashboard/components/add-widget-sheet';
@@ -12,6 +12,7 @@ import { FilterCommandMenu } from './filters/filter-command-menu';
 import ImportButton from './import/import-button';
 import { DailySummaryModal } from './daily-summary-modal';
 import { ShareButton } from './share-button';
+import { GlobalSyncButton } from './global-sync-button';
 import { useData } from '@/context/data-provider';
 import { ActiveFilterTags } from './filters/active-filter-tags';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -34,20 +35,18 @@ export function DashboardHeader() {
         autoSaveStatus,
         flushPendingSaves
     } = useDashboard();
-    const { refreshAllData, isPlusUser, isLoading } = useData();
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { isPlusUser } = useData();
+    const searchParams = useSearchParams();
     const t = useI18n();
 
-    const handleRefresh = async () => {
-        setIsRefreshing(true);
-        await refreshAllData({ force: true });
-        setTimeout(() => setIsRefreshing(false), 1000);
-    };
-
     const getTitle = () => {
-        if (pathname === '/dashboard') return 'Overview';
-        if (pathname.includes('table')) return 'Journal';
-        if (pathname.includes('strategies')) return 'Strategies';
+        const tab = searchParams.get('tab');
+        if (pathname === '/dashboard') {
+            if (tab === 'table') return 'Trades';
+            if (tab === 'accounts') return 'Accounts';
+            return 'Overview';
+        }
+        if (pathname.includes('strategies')) return 'Journal';
         if (pathname.includes('reports')) return 'Analytics';
         if (pathname.includes('behavior')) return 'Behavior';
         if (pathname.includes('calendar')) return 'Calendar';
@@ -80,14 +79,7 @@ export function DashboardHeader() {
                     <div className="flex items-center gap-1">
                         <FilterCommandMenu variant="navbar" />
 
-                        <button
-                            onClick={handleRefresh}
-                            disabled={isLoading}
-                            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                            title="Manual Sync"
-                        >
-                            <RefreshCw className={cn("w-4 h-4", (isRefreshing || isLoading) && "animate-spin")} />
-                        </button>
+                        <GlobalSyncButton />
 
                         <DailySummaryModal />
                     </div>

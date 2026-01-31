@@ -142,6 +142,8 @@ export default {
   "dashboard.saveSuccess": "Disposition enregistrée",
   "dashboard.saveSuccessDesc": "La disposition de votre tableau de bord a été mise à jour.",
   "dashboard.saveError": "Échec de l'enregistrement",
+  "dashboard.refreshSuccess": "Données synchronisées avec succès",
+  "dashboard.refreshError": "Échec de la synchronisation des données",
   "dashboard.settings.description":
     "Gérez vos paramètres de compte et préférences",
   "dashboard.teams": "Équipe",

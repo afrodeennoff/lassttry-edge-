@@ -144,6 +144,8 @@ export default {
   "dashboard.saveSuccess": "Layout saved",
   "dashboard.saveSuccessDesc": "Your dashboard layout has been updated.",
   "dashboard.saveError": "Save failed",
+  "dashboard.refreshSuccess": "Data synchronized successfully",
+  "dashboard.refreshError": "Failed to synchronize data",
   "dashboard.settings.description":
     "Manage your account settings and preferences",
   "dashboard.teams": "Teams",
