@@ -188,6 +188,8 @@ export default {
             oneApiDescription: 'A single API effortlessly connecting to multiple providers and get one unified format.',
             toggleTheme: 'Toggle theme',
             openMenu: 'Open menu',
+            closeMenu: 'Close menu',
+            mobileMenu: 'Mobile menu',
             darkMode: 'Dark mode',
             lightMode: 'Light mode',
             systemTheme: 'System theme',
