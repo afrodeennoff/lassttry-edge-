@@ -76,11 +76,6 @@ export function DashboardHeader() {
                 </div>
             </div>
 
-            {/* Center: PnL Summary Metrics */}
-            <div className="flex-1 max-w-2xl px-8 hidden xl:block">
-                <PnLSummary />
-            </div>
-
             {/* Right Side: Actions */}
             <div className="flex items-center gap-3">
                 {/* Search / Command Menu */}

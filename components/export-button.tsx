@@ -32,7 +32,9 @@ import {
 } from "@/components/ui/pagination"
 
 type Props = {
-  trades: Trade[]
+  trades: Trade[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface FilteredTrade extends Trade {
@@ -40,8 +42,11 @@ interface FilteredTrade extends Trade {
   formattedCloseDate: string;
 }
 
-export default function TradeExportDialog({ trades }: Props) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function TradeExportDialog({ trades, open: externalOpen, onOpenChange: setExternalOpen }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = setExternalOpen !== undefined ? setExternalOpen : setInternalOpen;
+
   const accounts = Array.from(new Set(trades.map(trade => trade.accountNumber)))
   const instruments = Array.from(new Set(trades.map(trade => trade.instrument.slice(0, 2))))
 
@@ -49,12 +54,12 @@ export default function TradeExportDialog({ trades }: Props) {
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>(instruments)
   const [selectAllAccounts, setSelectAllAccounts] = useState(true)
   const [selectAllInstruments, setSelectAllInstruments] = useState(true)
-  
-  const [dateRange, setDateRange] = useState<DateRange>({ 
-    from: subMonths(new Date(), 6), 
-    to: new Date() 
+
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subMonths(new Date(), 6),
+    to: new Date()
   })
-  
+
   const [currentPage, setCurrentPage] = useState(1)
   const [filteredTrades, setFilteredTrades] = useState<FilteredTrade[]>([])
   const itemsPerPage = 10
@@ -68,7 +73,7 @@ export default function TradeExportDialog({ trades }: Props) {
 
   const handleExport = () => {
     // Filter trades based on selected accounts, instruments, and date range
-    const filteredTrades = trades.filter(trade => 
+    const filteredTrades = trades.filter(trade =>
       selectedAccounts.includes(trade.accountNumber) &&
       selectedInstruments.includes(trade.instrument.slice(0, 2)) &&
       (!dateRange?.from || new Date(trade.entryDate) >= dateRange.from) &&
@@ -122,13 +127,13 @@ export default function TradeExportDialog({ trades }: Props) {
   }
 
   const handleAccountChange = (account: string) => {
-    setSelectedAccounts(prev => 
+    setSelectedAccounts(prev =>
       prev.includes(account) ? prev.filter(a => a !== account) : [...prev, account]
     )
   }
 
   const handleInstrumentChange = (instrument: string) => {
-    setSelectedInstruments(prev => 
+    setSelectedInstruments(prev =>
       prev.includes(instrument) ? prev.filter(i => i !== instrument) : [...prev, instrument]
     )
   }
@@ -144,7 +149,7 @@ export default function TradeExportDialog({ trades }: Props) {
   }
 
   const updateFilteredTrades = useCallback(() => {
-    const filtered = trades.filter(trade => 
+    const filtered = trades.filter(trade =>
       selectedAccounts.includes(trade.accountNumber) &&
       selectedInstruments.includes(trade.instrument.slice(0, 2)) &&
       (!dateRange?.from || new Date(trade.entryDate) >= dateRange.from) &&
@@ -174,11 +179,13 @@ export default function TradeExportDialog({ trades }: Props) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Download className="mr-2 h-4 w-4" /> Export Trades
-        </Button>
-      </DialogTrigger>
+      {externalOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button size="sm">
+            <Download className="mr-2 h-4 w-4" /> Export Trades
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-full h-[90vh] w-full flex flex-col">
         <DialogHeader>
           <DialogTitle>Export Trades</DialogTitle>
@@ -197,9 +204,9 @@ export default function TradeExportDialog({ trades }: Props) {
                   <div>
                     <Label className="text-base">Select Accounts</Label>
                     <div className="flex items-center space-x-2 mt-2">
-                      <Checkbox 
-                        id="selectAllAccounts" 
-                        checked={selectAllAccounts} 
+                      <Checkbox
+                        id="selectAllAccounts"
+                        checked={selectAllAccounts}
                         onCheckedChange={handleSelectAllAccounts}
                       />
                       <label htmlFor="selectAllAccounts" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -209,8 +216,8 @@ export default function TradeExportDialog({ trades }: Props) {
                     <ScrollArea className="h-[100px] mt-2 rounded border p-2">
                       {accounts.map(account => (
                         <div key={account} className="flex items-center space-x-2 mb-2">
-                          <Checkbox 
-                            id={`account-${account}`} 
+                          <Checkbox
+                            id={`account-${account}`}
                             checked={selectedAccounts.includes(account)}
                             onCheckedChange={() => handleAccountChange(account)}
                           />
@@ -224,9 +231,9 @@ export default function TradeExportDialog({ trades }: Props) {
                   <div>
                     <Label className="text-base">Select Instruments</Label>
                     <div className="flex items-center space-x-2 mt-2">
-                      <Checkbox 
-                        id="selectAllInstruments" 
-                        checked={selectAllInstruments} 
+                      <Checkbox
+                        id="selectAllInstruments"
+                        checked={selectAllInstruments}
                         onCheckedChange={handleSelectAllInstruments}
                       />
                       <label htmlFor="selectAllInstruments" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -236,8 +243,8 @@ export default function TradeExportDialog({ trades }: Props) {
                     <ScrollArea className="h-[100px] mt-2 rounded border p-2">
                       {instruments.map(instrument => (
                         <div key={instrument} className="flex items-center space-x-2 mb-2">
-                          <Checkbox 
-                            id={`instrument-${instrument}`} 
+                          <Checkbox
+                            id={`instrument-${instrument}`}
                             checked={selectedInstruments.includes(instrument)}
                             onCheckedChange={() => handleInstrumentChange(instrument)}
                           />
@@ -251,7 +258,7 @@ export default function TradeExportDialog({ trades }: Props) {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="w-full h-fit">
               <CardHeader>
                 <CardTitle className="text-base">Select Date Range</CardTitle>
@@ -325,16 +332,16 @@ export default function TradeExportDialog({ trades }: Props) {
                     </TableBody>
                   </Table>
                 </div>
-                
+
                 <div className="mt-4">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         />
                       </PaginationItem>
-                      
+
                       {[...Array(totalPages)].map((_, i) => {
                         const page = i + 1
                         // Show first page, last page, current page, and pages around current
@@ -361,7 +368,7 @@ export default function TradeExportDialog({ trades }: Props) {
                         }
                         return null
                       })}
-                      
+
                       <PaginationItem>
                         <PaginationNext
                           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -375,8 +382,8 @@ export default function TradeExportDialog({ trades }: Props) {
           </div>
         </div>
         <div className="p-4 bg-background border-t mt-auto">
-          <Button 
-            onClick={handleExport} 
+          <Button
+            onClick={handleExport}
             disabled={selectedAccounts.length === 0 || selectedInstruments.length === 0}
             className="w-full max-w-xl mx-auto"
           >
