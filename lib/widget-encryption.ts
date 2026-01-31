@@ -35,7 +35,7 @@ class WidgetEncryptionService {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt,
+        salt: salt as any,
         iterations: 100000,
         hash: 'SHA-256'
       },
@@ -171,37 +171,37 @@ class WidgetEncryptionService {
 
   encryptSensitiveFields(widget: Widget): Widget {
     const sensitiveFields: (keyof Widget)[] = ['i']
-    
+
     const encrypted = { ...widget }
-    
+
     for (const field of sensitiveFields) {
       if (encrypted[field]) {
         const value = String(encrypted[field])
         const encoded = btoa(encodeURIComponent(value))
-        encrypted[field] = encoded as any
+          ; (encrypted as any)[field] = encoded
       }
     }
-    
+
     return encrypted
   }
 
   decryptSensitiveFields(widget: Widget): Widget {
     const sensitiveFields: (keyof Widget)[] = ['i']
-    
+
     const decrypted = { ...widget }
-    
+
     for (const field of sensitiveFields) {
       if (decrypted[field]) {
         try {
           const value = String(decrypted[field])
           const decoded = decodeURIComponent(atob(value))
-          decrypted[field] = decoded as any
+            ; (decrypted as any)[field] = decoded
         } catch {
           continue
         }
       }
     }
-    
+
     return decrypted
   }
 
