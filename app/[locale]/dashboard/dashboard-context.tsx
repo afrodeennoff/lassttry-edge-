@@ -11,14 +11,21 @@ import { defaultLayouts } from "@/lib/default-layouts"
 import { DashboardLayoutWithWidgets } from '@/store/user-store'
 import { useAutoSave } from '@/hooks/use-auto-save'
 import type { Prisma } from '@/prisma/generated/prisma'
+import type { DashboardLayout } from '@/prisma/generated/prisma'
 
 // --- Helper Functions (Moved from WidgetCanvas) ---
 
 const toPrismaLayout = (layout: DashboardLayoutWithWidgets): DashboardLayout => {
     return {
-        ...layout,
+        id: layout.id,
+        userId: layout.userId,
         desktop: layout.desktop as unknown as Prisma.JsonArray,
         mobile: layout.mobile as unknown as Prisma.JsonArray,
+        version: layout.version ?? 1,
+        checksum: null,
+        deviceId: null,
+        createdAt: layout.createdAt,
+        updatedAt: layout.updatedAt,
     }
 }
 
@@ -111,10 +118,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         isInitialized,
     } = useAutoSave({
         saveFunction: async (layout) => {
-            const result = await saveDashboardLayout(layout)
-            return {
-                success: !result,
-                error: result instanceof Error ? result.message : undefined
+            try {
+                await saveDashboardLayout(layout)
+                return { success: true }
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                }
             }
         },
         enabled: true,
@@ -138,34 +149,35 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         console.log('[DashboardContext] handleLayoutChange', layout)
 
         try {
+            const currentWidgets = layouts[activeLayout] || []
+            
+            const updatedWidgets = layout.map(item => {
+                const existingWidget = currentWidgets.find(w => w.i === item.i)
+                if (!existingWidget) {
+                    console.warn('[DashboardContext] Widget not found:', item.i)
+                    return null
+                }
+                return {
+                    ...existingWidget,
+                    x: isMobile ? 0 : item.x,
+                    y: item.y,
+                    w: isMobile ? 12 : item.w,
+                    h: item.h,
+                }
+            }).filter((item): item is NonNullable<typeof item> => item !== null)
+
             const updatedLayouts = {
                 ...layouts,
-                [activeLayout]: layout.map(item => {
-                    const existingWidget = layouts[activeLayout].find(w => w.i === item.i)
-                    if (!existingWidget) return null
-                    return {
-                        ...existingWidget,
-                        x: isMobile ? 0 : item.x,
-                        y: item.y,
-                        w: isMobile ? 12 : item.w,
-                        h: item.h,
-                    }
-                }).filter((item): item is NonNullable<typeof item> => item !== null)
+                [activeLayout]: updatedWidgets,
+                updatedAt: new Date()
             }
 
-            setLayouts({
-                ...layouts,
-                desktop: updatedLayouts.desktop,
-                mobile: updatedLayouts.mobile,
-                updatedAt: new Date()
-            })
-
+            setLayouts(updatedLayouts)
             triggerSave(toPrismaLayout(updatedLayouts), 'normal')
 
             if (isUserAction) setIsUserAction(false)
         } catch (error) {
-            console.error('Error updating layout:', error)
-            setLayouts(layouts)
+            console.error('[DashboardContext] Error updating layout:', error)
         }
     }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, triggerSave])
 
@@ -180,7 +192,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         if (!userId) {
             console.error('[DashboardContext] addWidget failed: missing user ID')
-            // We can still update local state, but it won't save to DB
+            return
         }
 
         const currentItems = layouts[activeLayout]
