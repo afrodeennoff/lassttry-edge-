@@ -418,6 +418,247 @@ export async function createDefaultDashboardLayout(userId: string): Promise<void
   }
 }
 
+export async function createLayoutVersionAction(
+  layoutId: string,
+  versionData: {
+    desktop: unknown
+    mobile: unknown
+    version: number
+    checksum: string
+    description?: string
+    deviceId: string
+    changeType: string
+  }
+): Promise<void> {
+  try {
+    await prisma.layoutVersion.create({
+      data: {
+        layoutId,
+        desktop: versionData.desktop as Prisma.JsonArray,
+        mobile: versionData.mobile as Prisma.JsonArray,
+        version: versionData.version,
+        checksum: versionData.checksum,
+        description: versionData.description,
+        deviceId: versionData.deviceId,
+        changeType: versionData.changeType
+      }
+    })
+
+    await prisma.dashboardLayout.update({
+      where: { id: layoutId },
+      data: {
+        version: versionData.version,
+        checksum: versionData.checksum,
+        deviceId: versionData.deviceId
+      }
+    })
+
+    logger.info('[createLayoutVersion] Success', { layoutId, version: versionData.version })
+  } catch (error) {
+    logger.error('[createLayoutVersion] Error', { error, layoutId })
+    throw error
+  }
+}
+
+export async function getLayoutVersionHistoryAction(
+  layoutId: string,
+  limit = 20
+): Promise<Array<{
+  id: string
+  version: number
+  desktop: unknown
+  mobile: unknown
+  checksum: string
+  description?: string
+  deviceId: string
+  changeType: string
+  createdAt: Date
+}>> {
+  try {
+    const versions = await prisma.layoutVersion.findMany({
+      where: { layoutId },
+      orderBy: { version: 'desc' },
+      take: limit
+    })
+
+    return versions.map(v => ({
+      id: v.id,
+      version: v.version,
+      desktop: v.desktop,
+      mobile: v.mobile,
+      checksum: v.checksum,
+      description: v.description ?? undefined,
+      deviceId: v.deviceId,
+      changeType: v.changeType,
+      createdAt: v.createdAt
+    }))
+  } catch (error) {
+    logger.error('[getLayoutVersionHistory] Error', { error, layoutId })
+    return []
+  }
+}
+
+export async function getLayoutVersionByNumberAction(
+  layoutId: string,
+  versionNumber: number
+): Promise<{
+  id: string
+  version: number
+  desktop: unknown
+  mobile: unknown
+  checksum: string
+  description?: string
+  deviceId: string
+  changeType: string
+  createdAt: Date
+} | null> {
+  try {
+    const version = await prisma.layoutVersion.findUnique({
+      where: {
+        id: await prisma.layoutVersion.findFirst({
+          where: { layoutId, version: versionNumber },
+          select: { id: true }
+        }).then(v => v?.id)
+      }
+    })
+
+    if (!version) return null
+
+    return {
+      id: version.id,
+      version: version.version,
+      desktop: version.desktop,
+      mobile: version.mobile,
+      checksum: version.checksum,
+      description: version.description ?? undefined,
+      deviceId: version.deviceId,
+      changeType: version.changeType,
+      createdAt: version.createdAt
+    }
+  } catch (error) {
+    logger.error('[getLayoutVersionByNumber] Error', { error, layoutId, versionNumber })
+    return null
+  }
+}
+
+export async function cleanupOldLayoutVersionsAction(
+  layoutId: string,
+  keepCount = 50
+): Promise<void> {
+  try {
+    const totalCount = await prisma.layoutVersion.count({ where: { layoutId } })
+    
+    if (totalCount <= keepCount) return
+
+    const versionsToDelete = await prisma.layoutVersion.findMany({
+      where: { layoutId },
+      orderBy: { version: 'desc' },
+      skip: keepCount,
+      select: { id: true }
+    })
+
+    if (versionsToDelete.length === 0) return
+
+    await prisma.layoutVersion.deleteMany({
+      where: {
+        id: { in: versionsToDelete.map(v => v.id) }
+      }
+    })
+
+    logger.info('[cleanupOldLayoutVersions] Success', { 
+      layoutId, 
+      deletedCount: versionsToDelete.length 
+    })
+  } catch (error) {
+    logger.error('[cleanupOldLayoutVersions] Error', { error, layoutId })
+  }
+}
+
+export async function saveDashboardLayoutWithVersionAction(
+  layouts: DashboardLayout,
+  versionData: {
+    description?: string
+    changeType: 'manual' | 'auto' | 'migration' | 'conflict_resolution'
+    deviceId: string
+  }
+): Promise<SaveLayoutResult> {
+  const userId = await getUserId()
+  
+  if (!userId) {
+    return { success: false, error: 'User not authenticated' }
+  }
+  
+  if (!layouts) {
+    return { success: false, error: 'Layouts data is required' }
+  }
+  
+  if (!validateLayouts(layouts)) {
+    logger.error('[saveDashboardLayoutWithVersion] Validation failed', { userId })
+    return { success: false, error: 'Invalid layout structure' }
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.dashboardLayout.findUnique({
+        where: { userId },
+        select: { id: true, version: true, checksum: true }
+      })
+
+      const newVersion = (existing?.version ?? 0) + 1
+      
+      const crypto = await import('crypto')
+      const checksum = crypto.createHash('sha256')
+        .update(JSON.stringify({ desktop: layouts.desktop, mobile: layouts.mobile }))
+        .digest('hex')
+
+      await tx.dashboardLayout.upsert({
+        where: { userId },
+        update: {
+          desktop: layouts.desktop as unknown as Prisma.JsonArray,
+          mobile: layouts.mobile as unknown as Prisma.JsonArray,
+          version: newVersion,
+          checksum,
+          deviceId: versionData.deviceId,
+          updatedAt: new Date()
+        },
+        create: {
+          userId,
+          desktop: layouts.desktop as unknown as Prisma.JsonArray,
+          mobile: layouts.mobile as unknown as Prisma.JsonArray,
+          version: newVersion,
+          checksum,
+          deviceId: versionData.deviceId
+        },
+      })
+
+      await tx.layoutVersion.create({
+        data: {
+          layoutId: existing?.id || userId,
+          desktop: layouts.desktop as unknown as Prisma.JsonArray,
+          mobile: layouts.mobile as unknown as Prisma.JsonArray,
+          version: newVersion,
+          checksum,
+          description: versionData.description,
+          deviceId: versionData.deviceId,
+          changeType: versionData.changeType
+        }
+      })
+    })
+
+    updateTag(`dashboard-${userId}`)
+    revalidatePath('/')
+    
+    logger.info('[saveDashboardLayoutWithVersion] Success', { userId })
+    return { success: true }
+  } catch (error) {
+    logger.error('[saveDashboardLayoutWithVersion] Error', { error, userId })
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown database error' 
+    }
+  }
+}
+
 export async function groupTradesAction(tradeIds: string[]): Promise<boolean> {
   try {
     const userId = await getUserId()

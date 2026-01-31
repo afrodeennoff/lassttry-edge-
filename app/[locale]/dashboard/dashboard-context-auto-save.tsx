@@ -11,8 +11,6 @@ import { defaultLayouts } from "@/lib/default-layouts"
 import { DashboardLayoutWithWidgets } from '@/store/user-store'
 import { useAutoSave } from '@/hooks/use-auto-save'
 
-// --- Helper Functions (Moved from WidgetCanvas) ---
-
 const toPrismaLayout = (layout: DashboardLayoutWithWidgets): DashboardLayout => {
     return {
         ...layout,
@@ -51,8 +49,6 @@ export const getWidgetGrid = (type: WidgetType, size: WidgetSize, isSmallScreen 
     return sizeToGrid(size)
 }
 
-// --- Context Definition ---
-
 interface DashboardContextType {
     isCustomizing: boolean
     setIsCustomizing: (val: boolean) => void
@@ -61,7 +57,6 @@ interface DashboardContextType {
     currentLayout: Widget[]
     activeLayout: 'desktop' | 'mobile'
 
-    // Actions
     addWidget: (type: WidgetType, size?: WidgetSize) => void
     removeWidget: (id: string) => void
     changeWidgetType: (id: string, newType: WidgetType) => void
@@ -70,10 +65,8 @@ interface DashboardContextType {
     restoreDefaultLayout: () => void
     handleLayoutChange: (layout: LayoutItem[]) => void
 
-    // Helpers
     isMobile: boolean
     
-    // Auto-save status
     autoSaveStatus: {
         hasPending: boolean
         isInitialized: boolean
@@ -109,7 +102,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         hasPendingSave,
         isInitialized,
     } = useAutoSave({
-        saveFunction: async (layout) => {
+        saveFunction: async (layout: DashboardLayout) => {
             const result = await saveDashboardLayout(layout)
             return {
                 success: !result,
@@ -124,6 +117,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         },
         onError: (error) => {
             console.error('[Dashboard] Auto-save failed', { error: error.message })
+            toast.error(t('widgets.saveError'), { 
+                description: error.message 
+            })
         },
         onSaveStart: () => {
             console.log('[Dashboard] Auto-save started')
@@ -179,11 +175,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         if (!userId) {
             console.error('[DashboardContext] addWidget failed: missing user ID')
-            // We can still update local state, but it won't save to DB
         }
 
         const currentItems = layouts[activeLayout]
-        // Prevent adding duplicate widget types
         if (currentItems.some(widget => widget.type === type)) {
             toast.error(t('widgets.duplicate.title'), { description: t('widgets.duplicate.description') })
             return
@@ -203,7 +197,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             type,
             size: effectiveSize,
             x: 0,
-            y: lowestY, // Simple append to bottom
+            y: lowestY,
             w: grid.w,
             h: grid.h
         }
