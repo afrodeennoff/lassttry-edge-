@@ -16,6 +16,7 @@ import { toast } from "sonner"
 interface AddWidgetSheetProps {
   onAddWidget: (type: WidgetType, size?: WidgetSize) => void
   isCustomizing: boolean
+  trigger?: React.ReactNode
 }
 
 interface PreviewCardProps {
@@ -100,7 +101,7 @@ const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(
     const t = useI18n()
     const { isMobile } = useData()
     return (
-      <div 
+      <div
         ref={ref}
         className={cn(
           "cursor-pointer rounded-md relative group m-1 w-full overflow-hidden px-2",
@@ -122,7 +123,7 @@ const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(
 PreviewCard.displayName = "PreviewCard"
 
 export const AddWidgetSheet = forwardRef<HTMLButtonElement, AddWidgetSheetProps>(
-  ({ onAddWidget, isCustomizing }, ref) => {
+  ({ onAddWidget, isCustomizing, trigger }, ref) => {
     const t = useI18n()
     const { isMobile } = useData()
     const [isOpen, setIsOpen] = React.useState(false)
@@ -147,13 +148,13 @@ export const AddWidgetSheet = forwardRef<HTMLButtonElement, AddWidgetSheetProps>
       setLoadedItems(prev => {
         const newSet = new Set(prev)
         newSet.add(index)
-        
+
         // Load next batch when current batch is loaded
         if (newSet.size > 0 && newSet.size % 3 === 0) {
           const nextBatch = Array.from({ length: 3 }, (_, i) => newSet.size + i)
           nextBatch.forEach(i => newSet.add(i))
         }
-        
+
         return newSet
       })
     }, [])
@@ -206,21 +207,23 @@ export const AddWidgetSheet = forwardRef<HTMLButtonElement, AddWidgetSheetProps>
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button
-            ref={ref}
-            variant="ghost"
-            className={cn(
-              "h-10 rounded-full flex items-center justify-center transition-transform active:scale-95",
-              isMobile ? "w-10 p-0" : "min-w-[120px] gap-3 px-4"
-            )}
-          >
-            <Plus className="h-4 w-4 shrink-0" />
-            {!isMobile && (
-              <span className="text-sm font-medium">
-                {t('widgets.addWidget')}
-              </span>
-            )}
-          </Button>
+          {trigger || (
+            <Button
+              ref={ref}
+              variant="ghost"
+              className={cn(
+                "h-10 rounded-full flex items-center justify-center transition-transform active:scale-95",
+                isMobile ? "w-10 p-0" : "min-w-[120px] gap-3 px-4"
+              )}
+            >
+              <Plus className="h-4 w-4 shrink-0" />
+              {!isMobile && (
+                <span className="text-sm font-medium">
+                  {t('widgets.addWidget')}
+                </span>
+              )}
+            </Button>
+          )}
         </SheetTrigger>
         <SheetContent side="right" className="w-[90vw] sm:max-w-[640px] flex flex-col h-dvh overflow-hidden">
           <SheetHeader>

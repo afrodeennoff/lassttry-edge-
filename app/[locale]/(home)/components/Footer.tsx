@@ -1,4 +1,6 @@
 
+"use client"
+
 import React from 'react';
 
 const Footer: React.FC = () => {
@@ -6,8 +8,8 @@ const Footer: React.FC = () => {
         <footer className="py-12 px-6 border-t border-white/5 bg-[#050505]">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center font-bold text-black text-xs">D</div>
-                    <span className="text-sm font-bold tracking-tighter uppercase mono">Deltalytix</span>
+                    <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center font-bold text-black text-xs">Q</div>
+                    <span className="text-sm font-bold tracking-tighter uppercase mono">Qunt Edge</span>
                 </div>
 
                 <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
@@ -18,7 +20,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 <div className="text-[10px] mono text-zinc-600">
-                    © {new Date().getFullYear()} Deltalytix. All rights reserved. Professional trading analytics.
+                    © {new Date().getFullYear()} Qunt Edge. All rights reserved. Professional trading analytics.
                 </div>
             </div>
         </footer>
