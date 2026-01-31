@@ -39,10 +39,11 @@ export function useSubscription() {
 
   useEffect(() => {
     let mounted = true
+    let channel: any = null
 
     async function fetchSubscription() {
       try {
-        setLoading(true)
+        if (mounted) setLoading(true)
         setError(null)
 
         const {
@@ -55,6 +56,25 @@ export function useSubscription() {
             setLoading(false)
           }
           return
+        }
+
+        // Setup real-time listener once we have the user
+        if (!channel && mounted) {
+          channel = supabase
+            .channel('subscription-changes')
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'Subscription',
+                filter: `userId=eq.${user.id}`,
+              },
+              () => {
+                fetchSubscription()
+              }
+            )
+            .subscribe()
         }
 
         const response = await fetch('/api/subscription/details', {
@@ -119,25 +139,11 @@ export function useSubscription() {
 
     fetchSubscription()
 
-    const channel = supabase
-      .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'Subscription',
-          filter: `userId=eq.${(await supabase.auth.getUser()).data.user?.id}`,
-        },
-        () => {
-          fetchSubscription()
-        }
-      )
-      .subscribe()
-
     return () => {
       mounted = false
-      channel.unsubscribe()
+      if (channel) {
+        channel.unsubscribe()
+      }
     }
   }, [supabase])
 
