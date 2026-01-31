@@ -3,7 +3,7 @@ import { whop } from '@/lib/whop'
 import { createClient } from '@/server/auth'
 import { logger } from '@/lib/logger'
 import crypto from 'crypto'
-import { PromotionType } from '@/prisma/generated/prisma'
+import { PromotionType, TransactionStatus, TransactionType, InvoiceStatus } from '@/prisma/generated/prisma'
 
 export interface PlanConfig {
   id: string
@@ -179,8 +179,8 @@ export class PaymentService {
     whopMembershipId?: string
     amount: number
     currency?: string
-    type?: 'SUBSCRIPTION' | 'ONE_TIME' | 'REFUND'
-    status?: 'PENDING' | 'COMPLETED' | 'FAILED'
+    type?: TransactionType
+    status?: TransactionStatus
     metadata?: Record<string, any>
   }): Promise<{ success: boolean; transactionId?: string; error?: string }> {
     try {
@@ -192,8 +192,8 @@ export class PaymentService {
           whopMembershipId: data.whopMembershipId,
           amount: data.amount,
           currency: data.currency || 'USD',
-          type: data.type || 'SUBSCRIPTION',
-          status: data.status || 'PENDING',
+          type: data.type || TransactionType.SUBSCRIPTION,
+          status: data.status || TransactionStatus.PENDING,
           metadata: data.metadata || {},
         },
       })
@@ -307,7 +307,7 @@ export class PaymentService {
   async getTransactionHistory(userId: string, options?: {
     limit?: number
     offset?: number
-    status?: string
+    status?: TransactionStatus | string
   }): Promise<{
     success: boolean
     transactions?: any[]
@@ -317,7 +317,7 @@ export class PaymentService {
       const transactions = await prisma.paymentTransaction.findMany({
         where: {
           userId,
-          ...(options?.status && { status: options.status }),
+          ...(options?.status && { status: options.status as TransactionStatus }),
         },
         orderBy: { createdAt: 'desc' },
         take: options?.limit || 50,
@@ -334,7 +334,7 @@ export class PaymentService {
   async getInvoices(userId: string, options?: {
     limit?: number
     offset?: number
-    status?: string
+    status?: InvoiceStatus | string
   }): Promise<{
     success: boolean
     invoices?: any[]
@@ -344,7 +344,7 @@ export class PaymentService {
       const invoices = await prisma.invoice.findMany({
         where: {
           userId,
-          ...(options?.status && { status: options.status }),
+          ...(options?.status && { status: options.status as InvoiceStatus }),
         },
         orderBy: { createdAt: 'desc' },
         take: options?.limit || 50,
