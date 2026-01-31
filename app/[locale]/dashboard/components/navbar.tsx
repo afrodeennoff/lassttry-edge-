@@ -3,14 +3,11 @@
 import { useState } from 'react'
 import {
   Pencil,
-  Share2,
   Plus,
-  Search,
   RefreshCw,
-  Upload,
-  Zap,
   Sparkles,
-  LayoutDashboard
+  LayoutDashboard,
+  Settings2
 } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -21,9 +18,6 @@ import { useKeyboardShortcuts } from '../../../../hooks/use-keyboard-shortcuts'
 import { ActiveFilterTags } from './filters/active-filter-tags'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FilterCommandMenu } from './filters/filter-command-menu'
-import { useModalStateStore } from '@/store/modal-state-store'
-import { useUserStore } from '@/store/user-store'
-import ReferralButton from '@/components/referral-button'
 import { useDashboard } from '../dashboard-context'
 import { AddWidgetSheet } from './add-widget-sheet'
 import { ShareButton } from './share-button'
@@ -31,6 +25,7 @@ import { useData } from '@/context/data-provider'
 import { cn } from '@/lib/utils'
 import { DailySummaryModal } from './daily-summary-modal'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { PnLSummary } from './pnl-summary'
 
 export default function Navbar() {
   const t = useI18n()
@@ -40,7 +35,7 @@ export default function Navbar() {
     addWidget,
     layouts
   } = useDashboard()
-  const { refreshAllData, isPlusUser } = useData()
+  const { refreshAllData, isPlusUser, isLoading } = useData()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleRefresh = async () => {
@@ -55,45 +50,53 @@ export default function Navbar() {
   const currentLayout = layouts || { desktop: [], mobile: [] }
 
   return (
-    <>
-      <nav className="sticky top-0 left-0 right-0 flex flex-col z-40 glass border-b border-border-subtle shadow-lg transition-all duration-300">
-        <div className="flex items-center justify-between px-4 sm:px-6 h-16">
+    <div className="sticky top-0 z-40 w-full px-4 py-3 pointer-events-none">
+      <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="pointer-events-auto flex flex-col glass rounded-[2rem] border border-white/10 shadow-2xl transition-all duration-500 hover:shadow-accent-teal/5"
+      >
+        <div className="flex items-center justify-between px-4 sm:px-6 h-14">
 
           {/* Left Side: Sidebar Toggle & Brand */}
           <div className="flex items-center gap-4">
-            <SidebarTrigger className="-ml-1 text-fg-muted hover:text-fg-primary hover:bg-glass transition-colors" />
-            <div className="h-4 w-px bg-border-subtle hidden lg:block" />
+            <SidebarTrigger className="-ml-1 text-fg-muted hover:text-fg-primary hover:bg-white/5 transition-all rounded-xl" />
+            <div className="h-4 w-px bg-white/10 hidden lg:block" />
+
             <Link href="/dashboard" className="flex items-center gap-3 group/logo">
-              <div className="relative overflow-hidden flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/20 transition-all duration-500 group-hover/logo:scale-110 group-hover/logo:rotate-3">
+              <div className="relative overflow-hidden flex aspect-square size-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent-teal to-accent-teal-hover shadow-lg shadow-accent-teal/20 transition-all duration-500 group-hover/logo:scale-110 group-hover/logo:rotate-3">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.4),transparent)] opacity-50" />
-                <Logo className="size-4 fill-white relative z-10" />
+                <Logo className="size-4.5 fill-white relative z-10" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-100 select-none group-hover/logo:text-white transition-colors">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-fg-primary select-none group-hover/logo:text-accent-teal transition-colors">
                   QuntEdge
                 </span>
-                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-zinc-500 select-none">
+                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-fg-muted select-none">
                   Analytics
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Right Side: Actions */}
-          <div className="flex items-center gap-3">
+          {/* Center: PnL Metrics (Desktop Only) */}
+          <PnLSummary />
 
-            {/* Dashboard Management Group */}
-            <div className="hidden lg:flex items-center gap-1.5 p-1 bg-glass-subtle rounded-2xl border border-border-subtle backdrop-blur-glass">
+          {/* Right Side: Actions */}
+          <div className="flex items-center gap-2">
+
+            {/* Config Group */}
+            <div className="hidden md:flex items-center gap-1.5 p-1 bg-white/5 rounded-2xl border border-white/5">
               <Button
                 id="customize-mode"
-                variant={isCustomizing ? "default" : "ghost"}
+                variant="ghost"
                 size="sm"
                 onClick={toggleCustomizing}
                 className={cn(
                   "h-8 px-3 gap-2 rounded-xl transition-all duration-300",
                   isCustomizing
-                    ? "bg-fg-primary text-bg-base hover:bg-neutral-200"
-                    : "text-fg-muted hover:text-fg-primary hover:bg-glass-subtle"
+                    ? "bg-accent-teal text-white hover:bg-accent-teal-hover"
+                    : "text-fg-muted hover:text-fg-primary hover:bg-white/5"
                 )}
               >
                 <Pencil className={cn("w-3.5 h-3.5", isCustomizing && "animate-pulse")} />
@@ -102,7 +105,7 @@ export default function Navbar() {
 
               <AddWidgetSheet onAddWidget={addWidget} isCustomizing={isCustomizing} />
 
-              <div className="w-px h-4 bg-border-subtle mx-1" />
+              <div className="w-px h-4 bg-white/10 mx-1" />
 
               <ShareButton currentLayout={currentLayout} />
             </div>
@@ -111,12 +114,12 @@ export default function Navbar() {
             <div className="flex items-center gap-1.5">
               <FilterCommandMenu variant="navbar" />
 
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <ImportButton />
 
                 {!isPlusUser() && (
                   <Link href="/dashboard/billing">
-                    <Button variant="outline" size="sm" className="h-9 px-4 gap-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-transparent border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest hover:border-amber-500/60 hover:from-amber-500/30 transition-all duration-500 shadow-[0_0_15px_-5px_rgba(245,158,11,0.3)]">
+                    <Button variant="outline" size="sm" className="h-8 px-4 gap-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-transparent border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest hover:border-amber-500/60 hover:from-amber-500/30 transition-all duration-500 shadow-[0_0_15px_-5px_rgba(245,158,11,0.3)]">
                       <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                       <span>Upgrade</span>
                     </Button>
@@ -127,15 +130,16 @@ export default function Navbar() {
               <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
 
               {/* Real-time Actions */}
-              <div className="flex items-center gap-2 bg-zinc-950/40 p-1 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-2xl border border-white/5">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleRefresh}
-                  className="h-8 w-8 rounded-xl text-fg-muted hover:text-fg-primary hover:bg-glass-subtle transition-all active:scale-95"
+                  disabled={isLoading}
+                  className="h-8 w-8 rounded-xl text-fg-muted hover:text-fg-primary hover:bg-white/5 transition-all active:scale-95"
                   title="Manual Refresh"
                 >
-                  <RefreshCw className={cn("w-3.5 h-3.5 transition-transform duration-700", isRefreshing && "animate-spin-fast")} />
+                  <RefreshCw className={cn("w-3.5 h-3.5 transition-transform duration-700", (isRefreshing || isLoading) && "animate-spin")} />
                 </Button>
                 <DailySummaryModal />
               </div>
@@ -146,9 +150,11 @@ export default function Navbar() {
 
         {/* Dynamic Filters Bar */}
         <AnimatePresence>
-          <ActiveFilterTags showAccountNumbers={true} />
+          <div className="px-6 flex flex-wrap gap-2">
+            <ActiveFilterTags showAccountNumbers={true} />
+          </div>
         </AnimatePresence>
-      </nav>
-    </>
+      </motion.nav>
+    </div>
   )
 }
