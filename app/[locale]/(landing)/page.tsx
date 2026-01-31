@@ -5,6 +5,9 @@ import Partners from "./components/partners";
 import FAQ from "./components/faq";
 import { setStaticParamsLocale } from "next-international/server";
 import Hero from "./components/hero";
+import HowItWorks from "./components/how-it-works";
+import ProblemStatement from "./components/problem-statement";
+import Qualification from "./components/qualification";
 import { getStaticParams } from "@/locales/server";
 
 export function generateStaticParams() {
@@ -20,10 +23,10 @@ export default async function LandingPage({
   setStaticParamsLocale(locale);
 
   return (
-    <main className="flex flex-col sm:gap-28">
-      <section id="" className="w-full py-14 md:py-12 lg:py-16 xl:py-24">
-        <Hero />
-      </section>
+    <main className="flex flex-col">
+      <Hero />
+      <ProblemStatement />
+      <HowItWorks />
       <section
         id="partners"
         className="w-full"
@@ -36,6 +39,7 @@ export default async function LandingPage({
       >
         <Features />
       </section>
+      <Qualification />
       <section
         id="pricing"
         className="w-full"

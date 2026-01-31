@@ -1,40 +1,16 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+'use client'
+import React from 'react';
 
 export default function Loading() {
   return (
-    <div className="container max-w-4xl py-8">
-      <div className="space-y-8">
-        <Card>
-          <CardHeader className="flex-row items-start justify-between space-y-0">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <Skeleton className="h-6 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-[90%]" />
-              <Skeleton className="h-4 w-[80%]" />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between border-t pt-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <Skeleton className="h-8 w-24" />
-            </div>
-          </CardFooter>
-        </Card>
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center z-50">
+      <div className="relative w-16 h-16 mb-8">
+        <div className="absolute inset-0 border-t-2 border-teal-500 rounded-full animate-spin"></div>
+        <div className="absolute inset-2 border-r-2 border-zinc-700 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+      </div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 animate-pulse">
+        Initializing Qunt Edge
       </div>
     </div>
-  )
-} 
+  );
+}
