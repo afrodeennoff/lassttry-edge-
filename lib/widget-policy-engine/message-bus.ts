@@ -113,7 +113,7 @@ export class WidgetMessageBus {
   async subscribeWithValidation(
     subscription: Omit<MessageSubscription, 'subscriberId'>,
     validationFn: (message: WidgetMessage) => boolean | Promise<boolean>
-  ): string {
+  ): Promise<string> {
     const wrappedCallback = async (message: WidgetMessage) => {
       const isValid = await validationFn(message)
       if (isValid) {

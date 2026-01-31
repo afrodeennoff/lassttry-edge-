@@ -48,6 +48,12 @@ model User {
   synchronizations      Synchronization[]
   tags                  Tag[]
   votes                 Vote[]
+  paymentTransactions   PaymentTransaction[]
+  invoices              Invoice[]
+  refunds               Refund[]
+  subscriptionEvents    SubscriptionEvent[]
+  paymentMethods        PaymentMethod[]
+  usageMetrics          UsageMetric[]
 
   @@index([email])
   @@schema("public")
@@ -863,6 +869,298 @@ enum MemberRole {
   TRADER
   ANALYST
   VIEWER
+
+  @@schema("public")
+}
+
+// ============================================================================
+// PAYMENT & BILLING SYSTEM
+// ============================================================================
+
+model PaymentTransaction {
+  id                String   @id @default(uuid())
+  userId            String
+  email             String
+  
+  whopTransactionId String   @unique
+  whopMembershipId  String?
+  
+  amount            Float
+  currency          String   @default("USD")
+  status            TransactionStatus @default(PENDING)
+  
+  type              TransactionType @default(SUBSCRIPTION)
+  
+  metadata          Json?
+  errorMessage      String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([email])
+  @@index([whopTransactionId])
+  @@index([status])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model Invoice {
+  id                String   @id @default(uuid())
+  userId            String
+  email             String
+  
+  whopInvoiceId     String   @unique
+  whopMembershipId  String?
+  
+  amountDue         Float
+  amountPaid        Float    @default(0)
+  currency          String   @default("USD")
+  status            InvoiceStatus @default(DRAFT)
+  
+  dueDate           DateTime?
+  paidAt            DateTime?
+  
+  lines             Json     @default("[]")
+  
+  invoicePdf        String?
+  hostedInvoiceUrl  String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([email])
+  @@index([whopInvoiceId])
+  @@index([status])
+  @@index([dueDate])
+  @@schema("public")
+}
+
+model Refund {
+  id                String   @id @default(uuid())
+  userId            String
+  email             String
+  
+  whopRefundId      String   @unique
+  whopPaymentId     String
+  
+  transactionId     String
+  amount            Float
+  currency          String   @default("USD")
+  status            RefundStatus @default(PENDING)
+  
+  reason            String?
+  metadata          Json?
+  
+  processedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([email])
+  @@index([whopRefundId])
+  @@index([status])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model SubscriptionEvent {
+  id              String   @id @default(uuid())
+  userId          String
+  email           String
+  
+  subscriptionId  String
+  eventType       SubscriptionEventType
+  eventData       Json
+  
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([email])
+  @@index([subscriptionId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model PaymentMethod {
+  id              String   @id @default(uuid())
+  userId          String
+  email           String
+  
+  whopMethodId    String   @unique
+  
+  type            String
+  last4           String?
+  brand           String?
+  expiryMonth     Int?
+  expiryYear      Int?
+  
+  isDefault       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([email])
+  @@index([whopMethodId])
+  @@schema("public")
+}
+
+model Promotion {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  
+  type            PromotionType
+  value           Float
+  
+  durationType    DurationType
+  durationInMonths Int?
+  
+  maxRedemptions  Int?
+  currentRedemptions Int   @default(0)
+  
+  planRestrictions String[] @default([])
+  
+  validFrom       DateTime
+  validUntil      DateTime?
+  
+  isActive        Boolean  @default(true)
+  
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([code])
+  @@index([isActive])
+  @@index([validFrom, validUntil])
+  @@schema("public")
+}
+
+model UsageMetric {
+  id              String   @id @default(uuid())
+  userId          String
+  email           String
+  
+  metricType      String
+  metricValue     Float
+  
+  periodStart     DateTime
+  periodEnd       DateTime
+  
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([email])
+  @@index([metricType])
+  @@index([periodStart, periodEnd])
+  @@unique([userId, metricType, periodStart])
+  @@schema("public")
+}
+
+model ProcessedWebhook {
+  id          String   @id @default(uuid())
+  webhookId   String
+  type        String
+  processedAt DateTime @default(now())
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@unique([webhookId, type])
+  @@index([processedAt])
+  @@index([type])
+  @@schema("public")
+}
+
+// ============================================================================
+// PAYMENT ENUMS
+// ============================================================================
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+
+  @@schema("public")
+}
+
+enum TransactionType {
+  SUBSCRIPTION
+  ONE_TIME
+  REFUND
+  CHARGEBACK
+  ADJUSTMENT
+
+  @@schema("public")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+
+  @@schema("public")
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+
+  @@schema("public")
+}
+
+enum SubscriptionEventType {
+  CREATED
+  ACTIVATED
+  DEACTIVATED
+  CANCELLED
+  TRIAL_STARTED
+  TRIAL_ENDED
+  PLAN_UPGRADED
+  PLAN_DOWNGRADED
+  RENEWED
+  PAYMENT_FAILED
+  PAYMENT_SUCCEEDED
+  REFUND_INITIATED
+  REFUND_PROCESSED
+  GRACE_PERIOD_STARTED
+  GRACE_PERIOD_ENDED
+
+  @@schema("public")
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_TRIAL
+
+  @@schema("public")
+}
+
+enum DurationType {
+  ONCE
+  FOREVER
+  REPEATING
 
   @@schema("public")
 }

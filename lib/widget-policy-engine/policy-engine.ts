@@ -5,6 +5,7 @@ import {
   RiskLevel,
   SeverityTier,
   WidgetPolicyManifest,
+  RiskAssessment,
 } from './types'
 import { RiskScoreCalculator } from './risk-calculator'
 import { DecisionEngine } from './decision-engine'
