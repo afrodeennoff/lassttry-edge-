@@ -1,4 +1,4 @@
-import Ajv from 'ajv'
+import Ajv, { type ValidateFunction } from 'ajv'
 import addFormats from 'ajv-formats'
 import manifestSchema from '../../schemas/widget-policy-manifest.schema.json'
 import inputSchema from '../../schemas/widget-input.schema.json'
@@ -7,9 +7,9 @@ import { WidgetPolicyManifest } from './types'
 
 export class SchemaValidator {
   private ajv: Ajv
-  private manifestValidator: Ajv.ValidateFunction
-  private inputValidator: Ajv.ValidateFunction
-  private outputValidator: Ajv.ValidateFunction
+  private manifestValidator: ValidateFunction
+  private inputValidator: ValidateFunction
+  private outputValidator: ValidateFunction
 
   constructor() {
     this.ajv = new Ajv({
@@ -191,7 +191,7 @@ export interface ValidationError {
   path: string
   message: string
   keyword: string
-  params: Record<string, unknown>
+  params: any
 }
 
 export interface BatchValidationResult {
