@@ -56,13 +56,13 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 flex flex-col z-40 bg-background/60 backdrop-blur-xl border-b border-white/5 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.5)] transition-all duration-300">
+      <nav className="sticky top-0 left-0 right-0 flex flex-col z-40 glass border-b border-border-subtle shadow-lg transition-all duration-300">
         <div className="flex items-center justify-between px-4 sm:px-6 h-16">
 
           {/* Left Side: Sidebar Toggle & Brand */}
           <div className="flex items-center gap-4">
-            <SidebarTrigger className="-ml-1 text-zinc-400 hover:text-foreground hover:bg-white/5 transition-colors" />
-            <div className="h-4 w-px bg-white/10 hidden lg:block" />
+            <SidebarTrigger className="-ml-1 text-fg-muted hover:text-fg-primary hover:bg-glass transition-colors" />
+            <div className="h-4 w-px bg-border-subtle hidden lg:block" />
             <Link href="/dashboard" className="flex items-center gap-3 group/logo">
               <div className="relative overflow-hidden flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/20 transition-all duration-500 group-hover/logo:scale-110 group-hover/logo:rotate-3">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.4),transparent)] opacity-50" />
@@ -83,7 +83,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
 
             {/* Dashboard Management Group */}
-            <div className="hidden lg:flex items-center gap-1.5 p-1 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-md">
+            <div className="hidden lg:flex items-center gap-1.5 p-1 bg-glass-subtle rounded-2xl border border-border-subtle backdrop-blur-glass">
               <Button
                 id="customize-mode"
                 variant={isCustomizing ? "default" : "ghost"}
@@ -92,8 +92,8 @@ export default function Navbar() {
                 className={cn(
                   "h-8 px-3 gap-2 rounded-xl transition-all duration-300",
                   isCustomizing
-                    ? "bg-white text-black hover:bg-zinc-200"
-                    : "text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
+                    ? "bg-fg-primary text-bg-base hover:bg-neutral-200"
+                    : "text-fg-muted hover:text-fg-primary hover:bg-glass-subtle"
                 )}
               >
                 <Pencil className={cn("w-3.5 h-3.5", isCustomizing && "animate-pulse")} />
@@ -102,7 +102,7 @@ export default function Navbar() {
 
               <AddWidgetSheet onAddWidget={addWidget} isCustomizing={isCustomizing} />
 
-              <div className="w-px h-4 bg-white/10 mx-1" />
+              <div className="w-px h-4 bg-border-subtle mx-1" />
 
               <ShareButton currentLayout={currentLayout} />
             </div>
@@ -132,7 +132,7 @@ export default function Navbar() {
                   variant="ghost"
                   size="icon"
                   onClick={handleRefresh}
-                  className="h-8 w-8 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                  className="h-8 w-8 rounded-xl text-fg-muted hover:text-fg-primary hover:bg-glass-subtle transition-all active:scale-95"
                   title="Manual Refresh"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5 transition-transform duration-700", isRefreshing && "animate-spin-fast")} />
