@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { useUserStore } from "@/store/user-store"
 import { useTradesStore } from "@/store/trades-store"
 import { useFinancialEventsStore } from "@/store/financial-events-store"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 type ImpactLevel = "low" | "medium" | "high"
 
@@ -120,7 +121,7 @@ export function MindsetSummary({
             <div 
               key={journalContent}
               className="prose prose-sm dark:prose-invert max-w-none [&_.ProseMirror]:outline-hidden [&_.ProseMirror]:relative [&_.ProseMirror]:h-full"
-              dangerouslySetInnerHTML={{ __html: journalContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(journalContent) }}
             />
           )}
         </div>

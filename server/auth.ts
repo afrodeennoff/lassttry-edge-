@@ -365,16 +365,12 @@ export async function setPasswordAction(newPassword: string) {
  *   unexpected errors. NEXT_REDIRECT errors are re-thrown to allow Next.js redirects.
  */
 export async function ensureUserInDatabase(user: User, locale?: string) {
-  console.log('[ensureUserInDatabase] Starting with user:', { id: user?.id, email: user?.email });
-  
   if (!user) {
-    console.log('[ensureUserInDatabase] ERROR: No user provided');
     await signOut();
     throw new Error('User data is required');
   }
 
   if (!user.id) {
-    console.log('[ensureUserInDatabase] ERROR: No user ID provided');
     await signOut();
     throw new Error('User ID is required');
   }

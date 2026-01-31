@@ -20,7 +20,11 @@ model User {
   isBeta           Boolean             @default(false)
   language         String              @default("en")
   etpToken         String?
+  etpTokenHash     String?             @unique
+  etpTokenExpiresAt DateTime?
   thorToken        String?
+  thorTokenHash     String?            @unique
+  thorTokenExpiresAt DateTime?
   referral         Referral?
   subscription     Subscription?
   dashboardLayout  DashboardLayout?
