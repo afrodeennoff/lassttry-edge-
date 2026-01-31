@@ -19,6 +19,7 @@ import { useAutoScroll } from '../../../../hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
 import { Widget, WidgetType, WidgetSize } from '../types/dashboard'
 import { useDashboard, sizeToGrid, getWidgetGrid } from '../dashboard-context'
+import { motion } from 'framer-motion'
 
 // Add a function to pre-calculate widget dimensions
 function getWidgetDimensions(widget: Widget, isMobile: boolean) {
@@ -125,17 +126,20 @@ function WidgetWrapper({ children, onRemove, onChangeSize, isCustomizing, size, 
   }
 
   return (
-    <div
-      ref={widgetRef}
-      className="relative h-full w-full rounded-lg bg-background shadow-[0_2px_4px_rgba(0,0,0,0.05)] group isolate animate-[fadeIn_1.5s_ease-in-out] overflow-clip"
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="relative h-full w-full rounded-2xl bg-card/40 backdrop-blur-md border border-white/5 shadow-2xl group isolate overflow-clip premium-glow-hover transition-all duration-300"
       onTouchStart={handleTouchStart}
     >
-      <div className={cn("h-full w-full",
-        isCustomizing && "group-hover:blur-[2px]",
-        isCustomizing && isMobile && "blur-[2px]"
+      <div className={cn("h-full w-full transition-all duration-500",
+        isCustomizing && "group-hover:blur-[4px] scale-[0.98]",
+        isCustomizing && isMobile && "blur-[4px] scale-[0.98]"
       )}>
         {children}
       </div>
+
       {isCustomizing && (
         <>
           <div className="absolute inset-0 border-2 border-dashed border-transparent hover:border-accent transition-colors duration-200 pointer-events-none" />
@@ -203,7 +207,7 @@ function WidgetWrapper({ children, onRemove, onChangeSize, isCustomizing, size, 
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   )
 }
 

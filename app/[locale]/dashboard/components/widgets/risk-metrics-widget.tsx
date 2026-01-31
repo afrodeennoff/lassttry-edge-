@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 import { useData } from "@/context/data-provider"
 import { calculateAdvancedMetrics } from "@/lib/advanced-metrics"
 import { Info, ShieldAlert } from "lucide-react"
@@ -33,10 +33,10 @@ export default function RiskMetricsWidget({ size = 'medium' }: { size?: 'tiny' |
     const neutralColor = "text-muted-foreground"
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardHeader
+        <div className="h-full flex flex-col bg-transparent">
+            <div
                 className={cn(
-                    "flex-none border-b",
+                    "flex-none border-b border-white/5",
                     size === 'tiny'
                         ? "py-1 px-2"
                         : (size === 'small' || size === 'small-long')
@@ -46,9 +46,9 @@ export default function RiskMetricsWidget({ size = 'medium' }: { size?: 'tiny' |
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <CardTitle
+                        <span
                             className={cn(
-                                "line-clamp-1",
+                                "line-clamp-1 font-bold tracking-tight text-fg-primary",
                                 size === 'tiny'
                                     ? "text-xs"
                                     : (size === 'small' || size === 'small-long')
@@ -57,45 +57,45 @@ export default function RiskMetricsWidget({ size = 'medium' }: { size?: 'tiny' |
                             )}
                         >
                             {t('widgets.riskMetrics.title')}
-                        </CardTitle>
+                        </span>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <Info className="h-3.5 w-3.5 text-fg-muted" />
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>{t('widgets.riskMetrics.tooltip')}</p>
+                                    <p className="text-xs">{t('widgets.riskMetrics.tooltip')}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
-                    <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground" />
+                    <ShieldAlert className="h-4 w-4 text-fg-muted" />
                 </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-0">
+            </div>
+            <div className="flex-1 p-0 overflow-hidden">
                 <div className="grid h-full grid-cols-2">
                     {/* Return Risk Ratios */}
                     <div className={cn(
-                        "flex flex-col border-r border-b",
-                        size === 'tiny' ? "p-1.5" : "p-3"
+                        "flex flex-col border-r border-b border-white/5",
+                        size === 'tiny' ? "p-1.5" : "p-4"
                     )}>
-                        <h3 className="text-xs font-medium mb-1.5 text-muted-foreground">Ratios</h3>
-                        <div className="flex-1 flex flex-col justify-center gap-1.5">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest mb-3 text-fg-muted">Ratios</h3>
+                        <div className="flex-1 flex flex-col justify-center gap-2.5">
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Sharpe</span>
-                                <span className={cn("text-xs font-medium font-mono", sharpeRatio > 1 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs">Sharpe</span>
+                                <span className={cn("text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-md", sharpeRatio > 1 ? "text-accent-teal bg-accent-teal/10" : "text-rose-500 bg-rose-500/10")}>
                                     {sharpeRatio.toFixed(2)}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Sortino</span>
-                                <span className={cn("text-xs font-medium font-mono", sortinoRatio > 1.5 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs">Sortino</span>
+                                <span className={cn("text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-md", sortinoRatio > 1.5 ? "text-accent-teal bg-accent-teal/10" : "text-rose-500 bg-rose-500/10")}>
                                     {sortinoRatio.toFixed(2)}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Calmar</span>
-                                <span className={cn("text-xs font-medium font-mono", calmarRatio > 1 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs">Calmar</span>
+                                <span className={cn("text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-md", calmarRatio > 1 ? "text-accent-teal bg-accent-teal/10" : "text-rose-500 bg-rose-500/10")}>
                                     {calmarRatio.toFixed(2)}
                                 </span>
                             </div>
@@ -104,26 +104,26 @@ export default function RiskMetricsWidget({ size = 'medium' }: { size?: 'tiny' |
 
                     {/* Position Sizing */}
                     <div className={cn(
-                        "flex flex-col border-b",
-                        size === 'tiny' ? "p-1.5" : "p-3"
+                        "flex flex-col border-b border-white/5",
+                        size === 'tiny' ? "p-1.5" : "p-4"
                     )}>
-                        <h3 className="text-xs font-medium mb-1.5 text-muted-foreground">Position Sizing</h3>
-                        <div className="flex-1 flex flex-col justify-center gap-1.5">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest mb-3 text-fg-muted">Position Sizing</h3>
+                        <div className="flex-1 flex flex-col justify-center gap-2.5">
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Kelly (Half)</span>
-                                <span className={cn("text-xs font-medium font-mono", kellyHalf > 0 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs text-balance">Kelly Half</span>
+                                <span className={cn("text-xs font-bold tabular-nums", kellyHalf > 0 ? "text-accent-teal" : "text-rose-500")}>
                                     {(kellyHalf * 100).toFixed(1)}%
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Optimal</span>
-                                <span className={cn("text-xs font-medium font-mono", kellyFull > 0 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs">Optimal</span>
+                                <span className={cn("text-xs font-bold tabular-nums", kellyFull > 0 ? "text-accent-teal" : "text-rose-500")}>
                                     {(kellyFull * 100).toFixed(1)}%
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground text-xs">Conservative</span>
-                                <span className={cn("text-xs font-medium font-mono", kellyHalf > 0 ? goodColor : badColor)}>
+                                <span className="text-fg-secondary text-xs">Conservative</span>
+                                <span className={cn("text-xs font-bold tabular-nums", kellyHalf > 0 ? "text-accent-teal" : "text-rose-500")}>
                                     {((kellyHalf / 2) * 100).toFixed(1)}%
                                 </span>
                             </div>
@@ -133,22 +133,22 @@ export default function RiskMetricsWidget({ size = 'medium' }: { size?: 'tiny' |
                     {/* Drawdown Section */}
                     <div className={cn(
                         "flex flex-col col-span-2",
-                        size === 'tiny' ? "p-1.5" : "p-3"
+                        size === 'tiny' ? "p-1.5" : "p-4"
                     )}>
-                        <h3 className="text-xs font-medium mb-1.5 text-muted-foreground">Drawdown Analysis</h3>
-                        <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground text-xs">Max Drawdown</span>
-                            <span className="text-sm font-bold font-mono text-red-500">
-                                {formatCurrency(maxDrawdown)}
-                            </span>
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="flex flex-col">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-fg-muted">Max Drawdown</h3>
+                                <span className="text-xl font-black tabular-nums text-rose-500">
+                                    {formatCurrency(maxDrawdown)}
+                                </span>
+                            </div>
                         </div>
-                        {/* Placeholder for future drawdown recovery metrics */}
-                        <div className="mt-2 w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-red-500/50 w-full" />
+                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-rose-500/50 w-full animate-shimmer" />
                         </div>
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }

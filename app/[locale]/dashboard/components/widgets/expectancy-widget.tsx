@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 import { useData } from "@/context/data-provider"
 import { calculateAdvancedMetrics } from "@/lib/advanced-metrics"
 import { Info, Target } from "lucide-react"
@@ -18,41 +18,45 @@ export default function ExpectancyWidget({ size }: { size?: string }) {
     const formattedExpectancy = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(expectancy)
 
     return (
-        <Card className="h-full flex flex-col">
-            <CardHeader className="py-3 px-4 flex-none border-b">
+        <div className="h-full flex flex-col bg-transparent">
+            <div className="py-3 px-4 flex-none border-b border-white/5">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{t('widgets.expectancy.title')}</CardTitle>
+                        <span className="text-sm font-bold tracking-tight text-fg-primary">{t('widgets.expectancy.title')}</span>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <Info className="h-3.5 w-3.5 text-fg-muted" />
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>{t('widgets.expectancy.tooltip')}</p>
+                                    <p className="text-xs">{t('widgets.expectancy.tooltip')}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
-                    <Target className="h-4 w-4 text-muted-foreground" />
+                    <Target className="h-4 w-4 text-fg-muted" />
                 </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col items-center justify-center p-4">
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center p-4">
                 <div className="flex flex-col items-center justify-center">
-                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-2">Expected Value Per Trade</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-fg-muted mb-4">Value Per Trade</span>
                     <div className={cn(
-                        "text-4xl font-bold tracking-tighter tabular-nums",
-                        expectancy > 0 ? "text-emerald-500" : expectancy < 0 ? "text-red-500" : "text-muted-foreground"
+                        "text-4xl font-black tracking-tighter tabular-nums drop-shadow-2xl",
+                        expectancy > 0 ? "text-accent-teal" : expectancy < 0 ? "text-rose-500" : "text-fg-muted"
                     )}>
                         {expectancy > 0 ? '+' : ''}{formattedExpectancy}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-4 text-center max-w-[200px]">
-                        {expectancy > 0
-                            ? "Your strategy has a positive edge. Keep executing consistently."
-                            : "Your strategy currently has a negative expectancy. Review your risk management."}
-                    </p>
+                    <div className="mt-6 flex flex-col items-center gap-1">
+                        <div className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                            expectancy > 0 ? "bg-accent-teal/10 text-accent-teal border border-accent-teal/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                        )}>
+                            {expectancy > 0 ? "Positive Edge" : "Negative Edge"}
+                        </div>
+                    </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
+
