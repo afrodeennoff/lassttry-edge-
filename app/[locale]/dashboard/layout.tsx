@@ -21,7 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProvider>
-      <div className="flex min-h-screen w-full bg-base selection:bg-accent-teal/30 selection:text-fg-primary">
+      <div className="flex min-h-screen w-full bg-background selection:bg-accent-teal/30 selection:text-fg-primary">
         <AIModelSidebar />
         <SidebarInset className="flex-1 relative overflow-hidden">
           {/* Global Background Effects */}

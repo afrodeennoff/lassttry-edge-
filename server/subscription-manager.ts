@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { paymentService } from './payment-service'
 import { getSubscriptionDetails } from './subscription'
+import { whop } from '@/lib/whop'
 
 export interface SubscriptionDetails {
   userId: string
@@ -429,6 +430,7 @@ export class SubscriptionManager {
 
       for (const subscription of expiringSubscriptions) {
         try {
+          if (!subscription.endDate) continue
           const gracePeriodEnd = new Date(subscription.endDate)
           gracePeriodEnd.setDate(
             gracePeriodEnd.getDate() + GRACE_PERIOD_CONFIG.duration
@@ -503,7 +505,7 @@ export class SubscriptionManager {
 
   private calculateEndDate(interval: 'month' | 'quarter' | 'year' | 'lifetime'): Date {
     const now = new Date()
-    
+
     if (interval === 'lifetime') {
       const lifetimeDate = new Date(now)
       lifetimeDate.setFullYear(lifetimeDate.getFullYear() + 100)

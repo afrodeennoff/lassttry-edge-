@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { PrismaClient } from "@/prisma/generated/prisma"
 import { PrismaPg } from "@prisma/adapter-pg"
 import pg from "pg"
@@ -24,7 +25,20 @@ export async function POST(req: Request) {
 
   try {
 
-    const { teamId, email, inviterId } = await req.json()
+    const body = await req.json()
+    const schema = z.object({
+      teamId: z.string(),
+      email: z.string().email(),
+      inviterId: z.string(),
+    })
+
+    const parseResult = schema.safeParse(body)
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.format() }, { status: 400 })
+    }
+
+    const { teamId, email, inviterId } = parseResult.data
 
     console.log('Debug - Team ID:', teamId)
     console.log('Debug - Trader Email:', email)

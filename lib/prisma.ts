@@ -7,15 +7,20 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 const forceIPv4ConnectionString = (connectionString: string): string => {
-  const url = new URL(connectionString)
-  
-  if (url.hostname.includes(':')) {
+  if (!connectionString) return ''
+  try {
+    const url = new URL(connectionString)
+
+    if (url.hostname.includes(':')) {
+      return connectionString
+    }
+
+    const family = 4
+    const separator = connectionString.includes('?') ? '&' : '?'
+    return `${connectionString}${separator}family=${family}`
+  } catch (error) {
     return connectionString
   }
-  
-  const family = 4
-  const separator = connectionString.includes('?') ? '&' : '?'
-  return `${connectionString}${separator}family=${family}`
 }
 
 const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
@@ -39,7 +44,7 @@ pool.on('connect', () => {
 
 const adapter = new PrismaPg(pool)
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ 
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   adapter,
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })

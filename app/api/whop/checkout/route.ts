@@ -6,7 +6,7 @@ import { getReferralBySlug } from "@/server/referral";
 
 async function handleWhopCheckout(lookup_key: string, user: any, websiteURL: string, referral?: string | null) {
     const subscriptionDetails = await getSubscriptionDetails();
-    
+
     if (subscriptionDetails?.isActive) {
         return NextResponse.redirect(
             `${websiteURL}dashboard?error=already_subscribed`,
@@ -63,6 +63,10 @@ async function handleWhopCheckout(lookup_key: string, user: any, websiteURL: str
     }
 }
 
+import { z } from "zod"
+
+// ... imports
+
 export async function POST(req: Request) {
     const body = await req.formData();
     const websiteURL = await getWebsiteURL();
@@ -70,13 +74,22 @@ export async function POST(req: Request) {
     const lookup_key = body.get('lookup_key') as string;
     const referral = body.get('referral') as string | null;
 
-    if (!lookup_key) {
-        return NextResponse.json({ message: "Lookup key is required" }, { status: 400 });
+    const schema = z.object({
+        lookup_key: z.string().min(1, "Lookup key is required"),
+        referral: z.string().nullable().optional(),
+    })
+
+    const validation = schema.safeParse({ lookup_key, referral })
+
+    if (!validation.success) {
+        return NextResponse.json({ message: "Invalid input", errors: validation.error.format() }, { status: 400 });
     }
+
+    // ... rest of the code
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
         const referralParam = referral ? `&referral=${encodeURIComponent(referral)}` : '';
         return NextResponse.redirect(
@@ -100,7 +113,7 @@ export async function GET(req: Request) {
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
         const referralParam = referral ? `&referral=${encodeURIComponent(referral)}` : '';
         return NextResponse.redirect(

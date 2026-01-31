@@ -80,6 +80,7 @@ model Subscription {
   email    String  @unique
   plan     String
   status   String  @default("ACTIVE")
+  cancelAtPeriodEnd Boolean @default(false)
   interval String?
 
   userId      String    @unique
