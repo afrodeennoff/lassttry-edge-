@@ -337,13 +337,6 @@
     width: 100%;
   }
 
-  /* Fluid Spacing Grid */
-  .grid-fluid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(clamp(250px, 30vw, 400px), 1fr));
-    gap: clamp(1rem, 3vw, 2.5rem);
-  }
-
   /* Touch-Optimized Interactives */
   .touch-optimized {
     min-height: 48px;
