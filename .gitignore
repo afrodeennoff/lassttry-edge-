@@ -67,3 +67,5 @@ datafeeds/
 
 # prisma
 /prisma/generated/
+env_vars.txt
+env_vars.txt

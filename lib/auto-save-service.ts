@@ -150,7 +150,7 @@ export class AutoSaveService {
         
         if (this.saveHistory.size > 100) {
           const oldestKey = this.saveHistory.keys().next().value
-          if (oldestKey !== undefined) {
+          if (oldestKey) {
             this.saveHistory.delete(oldestKey)
           }
         }

@@ -378,17 +378,13 @@ class WidgetValidator {
 
     return {
       i: String(widget.i),
-      type: widget.type || 'chart',
+      type: widget.type || 'statisticsWidget',
       size: widget.size || 'medium',
       x: Math.max(0, Math.min(11, Math.floor(Number(widget.x) || 0))),
       y: Math.max(0, Math.floor(Number(widget.y) || 0)),
       w: Math.max(1, Math.min(12, Math.floor(Number(widget.w) || 6))),
       h: Math.max(1, Math.min(12, Math.floor(Number(widget.h) || 4))),
-      static: Boolean(widget.static),
-      minW: widget.minW !== undefined ? Math.floor(Number(widget.minW)) : undefined,
-      maxW: widget.maxW !== undefined ? Math.floor(Number(widget.maxW)) : undefined,
-      minH: widget.minH !== undefined ? Math.floor(Number(widget.minH)) : undefined,
-      maxH: widget.maxH !== undefined ? Math.floor(Number(widget.maxH)) : undefined
+      static: Boolean(widget.static)
     }
   }
 

@@ -17,6 +17,10 @@ export async function checkDatabaseHealth(
     const client = new pg.Client({
       connectionString,
       connectionTimeoutMillis: 10000,
+      family,
+      ssl: {
+        rejectUnauthorized: false
+      }
     })
 
     try {

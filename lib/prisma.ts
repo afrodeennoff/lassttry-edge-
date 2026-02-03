@@ -30,6 +30,9 @@ const poolConfig: pg.PoolConfig = {
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 15000,
+  ssl: {
+    rejectUnauthorized: false
+  }
 }
 
 export const prisma = globalForPrisma.prisma ?? (() => {

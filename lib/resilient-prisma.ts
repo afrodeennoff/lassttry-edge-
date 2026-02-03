@@ -52,6 +52,9 @@ export class ResilientPrismaClient {
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 15000,
+      ssl: {
+        rejectUnauthorized: false
+      }
     }
 
     this.pool = new pg.Pool(poolConfig)
@@ -76,11 +79,11 @@ export class ResilientPrismaClient {
   private forceIPv4ConnectionString(connectionString: string): string {
     try {
       const url = new URL(connectionString)
-      
+
       if (url.hostname.includes(':')) {
         console.log('[ResilientPrisma] IPv6 address detected, forcing IPv4...')
       }
-      
+
       const separator = connectionString.includes('?') ? '&' : '?'
       return `${connectionString}${separator}family=4`
     } catch (error) {
@@ -111,7 +114,7 @@ export class ResilientPrismaClient {
 
   private async performInitialHealthCheck(connectionString: string): Promise<void> {
     console.log('[ResilientPrisma] Performing initial health check...')
-    
+
     const result = await testDatabaseConnectionWithRetry(
       connectionString,
       this.config.maxRetries,
@@ -134,7 +137,7 @@ export class ResilientPrismaClient {
 
     this.healthCheckTimer = setInterval(async () => {
       const result = await checkDatabaseHealth(connectionString)
-      
+
       if (!result.healthy && this.isHealthy) {
         console.warn('[ResilientPrisma] Health check failed:', result.error)
         this.isHealthy = false
@@ -188,7 +191,7 @@ export class ResilientPrismaClient {
         return await operation()
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
-        
+
         console.warn(
           `[ResilientPrisma] ${operationName} failed (attempt ${attempt}/${this.config.maxRetries}):`,
           lastError.message
