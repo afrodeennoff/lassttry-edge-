@@ -340,6 +340,7 @@ export async function loadDashboardLayoutAction(): Promise<Layouts | null> {
 
 export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promise<SaveLayoutResult> {
   const userId = await getUserId()
+  const headersList = await headers()
   
   if (!userId) {
     return { success: false, error: 'User not authenticated' }
@@ -363,11 +364,14 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
     try {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+      if (user?.email) {
         await ensureUserInDatabase(user)
       } else {
-        const headersList = await headers()
         const emailFromHeader = headersList.get('x-user-email') || ''
+        if (!emailFromHeader) {
+          logger.error('[saveDashboardLayout] Missing user email for ensureUserInDatabase', { userId })
+          return { success: false, error: 'User email not available' }
+        }
         const fallbackUser: SupabaseUser = {
           id: userId,
           email: emailFromHeader,
@@ -376,10 +380,11 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
       }
     } catch (error) {
       logger.error('[saveDashboardLayout] Failed to ensure user record', { error, userId })
+      return { success: false, error: 'Failed to ensure user record' }
     }
   }
 
-  const verifiedUser = existingUser || await prisma.user.findUnique({
+  const verifiedUser = await prisma.user.findUnique({
     where: { auth_user_id: userId },
     select: { id: true },
   })
