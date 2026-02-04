@@ -53,14 +53,14 @@ export default function Navbar() {
   const currentLayout = layouts || { desktop: [], mobile: [] }
 
   return (
-    <div className="sticky top-0 z-40 w-full px-6 py-4 pointer-events-none">
+    <div className="sticky top-0 z-40 w-full px-3 sm:px-6 py-3 sm:py-4 pointer-events-none">
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="pointer-events-auto flex flex-col glass-strong rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 hover:shadow-accent-teal/10 hover:border-white/20"
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-auto flex flex-col glass-strong rounded-[2rem] sm:rounded-[2.5rem] border border-white/10 sm:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 hover:shadow-accent-teal/10 hover:border-white/20"
       >
-        <div className="flex items-center justify-between px-6 h-16">
+        <div className="flex items-center justify-between px-4 sm:px-6 h-14 sm:h-16">
 
           {/* Left Side: Sidebar Toggle & Brand */}
           <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export default function Navbar() {
           </div>
 
           {/* Center: PnL Metrics (Desktop Only) */}
-          <div className="flex-1 max-w-2xl px-4">
+          <div className="hidden md:flex flex-1 max-w-2xl px-4">
             <PnLSummary />
           </div>
 

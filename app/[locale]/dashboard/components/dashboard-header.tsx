@@ -61,9 +61,9 @@ export function DashboardHeader() {
 
     return (
         <header className="border-b border-white/5 bg-[#020202]/95 backdrop-blur-md sticky top-0 z-50 overflow-hidden">
-            <div className="h-16 flex items-center justify-between px-4 md:px-8">
+            <div className="min-h-[64px] flex flex-wrap items-center justify-between gap-2 px-3 md:px-8">
                 {/* Left Side: Sidebar Toggle & Title */}
-                <div className="flex items-center gap-4 flex-shrink-0">
+                <div className="flex items-center gap-3 flex-shrink-0">
                     <button onClick={toggleSidebar} className="p-2 text-zinc-500 hover:text-white lg:hidden">
                         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
                     </button>
@@ -73,7 +73,7 @@ export function DashboardHeader() {
                 </div>
 
                 {/* Right Side: Actions & Configuration */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
 
                     {/* Global Utilities Group */}
                     <div className="flex items-center gap-1">

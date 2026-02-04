@@ -199,7 +199,7 @@ export function AIModelSidebar() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setOpenMobile(false)} // Close mobile
-                        className="fixed inset-0 bg-black/80 z-40 backdrop-blur-sm lg:hidden"
+                        className="fixed inset-0 bg-black/70 z-40 lg:hidden"
                     />
                 )}
             </AnimatePresence>
@@ -211,8 +211,8 @@ export function AIModelSidebar() {
                         ? { x: open ? 0 : '-100%', width: 248 }
                         : { width: open ? 232 : 72, x: 0 }
                 }
-                transition={{ type: "spring", stiffness: 260, damping: 32, mass: 0.85 }}
-                className="bg-[#030303] border-r border-white/10 ring-1 ring-white/5 flex flex-col z-50 flex-shrink-0 shadow-2xl fixed lg:sticky lg:top-0 h-screen overflow-visible group/sidebar"
+                transition={isMobile ? { type: "tween", duration: 0.2 } : { type: "spring", stiffness: 240, damping: 30, mass: 0.8 }}
+                className="bg-[#030303] border-r border-white/10 ring-1 ring-white/5 flex flex-col z-50 flex-shrink-0 fixed lg:sticky lg:top-0 h-screen overflow-visible group/sidebar will-change-transform lg:shadow-2xl"
             >
                 {!isMobile && (
                     <button
@@ -251,7 +251,7 @@ export function AIModelSidebar() {
                         )}
                     </div>
 
-                    <nav className="flex-grow px-3 space-y-7 mt-4 overflow-y-auto no-scrollbar">
+                    <nav className="flex-grow px-3 space-y-5 mt-3 overflow-y-auto no-scrollbar">
                         {menuGroups.map((group: SidebarGroup, groupIdx: number) => {
                             return (
                                 <div key={groupIdx}>
