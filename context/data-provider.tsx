@@ -18,7 +18,6 @@ import {
 } from "@/prisma/generated/prisma";
 import { SharedParams } from "@/server/shared";
 import {
-  getDashboardLayout,
   getUserData,
   loadSharedData,
   updateIsFirstConnectionAction,
@@ -26,7 +25,6 @@ import {
 import {
   getTradesAction,
   groupTradesAction,
-  saveDashboardLayoutAction,
   ungroupTradesAction,
   updateTradesAction,
 } from "@/server/database";
@@ -66,6 +64,8 @@ import { useSubscriptionStore } from "@/store/subscription-store";
 import { getSubscriptionData } from "@/server/billing";
 import { defaultLayouts } from "@/lib/default-layouts";
 import { Decimal } from "@prisma/client-runtime-utils";
+import { widgetStorageService } from "@/lib/widget-storage-service";
+import { Widget } from "@/app/[locale]/dashboard/types/dashboard";
 
 // Types from trades-data.tsx
 type StatisticsProps = {
@@ -453,18 +453,26 @@ export const DataProvider: React.FC<{
       setSupabaseUser(user);
 
       // CRITICAL: Get dashboard layout first
-      // But check if the layout is already in the state
-      // TODO: Cache layout client side (lightweight)
-      if (!dashboardLayout) {
+      // Reload if missing or mismatched with current user
+      const needsLayoutReload =
+        !dashboardLayout || !dashboardLayout.userId || dashboardLayout.userId !== user.id
+
+      if (needsLayoutReload) {
         const userId = await getUserId();
-        const dashboardLayoutResponse = await getDashboardLayout(userId);
-        if (dashboardLayoutResponse) {
+        const storedLayout = await widgetStorageService.load(userId);
+        if (storedLayout) {
           setDashboardLayout(
-            dashboardLayoutResponse as unknown as DashboardLayoutWithWidgets
+            storedLayout as unknown as DashboardLayoutWithWidgets
           );
         } else {
           // If no layout exists in database, use default layout
-          setDashboardLayout(defaultLayouts);
+          setDashboardLayout({
+            ...defaultLayouts,
+            id: userId,
+            userId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
         }
       }
 
@@ -1597,11 +1605,27 @@ export const DataProvider: React.FC<{
       if (!userId) return;
 
       try {
-        setDashboardLayout(layout as unknown as DashboardLayoutWithWidgets);
-        const result = await saveDashboardLayoutAction(layout);
-        
+        const normalizedLayout: DashboardLayoutWithWidgets = {
+          id: layout.id || userId,
+          userId,
+          desktop: layout.desktop as unknown as Widget[],
+          mobile: layout.mobile as unknown as Widget[],
+          version: layout.version ?? 1,
+          checksum: layout.checksum ?? null,
+          deviceId: layout.deviceId ?? null,
+          createdAt: layout.createdAt ? new Date(layout.createdAt) : new Date(),
+          updatedAt: new Date(),
+        };
+
+        setDashboardLayout(normalizedLayout);
+
+        const result = await widgetStorageService.saveWithRetry(
+          userId,
+          normalizedLayout
+        );
+
         if (!result.success) {
-          throw new Error(result.error || 'Failed to save dashboard layout');
+          throw new Error(result.error || "Failed to save dashboard layout");
         }
       } catch (error) {
         console.error("Error saving dashboard layout:", error);

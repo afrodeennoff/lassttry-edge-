@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
@@ -11,6 +11,18 @@ const inter = Inter({ subsets: ["latin"] });
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export async function generateMetadata({
@@ -27,13 +39,6 @@ export async function generateMetadata({
     title: "Qunt Edge",
     description: "Next generation trading dashboard",
     metadataBase: new URL("https://qunt-edge.vercel.app"),
-    viewport: {
-      width: "device-width",
-      initialScale: 1,
-      maximumScale: 5,
-      userScalable: true,
-      viewportFit: "cover",
-    },
     alternates: {
       canonical: "https://qunt-edge.vercel.app",
       languages: {
@@ -41,10 +46,6 @@ export async function generateMetadata({
         "fr-FR": "https://qunt-edge.vercel.app/fr",
       },
     },
-    themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-      { media: "(prefers-color-scheme: dark)", color: "#000000" },
-    ],
     // ---------- OPEN GRAPH ----------
     openGraph: {
       title: "Qunt Edge",
