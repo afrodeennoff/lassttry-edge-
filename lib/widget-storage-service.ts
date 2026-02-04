@@ -117,18 +117,15 @@ class WidgetStorageService {
     try {
       const { saveDashboardLayoutAction } = await import('@/server/database')
       const prismaLayout = this.toPrismaLayout(layout)
-      const result = await saveDashboardLayoutAction(prismaLayout)
+      await saveDashboardLayoutAction(prismaLayout)
       
-      if (result.success) {
-        this.saveToLocalStorage(userId, layout)
-        return {
-          success: true,
-          source: 'database',
-          timestamp: Date.now()
-        }
+      // Save succeeded (no error thrown)
+      this.saveToLocalStorage(userId, layout)
+      return {
+        success: true,
+        source: 'database',
+        timestamp: Date.now()
       }
-      
-      throw new Error(result.error || 'Database save failed')
     } catch (error) {
       console.error('[WidgetStorageService] Database save failed:', error)
       
