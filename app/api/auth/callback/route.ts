@@ -60,7 +60,11 @@ export async function GET(request: Request) {
           if (user) {
             await ensureUserInDatabase(user, locale)
           }
-        } catch (e) {
+        } catch (e: any) {
+          // Re-throw NEXT_REDIRECT errors - these are intentional redirects from signOut()
+          if (e?.digest?.startsWith?.('NEXT_REDIRECT')) {
+            throw e
+          }
           console.error('Auth callback ensureUserInDatabase error:', e)
           // Non-fatal: continue redirect
         }

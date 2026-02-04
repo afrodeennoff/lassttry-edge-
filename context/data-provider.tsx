@@ -1593,22 +1593,17 @@ export const DataProvider: React.FC<{
 
   const saveDashboardLayout = useCallback(
     async (layout: PrismaDashboardLayout) => {
-      const userId = user?.id || supabaseUser?.id;
-      if (!userId) return;
+      if (!supabaseUser?.id) return;
 
       try {
         setDashboardLayout(layout as unknown as DashboardLayoutWithWidgets);
-        const result = await saveDashboardLayoutAction(layout);
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to save dashboard layout');
-        }
+        await saveDashboardLayoutAction(layout);
       } catch (error) {
         console.error("Error saving dashboard layout:", error);
         throw error;
       }
     },
-    [user?.id, supabaseUser?.id, setDashboardLayout]
+    [supabaseUser?.id, setDashboardLayout]
   );
 
   const contextValue: DataContextType = {
