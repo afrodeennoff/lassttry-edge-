@@ -85,11 +85,17 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
     const toPrismaLayout = useCallback(
         (layout: DashboardLayoutWithWidgets): PrismaDashboardLayout => ({
-            ...layout,
+            id: layout.id || userId || '',
+            userId: layout.userId || userId || '',
             desktop: layout.desktop as PrismaDashboardLayout["desktop"],
             mobile: layout.mobile as PrismaDashboardLayout["mobile"],
+            version: layout.version ?? 1,
+            checksum: layout.checksum ?? null,
+            deviceId: layout.deviceId ?? null,
+            createdAt: layout.createdAt ?? new Date(),
+            updatedAt: new Date(),
         }),
-        [],
+        [userId],
     )
 
     const persistLayout = useCallback(async (layout: DashboardLayoutWithWidgets) => {
