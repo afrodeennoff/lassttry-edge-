@@ -2,33 +2,15 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
 import { useUserStore } from '@/store/user-store'
-import { useData } from '@/context/data-provider'
 import { useI18n } from "@/locales/client"
 import { Widget, WidgetType, WidgetSize, LayoutItem } from './types/dashboard'
 import { WIDGET_REGISTRY } from './config/widget-registry'
 import { toast } from "sonner"
 import { defaultLayouts } from "@/lib/default-layouts"
 import { DashboardLayoutWithWidgets } from '@/store/user-store'
-import { useAutoSave } from '@/hooks/use-auto-save'
-import type { Prisma } from '@/prisma/generated/prisma'
-import type { DashboardLayout } from '@/prisma/generated/prisma'
+import { widgetPersistenceManager } from '@/lib/widget-persistence-manager'
 
 // --- Helper Functions (Moved from WidgetCanvas) ---
-
-const toPrismaLayout = (layout: DashboardLayoutWithWidgets): DashboardLayout => {
-    return {
-        id: layout.id,
-        userId: layout.userId,
-        desktop: layout.desktop as unknown as Prisma.JsonArray,
-        mobile: layout.mobile as unknown as Prisma.JsonArray,
-        version: layout.version ?? 1,
-        checksum: null,
-        deviceId: null,
-        createdAt: layout.createdAt,
-        updatedAt: layout.updatedAt,
-    }
-}
-
 export const sizeToGrid = (size: WidgetSize, isSmallScreen = false): { w: number, h: number } => {
     if (isSmallScreen) {
         switch (size) {
@@ -98,64 +80,36 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const setLayouts = useUserStore(state => state.setDashboardLayout)
     const user = useUserStore(state => state.user)
     const supabaseUser = useUserStore(state => state.supabaseUser)
-    const { saveDashboardLayout } = useData()
-
     const [isCustomizing, setIsCustomizing] = useState(false)
     const [isUserAction, setIsUserAction] = useState(false)
+    const [autoSaveInitialized, setAutoSaveInitialized] = useState(false)
 
     const activeLayout = useMemo(() => isMobile ? 'mobile' : 'desktop', [isMobile])
 
-    const {
-        triggerSave,
-        flushPending,
-        hasPendingSave,
-        isInitialized,
-    } = useAutoSave({
-        saveFunction: async (layout) => {
-            try {
-                await saveDashboardLayout(layout)
-                return { success: true }
-            } catch (error) {
-                return {
-                    success: false,
-                    error: error instanceof Error ? error.message : 'Unknown error'
-                }
-            }
-        },
-        enabled: true,
-        debounceMs: 2000,
-        maxRetries: 5,
-        onSaved: (duration) => {
-            console.log('[Dashboard] Auto-save completed', { duration })
-            toast.success(t('dashboard.saveSuccess') || 'Layout saved', {
-                description: t('dashboard.saveSuccessDesc') || 'Your dashboard layout has been updated.'
-            })
-        },
-        onError: (error) => {
-            console.error('[Dashboard] Auto-save failed', { error: error.message })
-            toast.error(t('dashboard.saveError') || 'Save failed', {
-                description: error.message
-            })
-        },
-        onSaveStart: () => {
-            console.log('[Dashboard] Auto-save started')
-        },
-    })
+    const userId = user?.id || supabaseUser?.id
+
+    useEffect(() => {
+        if (!userId) return
+
+        widgetPersistenceManager.setLayoutId(userId)
+        widgetPersistenceManager.loadLayout(userId).catch((error) => {
+            console.error('[Dashboard] Failed to preload layout for persistence manager', error)
+        })
+        setAutoSaveInitialized(true)
+    }, [userId])
 
     const currentLayout = useMemo(() => {
         return layouts?.[activeLayout] || []
     }, [layouts, activeLayout])
 
     const toggleCustomizing = useCallback(async () => {
-        if (isCustomizing) {
-            // Flush any pending saves when locking the grid
-            await flushPending()
+        if (isCustomizing && userId) {
+            await widgetPersistenceManager.flushPendingSave(userId)
         }
         setIsCustomizing(prev => !prev)
-    }, [isCustomizing, flushPending])
+    }, [isCustomizing, userId])
 
     const handleLayoutChange = useCallback((layout: LayoutItem[]) => {
-        const userId = user?.id || supabaseUser?.id
         if (!userId || !setLayouts || !layouts) return
 
         console.log('[DashboardContext] handleLayoutChange', layout)
@@ -186,16 +140,15 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             }
 
             setLayouts(updatedLayouts)
-            triggerSave(toPrismaLayout(updatedLayouts), 'normal')
+            widgetPersistenceManager.saveLayout(userId, updatedLayouts, { changeType: 'auto' })
 
             if (isUserAction) setIsUserAction(false)
         } catch (error) {
             console.error('[DashboardContext] Error updating layout:', error)
         }
-    }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, triggerSave])
+    }, [userId, setLayouts, layouts, activeLayout, isMobile, isUserAction])
 
     const addWidget = useCallback(async (type: WidgetType, size: WidgetSize = 'medium') => {
-        const userId = user?.id || supabaseUser?.id
         console.log('[DashboardContext] addWidget', { type, size, userId, hasLayouts: !!layouts })
 
         if (!layouts) {
@@ -242,11 +195,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setLayouts(newLayouts)
         toast.success(t('widgets.widgetAdded'), { description: t('widgets.widgetAddedDescription') })
 
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave, t])
+        if (userId) {
+            widgetPersistenceManager.saveLayout(userId, newLayouts, { immediate: true, changeType: 'manual' })
+        }
+    }, [userId, layouts, activeLayout, setLayouts, t])
 
     const removeWidget = useCallback(async (i: string) => {
-        const userId = user?.id || supabaseUser?.id
         console.log('[DashboardContext] removeWidget', { widgetId: i, userId, hasLayouts: !!layouts })
 
         if (!layouts) {
@@ -260,22 +214,22 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         console.log('[DashboardContext] Updating state for removeWidget')
         setLayouts(newLayouts)
 
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        if (userId) {
+            widgetPersistenceManager.saveLayout(userId, newLayouts, { immediate: true, changeType: 'manual' })
+        }
+    }, [userId, layouts, activeLayout, setLayouts])
 
     const changeWidgetType = useCallback(async (i: string, newType: WidgetType) => {
-        const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
         const updatedWidgets = layouts[activeLayout].map(widget =>
             widget.i === i ? { ...widget, type: newType, updatedAt: new Date() } : widget
         )
         const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        widgetPersistenceManager.saveLayout(userId, newLayouts, { immediate: true, changeType: 'manual' })
+    }, [userId, layouts, activeLayout, setLayouts])
 
     const changeWidgetSize = useCallback(async (i: string, newSize: WidgetSize) => {
-        const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
         const widget = layouts[activeLayout].find(w => w.i === i)
         if (!widget) return
@@ -289,19 +243,17 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         )
         const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'normal')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        widgetPersistenceManager.saveLayout(userId, newLayouts, { changeType: 'auto' })
+    }, [userId, layouts, activeLayout, setLayouts])
 
     const removeAllWidgets = useCallback(async () => {
-        const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
         const newLayouts = { ...layouts, desktop: [], mobile: [], updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, setLayouts, triggerSave])
+        widgetPersistenceManager.saveLayout(userId, newLayouts, { immediate: true, changeType: 'manual' })
+    }, [userId, layouts, setLayouts])
 
     const restoreDefaultLayout = useCallback(async () => {
-        const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
         const newLayouts = {
             ...layouts,
@@ -310,17 +262,19 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             updatedAt: new Date()
         }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
+        widgetPersistenceManager.saveLayout(userId, newLayouts, { immediate: true, changeType: 'manual' })
         toast.success(t('widgets.restoredDefaultsTitle'), { description: t('widgets.restoredDefaultsDescription') })
-    }, [user?.id, supabaseUser?.id, layouts, setLayouts, triggerSave, t])
+    }, [userId, layouts, setLayouts, t])
 
     const flushPendingSaves = useCallback(async () => {
-        await flushPending()
-    }, [flushPending])
+        if (userId) {
+            await widgetPersistenceManager.flushPendingSave(userId)
+        }
+    }, [userId])
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (hasPendingSave()) {
+            if (widgetPersistenceManager.hasPendingSave()) {
                 e.preventDefault()
                 e.returnValue = ''
             }
@@ -328,7 +282,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         window.addEventListener('beforeunload', handleBeforeUnload)
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [hasPendingSave])
+    }, [])
 
     return (
         <DashboardContext.Provider value={{
@@ -347,8 +301,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             handleLayoutChange,
             isMobile,
             autoSaveStatus: {
-                hasPending: hasPendingSave(),
-                isInitialized,
+                hasPending: widgetPersistenceManager.hasPendingSave(),
+                isInitialized: autoSaveInitialized,
             },
             flushPendingSaves,
         }}>

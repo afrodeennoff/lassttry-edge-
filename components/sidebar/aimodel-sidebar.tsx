@@ -208,18 +208,18 @@ export function AIModelSidebar() {
                 initial={false}
                 animate={
                     isMobile
-                        ? { x: open ? 0 : '-100%', width: 280 }
-                        : { width: open ? 260 : 80, x: 0 }
+                        ? { x: open ? 0 : '-100%', width: 248 }
+                        : { width: open ? 232 : 72, x: 0 }
                 }
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="bg-[#030303] border-r border-white/5 flex flex-col z-50 flex-shrink-0 shadow-2xl fixed lg:sticky lg:top-0 h-screen overflow-visible group/sidebar"
+                transition={{ type: "spring", stiffness: 260, damping: 32, mass: 0.85 }}
+                className="bg-[#030303] border-r border-white/10 ring-1 ring-white/5 flex flex-col z-50 flex-shrink-0 shadow-2xl fixed lg:sticky lg:top-0 h-screen overflow-visible group/sidebar"
             >
                 {!isMobile && (
                     <button
                         onClick={toggleSidebar}
-                        className="absolute -right-3 top-8 w-6 h-6 bg-[#030303] border border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-teal-400 hover:border-teal-500/50 transition-colors z-50 shadow-lg"
+                        className="absolute -right-4 top-7 w-8 h-8 rounded-full border border-white/10 bg-[#050505]/95 backdrop-blur flex items-center justify-center text-zinc-400 hover:text-teal-300 hover:border-teal-500/40 hover:bg-teal-500/10 transition-all duration-200 z-50 shadow-lg"
                     >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform duration-300 ${!open ? 'rotate-180' : ''}`}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform duration-300 ${!open ? 'rotate-180' : ''}`}>
                             <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </button>
@@ -227,14 +227,14 @@ export function AIModelSidebar() {
 
                 <div className="flex flex-col h-full overflow-hidden w-full relative">
 
-                    <div className="h-16 flex items-center px-6 mb-2 relative flex-shrink-0">
-                        <div className={`flex items-center transition-all duration-300 ${!open && !isMobile ? 'justify-center w-full' : 'gap-4'}`}>
+                    <div className="h-16 flex items-center px-5 mb-2 relative flex-shrink-0">
+                        <div className={`flex items-center transition-all duration-300 ${!open && !isMobile ? 'justify-center w-full' : 'gap-3'}`}>
                             <Link href="/dashboard" className="w-10 h-10 flex items-center justify-center text-teal-400 bg-teal-500/5 border border-teal-500/10 rounded-xl flex-shrink-0 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-teal-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" className="relative z-10"><path d="M16 2L2 9V23L16 30L30 23V9L16 2Z" strokeLinejoin="round" /></svg>
                             </Link>
                             {(open || isMobile) && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col">
+                                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-col">
                                     <span className="font-bold text-white tracking-tight whitespace-nowrap leading-none text-lg">Qunt Edge</span>
                                     <span className="text-[9px] text-teal-500 font-mono uppercase tracking-widest mt-1">Terminal v2.4</span>
                                 </motion.div>
@@ -251,7 +251,7 @@ export function AIModelSidebar() {
                         )}
                     </div>
 
-                    <nav className="flex-grow px-3 space-y-8 mt-4 overflow-y-auto no-scrollbar">
+                    <nav className="flex-grow px-3 space-y-7 mt-4 overflow-y-auto no-scrollbar">
                         {menuGroups.map((group: SidebarGroup, groupIdx: number) => {
                             return (
                                 <div key={groupIdx}>
@@ -277,7 +277,7 @@ export function AIModelSidebar() {
                                                         }
                                                     }}
                                                     className={`
-                                            w-full flex items-center gap-3 px-3 py-3 rounded-lg flex-shrink-0 transition-all duration-200 relative group/item
+                                            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg flex-shrink-0 transition-all duration-200 relative group/item
                                             ${isActive
                                                             ? 'bg-gradient-to-r from-teal-500/10 to-transparent text-white'
                                                             : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
@@ -293,7 +293,7 @@ export function AIModelSidebar() {
                                                     </div>
 
                                                     {(open || isMobile) && (
-                                                        <span className="text-xs font-medium whitespace-nowrap">{item.label}</span>
+                                                        <span className="text-[11px] font-medium whitespace-nowrap">{item.label}</span>
                                                     )}
 
                                                     {!open && !isMobile && (
@@ -310,7 +310,7 @@ export function AIModelSidebar() {
                         })}
                     </nav>
 
-                    <div className="mt-auto p-4 border-t border-white/5 flex-shrink-0 bg-[#020202]">
+                    <div className="mt-auto p-4 border-t border-white/10 flex-shrink-0 bg-[#020202]">
                         <div className={`flex items-center gap-3 ${!open && !isMobile ? 'justify-center' : ''}`}>
                             <div className="relative">
                                 <div className="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300 ring-1 ring-white/10 group-hover:ring-teal-500/30 transition-all flex-shrink-0">
@@ -337,9 +337,22 @@ export function AIModelSidebar() {
                                     </div>
                                 </div>
                             )}
-
-                            {(open || isMobile) && (
-                                <button onClick={handleLogout} className="ml-auto p-1.5 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors">
+                        </div>
+                        <div className={`mt-3 ${!open && !isMobile ? 'flex justify-center' : ''}`}>
+                            {(open || isMobile) ? (
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-200"
+                                >
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                    Logout
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2 text-zinc-500 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    aria-label="Logout"
+                                >
                                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                                 </button>
                             )}

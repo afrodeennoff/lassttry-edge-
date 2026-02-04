@@ -365,6 +365,19 @@ class WidgetPersistenceManager {
     this.pendingSave = null
   }
 
+  hasPendingSave(): boolean {
+    return !!this.pendingSave
+  }
+
+  async flushPendingSave(userId: string): Promise<SaveResult | null> {
+    if (!this.pendingSave) return null
+
+    const layoutToSave = this.pendingSave
+    this.clearPendingSave()
+
+    return this.performSave(userId, layoutToSave, 'Flushed pending auto-save', 'auto')
+  }
+
   setLayoutId(layoutId: string): void {
     this.currentLayoutId = layoutId
   }
