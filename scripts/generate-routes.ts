@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const __filename = new URL(import.meta.url).pathname
+const __filename = decodeURIComponent(new URL(import.meta.url).pathname)
 const __dirname = path.dirname(__filename)
 
 const appDir = path.join(__dirname, '../app')

@@ -60,10 +60,14 @@ datafeeds/
 **/market/**
 
 # Lock files
-*.lock# Additional ignore rules for clean push
+*.lock
+
+# Additional ignore rules for clean push
 .turbo/
 .cache/
 .env.local
+Qunt-Edge-test/
+temp_d2_repo/
 
 # prisma
 /prisma/generated/

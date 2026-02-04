@@ -12,7 +12,6 @@ const Footer: React.FC = () => {
                     <span className="text-sm font-bold tracking-tighter uppercase mono">Qunt Edge</span>
                 </div>
 
-<<<<<<< HEAD
                 <div className="grid grid-cols-2 gap-8 text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-md">
                     <div className="flex flex-col gap-2">
                         <span className="text-white mb-2">Product</span>
@@ -31,8 +30,6 @@ const Footer: React.FC = () => {
                         <a href="/disclaimers" className="hover:text-white transition-colors">Disclaimers</a>
                     </div>
                 </div>
-                </div>
-
                 <div className="text-[10px] mono text-zinc-600">
                     © {new Date().getFullYear()} Qunt Edge. All rights reserved. Professional trading analytics.
                 </div>
