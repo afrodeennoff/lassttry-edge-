@@ -28,7 +28,7 @@ export default function HomeContent() {
             <div className="noise"></div>
 
             <Navigation onAccessPortal={handleLogin} />
-            <main className="flex-grow relative z-10 w-full max-w-nones">
+            <main className="flex-grow relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Hero onStart={handleLogin} />
                 <ProblemStatement />
                 <AnalysisDemo />
