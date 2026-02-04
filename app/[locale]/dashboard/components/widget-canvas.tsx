@@ -224,7 +224,6 @@ export default function WidgetCanvas() {
     isMobile
   } = useDashboard()
 
-  const [isUserAction, setIsUserAction] = useState(false)
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
 
   const widgetDimensions = useMemo(() => {

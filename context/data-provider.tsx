@@ -19,6 +19,7 @@ import {
 import { SharedParams } from "@/server/shared";
 import {
   getUserData,
+  getDashboardLayout,
   loadSharedData,
   updateIsFirstConnectionAction,
 } from "@/server/user-data";
@@ -27,6 +28,7 @@ import {
   groupTradesAction,
   ungroupTradesAction,
   updateTradesAction,
+  saveDashboardLayoutAction,
 } from "@/server/database";
 import {
   deletePayoutAction,
@@ -64,8 +66,6 @@ import { useSubscriptionStore } from "@/store/subscription-store";
 import { getSubscriptionData } from "@/server/billing";
 import { defaultLayouts } from "@/lib/default-layouts";
 import { Decimal } from "@prisma/client-runtime-utils";
-import { widgetStorageService } from "@/lib/widget-storage-service";
-import { Widget } from "@/app/[locale]/dashboard/types/dashboard";
 
 // Types from trades-data.tsx
 type StatisticsProps = {
@@ -453,26 +453,17 @@ export const DataProvider: React.FC<{
       setSupabaseUser(user);
 
       // CRITICAL: Get dashboard layout first
-      // Reload if missing or mismatched with current user
-      const needsLayoutReload =
-        !dashboardLayout || !dashboardLayout.userId || dashboardLayout.userId !== user.id
-
-      if (needsLayoutReload) {
+      // But check if the layout is already in the state
+      if (!dashboardLayout) {
         const userId = await getUserId();
-        const storedLayout = await widgetStorageService.load(userId);
-        if (storedLayout) {
+        const dashboardLayoutResponse = await getDashboardLayout(userId);
+        if (dashboardLayoutResponse) {
           setDashboardLayout(
-            storedLayout as unknown as DashboardLayoutWithWidgets
+            dashboardLayoutResponse as unknown as DashboardLayoutWithWidgets
           );
         } else {
           // If no layout exists in database, use default layout
-          setDashboardLayout({
-            ...defaultLayouts,
-            id: userId,
-            userId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
+          setDashboardLayout(defaultLayouts);
         }
       }
 
@@ -1601,38 +1592,17 @@ export const DataProvider: React.FC<{
 
   const saveDashboardLayout = useCallback(
     async (layout: PrismaDashboardLayout) => {
-      const userId = user?.id || supabaseUser?.id;
-      if (!userId) return;
+      if (!supabaseUser?.id) return;
 
       try {
-        const normalizedLayout: DashboardLayoutWithWidgets = {
-          id: layout.id || userId,
-          userId,
-          desktop: layout.desktop as unknown as Widget[],
-          mobile: layout.mobile as unknown as Widget[],
-          version: layout.version ?? 1,
-          checksum: layout.checksum ?? null,
-          deviceId: layout.deviceId ?? null,
-          createdAt: layout.createdAt ? new Date(layout.createdAt) : new Date(),
-          updatedAt: new Date(),
-        };
-
-        setDashboardLayout(normalizedLayout);
-
-        const result = await widgetStorageService.saveWithRetry(
-          userId,
-          normalizedLayout
-        );
-
-        if (!result.success) {
-          throw new Error(result.error || "Failed to save dashboard layout");
-        }
+        setDashboardLayout(layout as unknown as DashboardLayoutWithWidgets);
+        await saveDashboardLayoutAction(layout);
       } catch (error) {
         console.error("Error saving dashboard layout:", error);
         throw error;
       }
     },
-    [user?.id, supabaseUser?.id, setDashboardLayout]
+    [supabaseUser?.id, setDashboardLayout]
   );
 
   const contextValue: DataContextType = {
