@@ -79,6 +79,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const [isUserAction, setIsUserAction] = useState(false)
     const [autoSaveInitialized, setAutoSaveInitialized] = useState(false)
 
+    const userId = user?.id || supabaseUser?.id
     const activeLayout = useMemo(() => isMobile ? 'mobile' : 'desktop', [isMobile])
 
     const toggleCustomizing = useCallback(async () => {
@@ -91,8 +92,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const currentLayout = useMemo(() => {
         return layouts?.[activeLayout] || []
     }, [layouts, activeLayout])
-
-    const userId = user?.id || supabaseUser?.id
 
     useEffect(() => {
         if (!userId) return
