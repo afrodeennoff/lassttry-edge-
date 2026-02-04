@@ -453,8 +453,11 @@ export const DataProvider: React.FC<{
       setSupabaseUser(user);
 
       // CRITICAL: Get dashboard layout first
-      // But check if the layout is already in the state
-      if (!dashboardLayout) {
+      // Reload if missing or mismatched with current user
+      const needsLayoutReload =
+        !dashboardLayout || !dashboardLayout.userId || dashboardLayout.userId !== user.id
+
+      if (needsLayoutReload) {
         const userId = await getUserId();
         const storedLayout = await widgetStorageService.load(userId);
         if (storedLayout) {
