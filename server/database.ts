@@ -2,9 +2,8 @@
 import { Trade, Prisma, DashboardLayout } from '@/prisma/generated/prisma'
 import { revalidatePath, updateTag } from 'next/cache'
 import { headers } from 'next/headers'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Widget, Layouts } from '@/app/[locale]/dashboard/types/dashboard'
-import { createClient, ensureUserInDatabase, getUserId } from './auth'
+import { createClient, getUserId } from './auth'
 import { startOfDay } from 'date-fns'
 import { getSubscriptionDetails } from './subscription'
 import { prisma } from '@/lib/prisma'
@@ -355,37 +354,33 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
     return { success: false, error: 'Invalid layout structure' }
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { auth_user_id: userId },
-    select: { id: true },
-  })
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const emailFromHeader = headersList.get('x-user-email') || ''
+    const resolvedEmail = user?.email || emailFromHeader
 
-  if (!existingUser) {
-    try {
-      const supabase = await createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email) {
-        await ensureUserInDatabase(user)
-      } else {
-        const emailFromHeader = headersList.get('x-user-email') || ''
-        if (!emailFromHeader) {
-          logger.error('[saveDashboardLayout] Missing user email for ensureUserInDatabase', { userId })
-          return { success: false, error: 'User email not available' }
-        }
-        const fallbackUser: SupabaseUser = {
-          id: userId,
-          email: emailFromHeader,
-        } as SupabaseUser
-        await ensureUserInDatabase(fallbackUser)
-      }
-    } catch (error) {
-      logger.error('[saveDashboardLayout] Failed to ensure user record', { error, userId })
-      return { success: false, error: 'Failed to ensure user record' }
+    if (!resolvedEmail) {
+      logger.error('[saveDashboardLayout] Missing user email for ensureUserInDatabase', { userId })
+      return { success: false, error: 'User email not available' }
     }
+
+    await prisma.user.upsert({
+      where: { id: userId },
+      create: {
+        id: userId,
+        auth_user_id: userId,
+        email: resolvedEmail,
+      },
+      update: {},
+    })
+  } catch (error) {
+    logger.error('[saveDashboardLayout] Failed to ensure user record', { error, userId })
+    return { success: false, error: 'Failed to ensure user record' }
   }
 
   const verifiedUser = await prisma.user.findUnique({
-    where: { auth_user_id: userId },
+    where: { id: userId },
     select: { id: true },
   })
 
