@@ -93,7 +93,7 @@ export default function Navbar() {
     const [hoveredItem, setHoveredItem] = useState<string | null>(null)
     const [isVisible, setIsVisible] = useState(true)
     const [lastScrollY, setLastScrollY] = useState(0)
-    const t = useI18n()
+    const t = useI18n() as (key: string) => string
     const pathname = usePathname()
 
     const toggleMenu = () => {
