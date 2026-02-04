@@ -186,67 +186,79 @@ export default function Navbar() {
         return <Laptop className="h-5 w-5" />;
     };
 
-    const links = [
+    type NavChild = {
+        path: string
+        title: string
+        icon?: React.ReactNode
+    }
+
+    type NavLink = {
+        title: string
+        path?: string
+        children?: NavChild[]
+    }
+
+    const links: NavLink[] = [
         {
-            title: t('landing.navbar.features'),
+            title: t('landing.navbar.features') as string,
             children: [
                 {
                     path: "/#data-import",
-                    title: t('landing.navbar.dataImport'),
+                    title: t('landing.navbar.dataImport') as string,
                     icon: <Database className="h-4 w-4" />,
                 },
                 {
                     path: "/#performance-visualization",
-                    title: t('landing.navbar.performanceVisualization'),
+                    title: t('landing.navbar.performanceVisualization') as string,
                     icon: <LineChart className="h-4 w-4" />,
                 },
                 {
                     path: "/#daily-performance",
-                    title: t('landing.navbar.dailyPerformance'),
+                    title: t('landing.navbar.dailyPerformance') as string,
                     icon: <Calendar className="h-4 w-4" />,
                 },
                 {
                     path: "/#ai-journaling",
-                    title: t('landing.navbar.aiJournaling'),
+                    title: t('landing.navbar.aiJournaling') as string,
                     icon: <BookOpen className="h-4 w-4" />,
                 },
             ],
         },
         {
-            title: t('landing.navbar.pricing'),
+            title: t('landing.navbar.pricing') as string,
             path: "/pricing",
         },
         {
-            title: t('landing.navbar.updates'),
+            title: t('landing.navbar.updates') as string,
             children: [
                 {
                     path: "/updates",
-                    title: t('landing.navbar.productUpdates'),
+                    title: t('landing.navbar.productUpdates') as string,
                     icon: <BarChart3 className="h-4 w-4" />,
                 },
                 {
                     path: "/community",
-                    title: t('landing.navbar.community'),
+                    title: t('landing.navbar.community') as string,
                     icon: <Users className="h-4 w-4" />,
                 },
             ],
         },
         {
-            title: t('landing.navbar.developers'),
+            title: t('landing.navbar.developers') as string,
             children: [
                 {
                     path: "https://github.com/afrodeennoff/lassttry-edge-",
-                    title: t('landing.navbar.openSource'),
+                    title: t('landing.navbar.openSource') as string,
                     icon: <Github className="h-4 w-4" />,
                 },
                 {
                     path: "https://www.youtube.com/@hugodemenez",
-                    title: t('landing.navbar.youtube'),
+                    title: t('landing.navbar.youtube') as string,
                     icon: <Menu className="h-4 w-4" />,
                 },
                 {
                     path: "https://discord.gg/efHDc43M",
-                    title: t('landing.navbar.joinCommunity'),
+                    title: t('landing.navbar.joinCommunity') as string,
                     icon: <Users className="h-4 w-4" />,
                 },
             ],
