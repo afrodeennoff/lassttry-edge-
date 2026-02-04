@@ -39,7 +39,7 @@ import {
   Building2,
 } from 'lucide-react'
 import { SubscriptionBadge } from '@/components/subscription-badge'
-import { signOut } from '@/server/auth'
+import { signOutClient } from '@/lib/auth-client'
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -277,7 +277,7 @@ export default function UserMenu({ variant = 'sidebar' }: { variant?: 'navbar' |
           <DropdownMenuItem
             onClick={() => {
               localStorage.removeItem('qunt_edge_user_data')
-              signOut()
+              signOutClient()
             }}
             className="flex items-center"
           >
@@ -290,5 +290,4 @@ export default function UserMenu({ variant = 'sidebar' }: { variant?: 'navbar' |
     </div>
   )
 }
-
 

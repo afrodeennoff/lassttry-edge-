@@ -30,7 +30,8 @@ import {
   Eye,
   EyeOff
 } from "lucide-react"
-import { signOut, setPasswordAction } from "@/server/auth"
+import { setPasswordAction } from "@/server/auth"
+import { signOutClient } from "@/lib/auth-client"
 import Link from 'next/link'
 import { useChangeLocale, useCurrentLocale } from "@/locales/client"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -631,7 +632,7 @@ export default function SettingsPage() {
                 className="w-full justify-start"
                 onClick={() => {
                   localStorage.removeItem('qunt_edge_user_data')
-                  signOut()
+                  signOutClient()
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
