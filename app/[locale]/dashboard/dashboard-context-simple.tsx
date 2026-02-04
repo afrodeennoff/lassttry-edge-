@@ -73,6 +73,13 @@ interface DashboardContextType {
     handleLayoutChange: (layout: LayoutItem[]) => void
 
     isMobile: boolean
+
+    // Compatibility fields for components expecting auto-save status
+    autoSaveStatus: {
+        hasPending: boolean
+        isInitialized: boolean
+    }
+    flushPendingSaves: () => Promise<void>
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
@@ -107,7 +114,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const currentWidgets = layouts[activeLayout] || []
-            
+
             const updatedWidgets = layout.map(item => {
                 const existingWidget = currentWidgets.find(w => w.i === item.i)
                 if (!existingWidget) {
@@ -138,11 +145,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             if (isUserAction) setIsUserAction(false)
         } catch (error) {
             console.error('[DashboardContext] Error updating layout:', error)
-            toast.error('Failed to Update Layout', {
+            toast.error(t('dashboard.saveError') || 'Failed to Update Layout', {
                 description: 'Please try again'
             })
         }
-    }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, saveDashboardLayout])
+    }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, saveDashboardLayout, t])
 
     const addWidget = useCallback(async (type: WidgetType, size: WidgetSize = 'medium') => {
         const userId = user?.id || supabaseUser?.id
@@ -167,7 +174,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         try {
             const widgetId = `${type}-${Date.now()}`
             const grid = getWidgetGrid(type, size, isMobile)
-            
+
             const newWidget: Widget = {
                 i: widgetId,
                 x: 0,
@@ -187,10 +194,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             setLayouts(updatedLayouts)
             saveDashboardLayout(toPrismaLayout(updatedLayouts))
 
-            toast.success(t('widgets.addedTitle'), { description: t('widgets.addedDescription') })
+            toast.success(t('widgets.widgetAdded'), { description: t('widgets.widgetAddedDescription') })
         } catch (error) {
             console.error('[DashboardContext] Error adding widget:', error)
-            toast.error('Failed to Add Widget', {
+            toast.error(t('dashboard.saveError') || 'Failed to Add Widget', {
                 description: 'Please try again'
             })
         }
@@ -209,7 +216,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setLayouts(updatedLayouts)
         saveDashboardLayout(toPrismaLayout(updatedLayouts))
 
-        toast.success(t('widgets.removedTitle'), { description: t('widgets.removedDescription') })
+        toast.success(t('widgets.removedTitle') || 'Widget Removed', { description: t('widgets.removedDescription') || 'The widget has been removed.' })
     }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, t])
 
     const changeWidgetType = useCallback(async (i: string, newType: WidgetType) => {
@@ -229,7 +236,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setLayouts(newLayouts)
         saveDashboardLayout(toPrismaLayout(newLayouts))
 
-        toast.success(t('widgets.typeChangedTitle'), { description: t('widgets.typeChangedDescription') })
+        toast.success(t('widgets.typeChangedTitle') || 'Type Changed', { description: t('widgets.typeChangedDescription') || 'Widget type has been updated.' })
     }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, isMobile, t])
 
     const changeWidgetSize = useCallback(async (i: string, newSize: WidgetSize) => {
@@ -249,7 +256,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setLayouts(newLayouts)
         saveDashboardLayout(toPrismaLayout(newLayouts))
 
-        toast.success(t('widgets.resizedTitle'), { description: t('widgets.resizedDescription') })
+        toast.success(t('widgets.resizedTitle') || 'Widget Resized', { description: t('widgets.resizedDescription') || 'Widget size has been updated.' })
     }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, t])
 
     const removeAllWidgets = useCallback(async () => {
@@ -259,7 +266,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setLayouts(newLayouts)
         saveDashboardLayout(toPrismaLayout(newLayouts))
 
-        toast.success(t('widgets.clearedTitle'), { description: t('widgets.clearedDescription') })
+        toast.success(t('widgets.clearedTitle') || 'All Widgets Removed', { description: t('widgets.clearedDescription') || 'Your dashboard is now empty.' })
     }, [user?.id, supabaseUser?.id, layouts, setLayouts, saveDashboardLayout, t])
 
     const restoreDefaultLayout = useCallback(async () => {
@@ -277,6 +284,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         toast.success(t('widgets.restoredDefaultsTitle'), { description: t('widgets.restoredDefaultsDescription') })
     }, [user?.id, supabaseUser?.id, layouts, setLayouts, saveDashboardLayout, t])
 
+    const flushPendingSaves = useCallback(async () => {
+        // Simple direct save has no pending queue
+        return Promise.resolve()
+    }, [])
+
     return (
         <DashboardContext.Provider value={{
             isCustomizing,
@@ -293,6 +305,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             restoreDefaultLayout,
             handleLayoutChange,
             isMobile,
+            autoSaveStatus: {
+                hasPending: false,
+                isInitialized: true,
+            },
+            flushPendingSaves,
         }}>
             {children}
         </DashboardContext.Provider>

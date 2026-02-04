@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { DashboardProvider } from "./dashboard-context";
 import { AIModelSidebar } from "@/components/sidebar/aimodel-sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
+import { DashboardLayoutLoader } from "@/components/DashboardLayoutLoader";
 
 export default async function DashboardLayout({
   children,

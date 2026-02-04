@@ -9,11 +9,8 @@ import { WIDGET_REGISTRY } from './config/widget-registry'
 import { toast } from "sonner"
 import { defaultLayouts } from "@/lib/default-layouts"
 import { DashboardLayoutWithWidgets } from '@/store/user-store'
-import { useAutoSave } from '@/hooks/use-auto-save'
 import type { Prisma } from '@/prisma/generated/prisma'
 import type { DashboardLayout } from '@/prisma/generated/prisma'
-
-// --- Helper Functions (Moved from WidgetCanvas) ---
 
 const toPrismaLayout = (layout: DashboardLayoutWithWidgets): DashboardLayout => {
     return {
@@ -59,8 +56,6 @@ export const getWidgetGrid = (type: WidgetType, size: WidgetSize, isSmallScreen 
     return sizeToGrid(size)
 }
 
-// --- Context Definition ---
-
 interface DashboardContextType {
     isCustomizing: boolean
     setIsCustomizing: (val: boolean) => void
@@ -69,7 +64,6 @@ interface DashboardContextType {
     currentLayout: Widget[]
     activeLayout: 'desktop' | 'mobile'
 
-    // Actions
     addWidget: (type: WidgetType, size?: WidgetSize) => void
     removeWidget: (id: string) => void
     changeWidgetType: (id: string, newType: WidgetType) => void
@@ -78,10 +72,9 @@ interface DashboardContextType {
     restoreDefaultLayout: () => void
     handleLayoutChange: (layout: LayoutItem[]) => void
 
-    // Helpers
     isMobile: boolean
 
-    // Auto-save status
+    // Compatibility fields for components expecting auto-save status
     autoSaveStatus: {
         hasPending: boolean
         isInitialized: boolean
@@ -103,57 +96,17 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const [isCustomizing, setIsCustomizing] = useState(false)
     const [isUserAction, setIsUserAction] = useState(false)
 
+    const tt = t as any
     const activeLayout = useMemo(() => isMobile ? 'mobile' : 'desktop', [isMobile])
 
-    const {
-        triggerSave,
-        flushPending,
-        hasPendingSave,
-        isInitialized,
-    } = useAutoSave({
-        saveFunction: async (layout) => {
-            try {
-                await saveDashboardLayout(layout)
-                return { success: true }
-            } catch (error) {
-                return {
-                    success: false,
-                    error: error instanceof Error ? error.message : 'Unknown error'
-                }
-            }
-        },
-        enabled: true,
-        debounceMs: 2000,
-        maxRetries: 5,
-        onSaved: (duration) => {
-            console.log('[Dashboard] Auto-save completed', { duration })
-            toast.success(t('dashboard.saveSuccess') || 'Layout saved', {
-                description: t('dashboard.saveSuccessDesc') || 'Your dashboard layout has been updated.'
-            })
-        },
-        onError: (error) => {
-            console.error('[Dashboard] Auto-save failed', { error: error.message })
-            toast.error(t('dashboard.saveError') || 'Save failed', {
-                description: error.message
-            })
-        },
-        onSaveStart: () => {
-            console.log('[Dashboard] Auto-save started')
-        },
-    })
+    const toggleCustomizing = useCallback(() => setIsCustomizing(prev => !prev), [])
 
     const currentLayout = useMemo(() => {
         return layouts?.[activeLayout] || []
     }, [layouts, activeLayout])
 
-    const toggleCustomizing = useCallback(async () => {
-        if (isCustomizing) {
-            // Flush any pending saves when locking the grid
-            await flushPending()
-        }
-        setIsCustomizing(prev => !prev)
-    }, [isCustomizing, flushPending])
-
+    // SIMPLIFIED: Direct save to database (no auto-save service)
+    // This matches the original deltalytix approach
     const handleLayoutChange = useCallback((layout: LayoutItem[]) => {
         const userId = user?.id || supabaseUser?.id
         if (!userId || !setLayouts || !layouts) return
@@ -175,7 +128,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
                     y: item.y,
                     w: isMobile ? 12 : item.w,
                     h: item.h,
-                    updatedAt: new Date()
                 }
             }).filter((item): item is NonNullable<typeof item> => item !== null)
 
@@ -185,14 +137,20 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
                 updatedAt: new Date()
             }
 
+            // Update state immediately
             setLayouts(updatedLayouts)
-            triggerSave(toPrismaLayout(updatedLayouts), 'normal')
+
+            // Save directly to database (simple approach from deltalytix)
+            saveDashboardLayout(toPrismaLayout(updatedLayouts))
 
             if (isUserAction) setIsUserAction(false)
         } catch (error) {
             console.error('[DashboardContext] Error updating layout:', error)
+            toast.error(tt('dashboard.saveError') as any || 'Failed to Update Layout', {
+                description: 'Please try again'
+            })
         }
-    }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, triggerSave])
+    }, [user?.id, supabaseUser?.id, setLayouts, layouts, activeLayout, isMobile, isUserAction, saveDashboardLayout, t])
 
     const addWidget = useCallback(async (type: WidgetType, size: WidgetSize = 'medium') => {
         const userId = user?.id || supabaseUser?.id
@@ -209,70 +167,78 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         }
 
         const currentItems = layouts[activeLayout]
-        // Prevent adding duplicate widget types
         if (currentItems.some(widget => widget.type === type)) {
-            toast.error(t('widgets.duplicate.title'), { description: t('widgets.duplicate.description') })
+            toast.error(tt('widgets.duplicate.title') as any, { description: tt('widgets.duplicate.description') as any })
             return
         }
 
-        const effectiveSize = size
-        const grid = sizeToGrid(effectiveSize, activeLayout === 'mobile')
+        try {
+            const widgetId = `${type}-${Date.now()}`
+            const grid = getWidgetGrid(type, size, isMobile)
 
-        let lowestY = 0
-        currentItems.forEach(widget => {
-            const widgetBottom = widget.y + widget.h
-            if (widgetBottom > lowestY) lowestY = widgetBottom
-        })
+            const newWidget: Widget = {
+                i: widgetId,
+                x: 0,
+                y: currentItems.length > 0 ? Math.max(...currentItems.map(w => (w.y || 0) + (w.h || 4))) : 0,
+                w: grid.w,
+                h: grid.h,
+                type,
+                size
+            }
 
-        const newWidget: Widget = {
-            i: `widget${Date.now()}`,
-            type,
-            size: effectiveSize,
-            x: 0,
-            y: lowestY, // Simple append to bottom
-            w: grid.w,
-            h: grid.h,
+            const updatedLayouts = {
+                ...layouts,
+                [activeLayout]: [...currentItems, newWidget],
+                updatedAt: new Date()
+            }
+
+            setLayouts(updatedLayouts)
+            saveDashboardLayout(toPrismaLayout(updatedLayouts))
+
+            toast.success(tt('widgets.widgetAdded') as any, { description: tt('widgets.widgetAddedDescription') as any })
+        } catch (error) {
+            console.error('[DashboardContext] Error adding widget:', error)
+            toast.error(tt('dashboard.saveError') as any || 'Failed to Add Widget', {
+                description: 'Please try again'
+            })
+        }
+    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, isMobile, t])
+
+    const removeWidget = useCallback(async (id: string) => {
+        const userId = user?.id || supabaseUser?.id
+        if (!userId || !layouts) return
+
+        const updatedLayouts = {
+            ...layouts,
+            [activeLayout]: layouts[activeLayout].filter(w => w.i !== id),
             updatedAt: new Date()
         }
 
-        const updatedWidgets = [...currentItems, newWidget]
-        const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
+        setLayouts(updatedLayouts)
+        saveDashboardLayout(toPrismaLayout(updatedLayouts))
 
-        console.log('[DashboardContext] Updating state for addWidget')
-        setLayouts(newLayouts)
-        toast.success(t('widgets.widgetAdded'), { description: t('widgets.widgetAddedDescription') })
-
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave, t])
-
-    const removeWidget = useCallback(async (i: string) => {
-        const userId = user?.id || supabaseUser?.id
-        console.log('[DashboardContext] removeWidget', { widgetId: i, userId, hasLayouts: !!layouts })
-
-        if (!layouts) {
-            console.error('[DashboardContext] removeWidget failed: missing layouts')
-            return
-        }
-
-        const updatedWidgets = layouts[activeLayout].filter(widget => widget.i !== i)
-        const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
-
-        console.log('[DashboardContext] Updating state for removeWidget')
-        setLayouts(newLayouts)
-
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        toast.success(tt('widgets.removedTitle') as any || 'Widget Removed', { description: tt('widgets.removedDescription') as any || 'The widget has been removed.' })
+    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, t])
 
     const changeWidgetType = useCallback(async (i: string, newType: WidgetType) => {
         const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
+        const widget = layouts[activeLayout].find(w => w.i === i)
+        if (!widget) return
+
+        let effectiveSize = newType === 'tradingScore' ? 'medium' : widget.size
+        if (newType.includes('Chart') && widget.size === 'tiny') effectiveSize = 'medium'
+
+        const grid = getWidgetGrid(newType, effectiveSize, isMobile)
         const updatedWidgets = layouts[activeLayout].map(widget =>
-            widget.i === i ? { ...widget, type: newType, updatedAt: new Date() } : widget
+            widget.i === i ? { ...widget, type: newType, size: effectiveSize, ...grid } : widget
         )
         const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        saveDashboardLayout(toPrismaLayout(newLayouts))
+
+        toast.success(tt('widgets.typeChangedTitle') as any || 'Type Changed', { description: tt('widgets.typeChangedDescription') as any || 'Widget type has been updated.' })
+    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, isMobile, t])
 
     const changeWidgetSize = useCallback(async (i: string, newSize: WidgetSize) => {
         const userId = user?.id || supabaseUser?.id
@@ -285,20 +251,24 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         const grid = sizeToGrid(effectiveSize)
         const updatedWidgets = layouts[activeLayout].map(widget =>
-            widget.i === i ? { ...widget, size: effectiveSize, ...grid, updatedAt: new Date() } : widget
+            widget.i === i ? { ...widget, size: effectiveSize, ...grid } : widget
         )
         const newLayouts = { ...layouts, [activeLayout]: updatedWidgets, updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'normal')
-    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, triggerSave])
+        saveDashboardLayout(toPrismaLayout(newLayouts))
+
+        toast.success(tt('widgets.resizedTitle') as any || 'Widget Resized', { description: tt('widgets.resizedDescription') as any || 'Widget size has been updated.' })
+    }, [user?.id, supabaseUser?.id, layouts, activeLayout, setLayouts, saveDashboardLayout, t])
 
     const removeAllWidgets = useCallback(async () => {
         const userId = user?.id || supabaseUser?.id
         if (!userId || !layouts) return
         const newLayouts = { ...layouts, desktop: [], mobile: [], updatedAt: new Date() }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-    }, [user?.id, supabaseUser?.id, layouts, setLayouts, triggerSave])
+        saveDashboardLayout(toPrismaLayout(newLayouts))
+
+        toast.success(tt('widgets.clearedTitle') as any || 'All Widgets Removed', { description: tt('widgets.clearedDescription') as any || 'Your dashboard is now empty.' })
+    }, [user?.id, supabaseUser?.id, layouts, setLayouts, saveDashboardLayout, t])
 
     const restoreDefaultLayout = useCallback(async () => {
         const userId = user?.id || supabaseUser?.id
@@ -310,25 +280,15 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             updatedAt: new Date()
         }
         setLayouts(newLayouts)
-        triggerSave(toPrismaLayout(newLayouts), 'high')
-        toast.success(t('widgets.restoredDefaultsTitle'), { description: t('widgets.restoredDefaultsDescription') })
-    }, [user?.id, supabaseUser?.id, layouts, setLayouts, triggerSave, t])
+        saveDashboardLayout(toPrismaLayout(newLayouts))
+
+        toast.success(tt('widgets.restoredDefaultsTitle') as any, { description: tt('widgets.restoredDefaultsDescription') as any })
+    }, [user?.id, supabaseUser?.id, layouts, setLayouts, saveDashboardLayout, t])
 
     const flushPendingSaves = useCallback(async () => {
-        await flushPending()
-    }, [flushPending])
-
-    useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (hasPendingSave()) {
-                e.preventDefault()
-                e.returnValue = ''
-            }
-        }
-
-        window.addEventListener('beforeunload', handleBeforeUnload)
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [hasPendingSave])
+        // Simple direct save has no pending queue
+        return Promise.resolve()
+    }, [])
 
     return (
         <DashboardContext.Provider value={{
@@ -347,8 +307,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             handleLayoutChange,
             isMobile,
             autoSaveStatus: {
-                hasPending: hasPendingSave(),
-                isInitialized,
+                hasPending: false,
+                isInitialized: true,
             },
             flushPendingSaves,
         }}>
