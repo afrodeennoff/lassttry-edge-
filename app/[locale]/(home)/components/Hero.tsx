@@ -55,7 +55,7 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
                 initial="hidden"
                 animate="show"
                 style={{ scale }}
-                className="container-fluid relative z-10"
+                className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6 lg:px-8"
             >
                 <motion.div variants={item} className="mb-fluid-sm">
                     <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-zinc-900/50 border border-white/5 rounded-full backdrop-blur-md">

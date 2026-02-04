@@ -34,10 +34,10 @@ const Navigation: React.FC<NavigationProps> = ({ onAccessPortal }) => {
     }, [mobileMenuOpen]);
 
     const links = [
-        { name: 'Philosophy', href: '#problem' },
-        { name: 'Methodology', href: '#how-it-works' },
-        { name: 'Infrastructure', href: '#features' },
-        { name: t('landing.navbar.pricing'), href: '/pricing' },
+        { name: 'Features', href: '/#features' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Prop Firms Catalogue', href: '/propfirms' },
+        { name: 'About', href: '/about' },
     ];
 
     return (

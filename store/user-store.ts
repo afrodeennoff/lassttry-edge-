@@ -33,6 +33,8 @@ export type DashboardLayoutWithWidgets = {
   mobile: Widget[];
   version?: number;
   schemaVersion?: number;
+  checksum?: string | null;
+  deviceId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
