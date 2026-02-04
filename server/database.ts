@@ -2,7 +2,7 @@
 import { Trade, Prisma, DashboardLayout } from '@/prisma/generated/prisma'
 import { revalidatePath, updateTag } from 'next/cache'
 import { Widget, Layouts } from '@/app/[locale]/dashboard/types/dashboard'
-import { createClient, getUserId } from './auth'
+import { createClient, ensureUserInDatabase, getUserId } from './auth'
 import { startOfDay } from 'date-fns'
 import { getSubscriptionDetails } from './subscription'
 import { prisma } from '@/lib/prisma'
@@ -350,6 +350,33 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
   if (!validateLayouts(layouts)) {
     logger.error('[saveDashboardLayout] Validation failed', { userId })
     return { success: false, error: 'Invalid layout structure' }
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { auth_user_id: userId },
+    select: { id: true },
+  })
+
+  if (!existingUser) {
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await ensureUserInDatabase(user)
+      }
+    } catch (error) {
+      logger.error('[saveDashboardLayout] Failed to ensure user record', { error, userId })
+    }
+  }
+
+  const verifiedUser = existingUser || await prisma.user.findUnique({
+    where: { auth_user_id: userId },
+    select: { id: true },
+  })
+
+  if (!verifiedUser) {
+    logger.error('[saveDashboardLayout] Missing user record for layout save', { userId })
+    return { success: false, error: 'User record not found' }
   }
 
   const lockKey = `layout:${userId}`
