@@ -4,7 +4,7 @@ import { createClient } from '@/server/auth'
 import { PrismaClient } from '@/prisma/generated/prisma'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
-import { whop } from '@/lib/whop'
+import { getWhop } from '@/lib/whop'
 import { logger } from '@/lib/logger'
 
 const pool = new pg.Pool({
@@ -95,7 +95,13 @@ export async function getSubscriptionData() {
 
     logger.info('[getSubscriptionData] Cache Miss - Fetching Whop API', { email: user.email });
 
+    if (!process.env.WHOP_API_KEY) {
+      logger.warn('[getSubscriptionData] WHOP_API_KEY missing, skipping Whop API lookup', { email: user.email })
+      return null
+    }
+
     const companyId = process.env.WHOP_COMPANY_ID || "biz_jh37YZGpH5dWIY";
+    const whop = getWhop()
 
     // 2. Fetch active memberships from Whop for real-time verification (Fallback)
     const members = await whop.members.list({
@@ -185,6 +191,11 @@ export async function getSubscriptionData() {
     } as SubscriptionWithPrice
 
   } catch (error) {
+    const status = (error as { status?: number })?.status
+    if (status === 401) {
+      logger.warn('Error fetching Whop subscription: unauthorized', { error })
+      return null
+    }
     logger.error('Error fetching Whop subscription:', { error })
     return null
   }
