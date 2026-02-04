@@ -1,6 +1,8 @@
 'use server'
 import { Trade, Prisma, DashboardLayout } from '@/prisma/generated/prisma'
 import { revalidatePath, updateTag } from 'next/cache'
+import { headers } from 'next/headers'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Widget, Layouts } from '@/app/[locale]/dashboard/types/dashboard'
 import { createClient, ensureUserInDatabase, getUserId } from './auth'
 import { startOfDay } from 'date-fns'
@@ -363,6 +365,14 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         await ensureUserInDatabase(user)
+      } else {
+        const headersList = await headers()
+        const emailFromHeader = headersList.get('x-user-email') || ''
+        const fallbackUser: SupabaseUser = {
+          id: userId,
+          email: emailFromHeader,
+        } as SupabaseUser
+        await ensureUserInDatabase(fallbackUser)
       }
     } catch (error) {
       logger.error('[saveDashboardLayout] Failed to ensure user record', { error, userId })
