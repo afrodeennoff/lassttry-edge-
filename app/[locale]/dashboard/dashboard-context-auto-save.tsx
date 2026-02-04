@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { defaultLayouts } from "@/lib/default-layouts"
 import { DashboardLayoutWithWidgets } from '@/store/user-store'
 import { useData } from '@/context/data-provider'
-import { DashboardLayout as PrismaDashboardLayout } from '@/prisma/generated/prisma'
+import { DashboardLayout as PrismaDashboardLayout, Prisma } from '@/prisma/generated/prisma'
 
 export const sizeToGrid = (size: WidgetSize, isSmallScreen = false): { w: number, h: number } => {
     if (isSmallScreen) {
@@ -87,8 +87,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         (layout: DashboardLayoutWithWidgets): PrismaDashboardLayout => ({
             id: layout.id || userId || '',
             userId: layout.userId || userId || '',
-            desktop: layout.desktop as PrismaDashboardLayout["desktop"],
-            mobile: layout.mobile as PrismaDashboardLayout["mobile"],
+            desktop: layout.desktop as unknown as Prisma.JsonValue,
+            mobile: layout.mobile as unknown as Prisma.JsonValue,
             version: layout.version ?? 1,
             checksum: layout.checksum ?? null,
             deviceId: layout.deviceId ?? null,
