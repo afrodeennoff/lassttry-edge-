@@ -1,14 +1,4 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "opencode-dynamic-context-pruning",
-    "opencode-morph-fast-apply",
-    "opencode-zellij-namer",
-    "opencode-skillful",
-    "opencode-supermemory",
-    "micode",
-    "opencode-workspace",
-    "opencode-worktree",
-    "opencode-websearch-cited"
-  ]
+  "note": "This project uses global OpenCode configuration from ~/.config/opencode/"
 }
