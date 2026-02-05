@@ -20,7 +20,7 @@ import {
   Globe,
   ArrowRight
 } from 'lucide-react'
-import Footer from '../../(landing)/components/footer'
+import Footer from '@/app/[locale]/(home)/components/Footer'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
