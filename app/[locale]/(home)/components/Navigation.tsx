@@ -37,7 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({ onAccessPortal }) => {
     const links = [
         { name: 'Features', href: '/#features' },
         { name: 'Pricing', href: '/pricing' },
-        { name: 'Prop Firms', href: '/propfirms' },
+        { name: 'Prop Firms Catalogue', href: '/propfirms' },
         { name: 'About', href: '/about' },
     ];
 
