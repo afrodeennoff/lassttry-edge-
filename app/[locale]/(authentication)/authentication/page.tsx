@@ -11,7 +11,7 @@ export default function AuthenticationPage() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-[#050505] selection:bg-teal-500/30 selection:text-teal-200 overflow-hidden font-sans">
-      
+
       {/* Cinematic Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-teal-500/5 rounded-full blur-[150px] animate-pulse-slow" />
@@ -48,11 +48,11 @@ export default function AuthenticationPage() {
           {/* Auth Card */}
           <div className="w-full relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-b from-teal-500/20 to-purple-500/20 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000" />
-            
+
             <div className="relative bg-[#0A0A0A]/90 backdrop-blur-xl border border-white/10 rounded-xl p-8 shadow-2xl">
               <div className="mb-6 text-center">
-                 <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-widest mb-1">{t('authentication.title')}</h2>
-                 <p className="text-xs text-zinc-600">{t('authentication.testimonialAuthor')}</p>
+                <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-widest mb-1">{t('authentication.title')}</h2>
+                <p className="text-xs text-zinc-600">{t('authentication.testimonialAuthor')}</p>
               </div>
 
               <UserAuthForm />
@@ -66,7 +66,7 @@ export default function AuthenticationPage() {
                   </svg>
                   <span>Secure Encryption</span>
                 </div>
-                
+
                 <p className="text-[10px] leading-relaxed text-zinc-500">
                   {t('authentication.termsAndPrivacy.prefix')}{" "}
                   <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors underline decoration-zinc-700 underline-offset-2">
@@ -84,7 +84,7 @@ export default function AuthenticationPage() {
           {/* Footer Copyright */}
           <div className="mt-12 text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
             <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} DeltaLytix Technologies
+              &copy; {new Date().getFullYear()} Qunt Edge
             </p>
           </div>
         </motion.div>

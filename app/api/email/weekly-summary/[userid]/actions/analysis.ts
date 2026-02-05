@@ -9,7 +9,7 @@ const customOpenai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const DELTALYTIX_CONTEXT = {
+const QUNT_EDGE_CONTEXT = {
   fr: `Qunt Edge est une plateforme web pour day traders de futures, avec une interface intuitive et personnalisable. Conçue à partir de mon expérience personnelle en tant que day trader de futures, utilisant des stratégies de scalping, elle propose des fonctionnalités comme la gestion de multiple compte, le suivi des challenges propfirms, et des tableaux de bord personnalisables. Notre but est de fournir aux traders des analyses approfondies sur leurs habitudes de trading pour optimiser leurs stratégies et améliorer leur prise de décision.`,
   en: `Qunt Edge is a web platform for futures day traders, featuring an intuitive and customizable interface. Designed from my personal experience as a futures day trader using scalping strategies, it offers features like multiple account management, propfirm challenge tracking, and customizable dashboards. Our goal is to provide traders with in-depth analysis of their trading habits to optimize their strategies and improve decision-making.`
 }
@@ -45,7 +45,7 @@ export async function generateTradingAnalysis(
   try {
     // Sort trades by date
     const sortedTrades = [...dailyPnL].sort((a, b) => a.date.getTime() - b.date.getTime())
-    
+
     // Group trades by week
     const tradesByWeek = sortedTrades.reduce((acc, trade) => {
       const weekNumber = getWeekNumber(trade.date)
@@ -65,18 +65,18 @@ export async function generateTradingAnalysis(
       schema: analysisSchema,
       prompt: language === 'fr'
         ? `Tu es un coach en trading qui aide les traders à progresser. Tu es toujours positif et encourageant.
-${DELTALYTIX_CONTEXT.fr}
+${QUNT_EDGE_CONTEXT.fr}
 
 Voici les résultats de trading des deux dernières semaines :
 
 Données de performance journalières :
 ${lastTwoWeeks.map((week, index) => {
-  const isCurrentWeek = index === 0;
-  const weekLabel = isCurrentWeek ? 'Semaine en cours' : 'Semaine précédente';
-  return `${weekLabel}:\n${week.map(day => 
-    `- ${day.date.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}: ${day.pnl}€`
-  ).join('\n')}`
-}).join('\n\n')}
+          const isCurrentWeek = index === 0;
+          const weekLabel = isCurrentWeek ? 'Semaine en cours' : 'Semaine précédente';
+          return `${weekLabel}:\n${week.map(day =>
+            `- ${day.date.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}: ${day.pnl}€`
+          ).join('\n')}`
+        }).join('\n\n')}
 
 Pour l'analyse (intro) :
 1. Fais une phrase simple qui explique comment s'est passée la semaine en cours
@@ -103,18 +103,18 @@ Pour les conseils (tips) :
 
 Fais une analyse qui aide le trader à progresser :`
         : `You are a trading coach who helps traders improve. You are always positive and encouraging.
-${DELTALYTIX_CONTEXT.en}
+${QUNT_EDGE_CONTEXT.en}
 
 Here are the trading results for the last two weeks:
 
 Daily performance data:
 ${lastTwoWeeks.map((week, index) => {
-  const isCurrentWeek = index === 0;
-  const weekLabel = isCurrentWeek ? 'Current Week' : 'Previous Week';
-  return `${weekLabel}:\n${week.map(day => 
-    `- ${day.date.toLocaleDateString('en-US', { weekday: 'long', day: '2-digit', month: 'long' })}: ${day.pnl}€`
-  ).join('\n')}`
-}).join('\n\n')}
+          const isCurrentWeek = index === 0;
+          const weekLabel = isCurrentWeek ? 'Current Week' : 'Previous Week';
+          return `${weekLabel}:\n${week.map(day =>
+            `- ${day.date.toLocaleDateString('en-US', { weekday: 'long', day: '2-digit', month: 'long' })}: ${day.pnl}€`
+          ).join('\n')}`
+        }).join('\n\n')}
 
 For the analysis (intro):
 1. Write a simple sentence explaining how the current week went

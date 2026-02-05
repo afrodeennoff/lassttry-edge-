@@ -4,7 +4,7 @@ import { YoutubeTranscript } from 'youtube-transcript'
 import { generateText, Output } from "ai"
 import { z } from 'zod/v3';
 
-const DELTALYTIX_CONTEXT = `Qunt Edge est une plateforme web pour day traders de futures, avec une interface intuitive et personnalisable. Conçue à partir de mon expérience personnelle en tant que day trader de futures, utilisant des stratégies de scalping, elle propose des fonctionnalités comme la gestion de multiple compte, le suivi des challenges propfirms, et des tableaux de bord personnalisables. Notre but est de fournir aux traders des analyses approfondies sur leurs habitudes de trading pour optimiser leurs stratégies et améliorer leur prise de décision.`
+const QUNT_EDGE_CONTEXT = `Qunt Edge est une plateforme web pour day traders de futures, avec une interface intuitive et personnalisable. Conçue à partir de mon expérience personnelle en tant que day trader de futures, utilisant des stratégies de scalping, elle propose des fonctionnalités comme la gestion de multiple compte, le suivi des challenges propfirms, et des tableaux de bord personnalisables. Notre but est de fournir aux traders des analyses approfondies sur leurs habitudes de trading pour optimiser leurs stratégies et améliorer leur prise de décision.`
 
 const summarySchema = z.object({
   summary: z.string().describe("Un résumé technique concis des mises à jour présentées")
@@ -16,7 +16,7 @@ export async function generateTranscriptSummary(transcript: string): Promise<str
       model: 'openai/gpt-5-mini',
       output: Output.object({ schema: summarySchema }),
       prompt: `Tu es un expert en développement web et en trading qui aide à résumer les mises à jour de Qunt Edge.
-${DELTALYTIX_CONTEXT}
+${QUNT_EDGE_CONTEXT}
 
 Ta tâche est de :
 1. Analyser la transcription d'une vidéo YouTube
@@ -40,11 +40,11 @@ ${transcript}`,
 
 export async function fetchTranscriptServer(videoId: string): Promise<string | null> {
   "use server"
-  
+
   try {
     const transcript = await YoutubeTranscript.fetchTranscript(videoId)
     console.log(transcript)
-    
+
     if (!transcript || transcript.length === 0) {
       return null
     }
@@ -60,50 +60,50 @@ export async function fetchTranscriptServer(videoId: string): Promise<string | n
     console.error('Error fetching YouTube transcript:', error)
     return null
   }
-} 
+}
 
 export async function getLatestVideoFromPlaylist(): Promise<string | null> {
   try {
     const playlistId = 'PLHyK_WJWO5vcsSKePM0GvJmeY5QRBW40S';
     const apiKey = process.env.YOUTUBE_API_KEY;
-    
+
     if (!apiKey) {
       console.error('YouTube API key not found in environment variables');
       return null;
     }
-    
+
     // Get all items from the playlist
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}`
     );
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('YouTube API error:', errorData);
       return null;
     }
-    
+
     const data = await response.json() as YouTubePlaylistResponse;
-    
+
     if (!data.items || data.items.length === 0) {
       console.error('No videos found in playlist');
       return null;
     }
 
     // Sort items by published date in descending order to get the latest one
-    const sortedItems = data.items.sort((a, b) => 
+    const sortedItems = data.items.sort((a, b) =>
       new Date(b.snippet.publishedAt).getTime() - new Date(a.snippet.publishedAt).getTime()
     );
-    
+
     // Get the video ID from the most recently published item
     const latestItem = sortedItems[0];
     const videoId = latestItem.contentDetails.videoId;
-    
+
     if (!videoId) {
       console.error('No video ID found in playlist item');
       return null;
     }
-    
+
     return videoId;
   } catch (error) {
     console.error('Error fetching latest video from playlist:', error);
@@ -158,26 +158,26 @@ export async function getAllVideosFromPlaylistAction(): Promise<Map<string, Play
   try {
     const playlistId = 'PLHyK_WJWO5vcsSKePM0GvJmeY5QRBW40S';
     const apiKey = process.env.YOUTUBE_API_KEY;
-    
+
     if (!apiKey) {
       console.error('YouTube API key not found in environment variables');
       return null;
     }
-    
+
     // Get all items from the playlist
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}`,
       { cache: 'force-cache' } // Cache for build time
     );
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('YouTube API error:', errorData);
       return null;
     }
-    
+
     const data = await response.json() as YouTubePlaylistResponse;
-    
+
     if (!data.items || data.items.length === 0) {
       console.error('No videos found in playlist');
       return null;
@@ -185,12 +185,12 @@ export async function getAllVideosFromPlaylistAction(): Promise<Map<string, Play
 
     // Create a map of videos by their ISO date string
     const videoMap = new Map<string, PlaylistVideo>();
-    
+
     data.items.forEach((item) => {
       const videoId = item.contentDetails?.videoId;
       const publishedAt = item.snippet?.publishedAt;
       const title = item.snippet?.title;
-      
+
       if (videoId && publishedAt) {
         const dateKey = publishedAt.split('T')[0]; // Use just the date part as key
         videoMap.set(dateKey, {
@@ -200,7 +200,7 @@ export async function getAllVideosFromPlaylistAction(): Promise<Map<string, Play
         });
       }
     });
-    
+
     return videoMap;
   } catch (error) {
     console.error('Error fetching videos from playlist:', error);
@@ -215,13 +215,13 @@ export async function getAllVideosFromPlaylistAction(): Promise<Map<string, Play
 export async function findVideoIdForPostDateAction(postDate: string): Promise<string | null> {
   try {
     const videoMap = await getAllVideosFromPlaylistAction();
-    
+
     if (!videoMap) {
       return null;
     }
-    
+
     const postDateObj = new Date(postDate);
-    
+
     // Try to find a video published in the same week
     for (const [, video] of videoMap.entries()) {
       const videoDate = new Date(video.publishedAt);
@@ -230,7 +230,7 @@ export async function findVideoIdForPostDateAction(postDate: string): Promise<st
         return video.videoId;
       }
     }
-    
+
     console.log(`No video found for post date ${postDate}`);
     return null;
   } catch (error) {

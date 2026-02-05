@@ -76,9 +76,9 @@ type Trade = {
 Target the iframe and post structured messages. Origin can be restricted to `https://qunt-edge.vercel.app` for production.
 
 ```html
-<iframe id="deltalytix-embed" src="https://qunt-edge.vercel.app/embed" ...></iframe>
+<iframe id="qunt-edge-embed" src="https://qunt-edge.vercel.app/embed" ...></iframe>
 <script>
-  const iframe = document.getElementById('deltalytix-embed')
+  const iframe = document.getElementById('qunt-edge-embed')
 
   // 1) Add specific trades
   iframe.contentWindow.postMessage({
