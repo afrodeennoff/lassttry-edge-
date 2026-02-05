@@ -65,7 +65,11 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-green-700/70 dark:text-green-300/70">
-                {t('landing.propfirms.payouts.count', { count: paidCount })}
+                {paidCount === 0
+                  ? (t as any)('landing.propfirms.payouts.count#zero')
+                  : paidCount === 1
+                  ? (t as any)('landing.propfirms.payouts.count#one')
+                  : (t as any)('landing.propfirms.payouts.count#other', { count: paidCount })}
               </p>
             </div>
 
@@ -80,7 +84,11 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-yellow-700/70 dark:text-yellow-300/70">
-                {t('landing.propfirms.payouts.count', { count: pendingCount })}
+                {pendingCount === 0
+                  ? (t as any)('landing.propfirms.payouts.count#zero')
+                  : pendingCount === 1
+                  ? (t as any)('landing.propfirms.payouts.count#one')
+                  : (t as any)('landing.propfirms.payouts.count#other', { count: pendingCount })}
               </p>
             </div>
 
@@ -95,7 +103,11 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-red-700/70 dark:text-red-300/70">
-                {t('landing.propfirms.payouts.count', { count: refusedCount })}
+                {refusedCount === 0
+                  ? (t as any)('landing.propfirms.payouts.count#zero')
+                  : refusedCount === 1
+                  ? (t as any)('landing.propfirms.payouts.count#one')
+                  : (t as any)('landing.propfirms.payouts.count#other', { count: refusedCount })}
               </p>
             </div>
           </div>
