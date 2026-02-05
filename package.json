@@ -184,7 +184,6 @@
     "react-email": "4.3.2",
     "tailwindcss": "^4.1.16",
     "ts-node": "^10.9.2",
-    "tw-animate-css": "latest",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.0.0",
     "vitest": "^2.1.9"
