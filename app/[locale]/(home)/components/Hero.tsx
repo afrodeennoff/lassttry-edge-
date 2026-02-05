@@ -3,6 +3,7 @@
 
 import React, { useRef } from 'react';
 import { motion, Variants, useScroll, useTransform } from 'framer-motion';
+import Link from 'next/link';
 
 interface HeroProps {
     onStart: () => void;
