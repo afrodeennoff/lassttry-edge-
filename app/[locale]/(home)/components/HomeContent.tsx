@@ -31,7 +31,7 @@ export default function HomeContent() {
             <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-teal-500/5 blur-[120px] rounded-full pointer-events-none"></div>
             <div className="noise"></div>
 
-            <Navigation />
+            <Navigation onAccessPortal={handleLogin} />
             <main className="flex-grow relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Hero onStart={handleLogin} />
                 <ProblemStatement />

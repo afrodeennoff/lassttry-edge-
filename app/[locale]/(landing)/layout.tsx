@@ -1,5 +1,5 @@
-import Navigation from "@/app/[locale]/(home)/components/Navigation";
-import Footer from "@/app/[locale]/(home)/components/Footer";
+import Navbar from "./components/navbar";
+import Footer from "./components/footer";
 
 import { Metadata } from 'next';
 
@@ -36,7 +36,7 @@ export default async function RootLayout(
 
   return (
     <div className="px-2 sm:px-6 lg:px-32">
-      <Navigation />
+      <Navbar />
       <div className="mt-8 sm:mt-20 max-w-(--breakpoint-xl) mx-auto">
         {children}
       </div>
