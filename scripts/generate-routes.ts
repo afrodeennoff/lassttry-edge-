@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
+const startTime = Date.now()
 const __filename = decodeURIComponent(new URL(import.meta.url).pathname)
 const __dirname = path.dirname(__filename)
 
@@ -8,7 +9,7 @@ const appDir = path.join(__dirname, '../app')
 const outputFilePath = path.join(__dirname, '../public/routes.json')
 
 // Directories to skip entirely
-const SKIP_DIRS = new Set(['api', 'admin', 'components', 'utils', 'styles'])
+const SKIP_DIRS = new Set(['api', 'admin', 'components', 'utils', 'styles', 'actions', 'dashboard', 'shared', 'teams'])
 
 function normalizeSegment(segment: string): string {
   // Remove route group parentheses: (landing) -> empty string (skip in URL)
@@ -52,4 +53,4 @@ const routes = Array.from(new Set(collectRoutes(appDir))).sort()
 fs.mkdirSync(path.dirname(outputFilePath), { recursive: true })
 fs.writeFileSync(outputFilePath, JSON.stringify(routes, null, 2))
 
-console.log(`Generated ${routes.length} routes`)
+console.log(`✓ Generated ${routes.length} routes in ${Date.now() - startTime}ms`)
