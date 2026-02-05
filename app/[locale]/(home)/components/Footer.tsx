@@ -18,11 +18,11 @@ const Footer: React.FC = () => {
                         <a href="/#features" className="hover:text-white transition-colors">Features</a>
                         <a href="/pricing" className="hover:text-white transition-colors">Pricing</a>
                         <a href="/propfirms" className="hover:text-white transition-colors">Prop Firms Catalogue</a>
-                        <a href="#" className="hover:text-white transition-colors">Teams</a>
+                        <a href="/teams" className="hover:text-white transition-colors">Teams</a>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="text-white mb-2">Support</span>
-                        <a href="#" className="hover:text-white transition-colors">Company</a>
+                        <a href="/about" className="hover:text-white transition-colors">Company</a>
                         <a href="/about" className="hover:text-white transition-colors">About</a>
                         <a href="#" className="hover:text-white transition-colors">Legal</a>
                         <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>

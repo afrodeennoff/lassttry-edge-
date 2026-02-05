@@ -10,10 +10,15 @@ export async function POST(req: NextRequest) {
     let event;
     try {
         event = whop.webhooks.unwrap(requestBodyText, { headers });
-    } catch (err) {
-        logger.error('[Webhook] Signature verification failed', { err });
+    } catch (err: any) {
+        logger.error('[Webhook] Signature verification failed', {
+            error: err.message,
+            stack: err.stack,
+            headers: JSON.stringify(headers)
+        });
+
         return NextResponse.json(
-            { message: `Webhook Error: ${err}` },
+            { message: `Webhook Error: Signature verification failed. Check logs for details.` },
             { status: 400 }
         );
     }

@@ -1,18 +1,22 @@
 
 'use client';
 
-import React from 'react';
+import dynamic from 'next/dynamic';
 import Navigation from './Navigation';
 import Hero from './Hero';
 import ProblemStatement from './ProblemStatement';
-import AnalysisDemo from './AnalysisDemo';
-import Differentiators from './Differentiators';
-import HowItWorks from './HowItWorks';
-import Features from './Features';
-import Qualification from './Qualification';
-import CTA from './CTA';
 import Footer from './Footer';
 import { useRouter } from 'next/navigation';
+
+// Lazy load non-critical components
+const AnalysisDemo = dynamic(() => import('./AnalysisDemo'), {
+    loading: () => <div className="h-[600px] w-full bg-zinc-900/20 animate-pulse rounded-3xl mx-auto my-20 max-w-7xl" />
+});
+const Differentiators = dynamic(() => import('./Differentiators'));
+const HowItWorks = dynamic(() => import('./HowItWorks'));
+const Features = dynamic(() => import('./Features'));
+const Qualification = dynamic(() => import('./Qualification'));
+const CTA = dynamic(() => import('./CTA'));
 
 export default function HomeContent() {
     const router = useRouter();

@@ -27,7 +27,10 @@ async function handleWhopCheckout(lookup_key: string, user: any, websiteURL: str
     }
 
     if (!planId) {
-        return NextResponse.json({ message: "Plan ID not found for lookup key" }, { status: 404 });
+        console.error(`[Checkout] Plan not found for lookup_key: ${lookup_key}`);
+        return NextResponse.json({
+            message: "Plan configuration missing for this selection. Please contact support."
+        }, { status: 404 });
     }
 
     // Validate referral if provided
@@ -55,11 +58,25 @@ async function handleWhopCheckout(lookup_key: string, user: any, websiteURL: str
             redirect_url: `${websiteURL}dashboard?success=true&referral_applied=${referral ? 'true' : 'false'}`,
         });
 
+        if (!checkoutConfig.purchase_url) {
+            throw new Error("No purchase_url returned from Whop");
+        }
+
         // Redirect to Whop checkout URL
         return NextResponse.redirect(checkoutConfig.purchase_url, 303);
-    } catch (error) {
-        console.error("Error creating Whop checkout:", error);
-        return NextResponse.json({ message: "Error creating checkout session" }, { status: 500 });
+    } catch (error: any) {
+        console.error("[Checkout] Error creating Whop checkout session:", {
+            message: error.message,
+            stack: error.stack,
+            planId,
+            companyId
+        });
+
+        // Return a user-friendly error page or message
+        return NextResponse.redirect(
+            `${websiteURL}dashboard?error=checkout_failed&reason=provider_error`,
+            303
+        );
     }
 }
 

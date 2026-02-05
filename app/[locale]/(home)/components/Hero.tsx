@@ -90,10 +90,10 @@ const Hero: React.FC<HeroProps> = ({ onStart }) => {
                         Apply for Access
                     </button>
 
-                    <button className="text-zinc-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 group">
+                    <Link href="/docs" className="text-zinc-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-[0.2em] flex items-center gap-2 group">
                         View Documentation
                         <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                    </button>
+                    </Link>
                 </motion.div>
 
                 <motion.div
