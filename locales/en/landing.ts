@@ -221,6 +221,9 @@ export default {
                 '2025': '2025',
                 allTime: 'All Time'
             },
+            'count#zero': 'No payouts',
+            'count#one': '1 payout',
+            'count#other': '{count} payouts',
             payouts: {
                 title: 'Payout Statistics',
                 paid: {
@@ -235,10 +238,7 @@ export default {
                     label: 'Refused',
                     description: 'Total amount and count of refused payouts'
                 },
-                amount: 'Amount',
-                'count#zero': 'No payouts',
-                'count#one': '1 payout',
-                'count#other': '{count} payouts'
+                amount: 'Amount'
             },
             other: {
                 title: 'Other Prop Firms',

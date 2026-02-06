@@ -65,7 +65,7 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-green-700/70 dark:text-green-300/70">
-                {t('landing.propfirms.payouts.count', { count: paidCount })}
+                {t('landing.propfirms.count', { count: paidCount })}
               </p>
             </div>
 
@@ -80,7 +80,7 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-yellow-700/70 dark:text-yellow-300/70">
-                {t('landing.propfirms.payouts.count', { count: pendingCount })}
+                {t('landing.propfirms.count', { count: pendingCount })}
               </p>
             </div>
 
@@ -95,7 +95,7 @@ function renderPropfirmCard(
                 </span>
               </div>
               <p className="text-xs text-red-700/70 dark:text-red-300/70">
-                {t('landing.propfirms.payouts.count', { count: refusedCount })}
+                {t('landing.propfirms.count', { count: refusedCount })}
               </p>
             </div>
           </div>

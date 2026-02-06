@@ -318,6 +318,13 @@ export default function Navbar() {
                                     </NavigationMenuLink>
                                 </Link>
                             </NavigationMenuItem>
+                            <NavigationMenuItem onMouseEnter={() => setHoveredItem('propfirms')} onMouseLeave={() => setHoveredItem(null)}>
+                                <Link href="/propfirms" legacyBehavior passHref>
+                                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                        {t('landing.navbar.propFirms')}
+                                    </NavigationMenuLink>
+                                </Link>
+                            </NavigationMenuItem>
                             <NavigationMenuItem onMouseEnter={() => setHoveredItem('updates')} onMouseLeave={() => setHoveredItem(null)}>
                                 <NavigationMenuTrigger className='bg-transparent'>{t('landing.navbar.updates')}</NavigationMenuTrigger>
                                 <NavigationMenuContent onMouseEnter={() => setHoveredItem('updates')} onMouseLeave={() => setHoveredItem(null)}>
