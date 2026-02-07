@@ -17,7 +17,7 @@ export default {
             },
             subscriptionPayments: {
                 title: "4. Subscription and Payments",
-                content: "We offer paid plans on a monthly, quarterly, yearly, and lifetime basis. Payment is processed through Stripe. Refunds are generally not provided after the subscription period, but may be considered on a case-by-case basis. Any refunds may be subject to processing fees charged by our payment service provider.",
+                content: "We offer paid plans on a monthly, quarterly, yearly, and lifetime basis. Payment is processed through Whop (https://docs.whop.com/get-started). Refunds are generally not provided after the subscription period, but may be considered on a case-by-case basis. Any refunds may be subject to processing fees charged by our payment service provider.",
                 storageClarification: "The unlimited storage provided in the lifetime plan covers texts, images, and standard documents related to trades. Recording or storing video files is not supported.",
                 fairUse: "The term \"unlimited\" is understood within the framework of normal and non-abusive use of the service. We reserve the right to limit or restrict usage in case of excessive use or use contrary to the platform's purpose.",
                 lifetimePlan: {
