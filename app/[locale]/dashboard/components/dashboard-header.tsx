@@ -1,13 +1,12 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useSidebar } from '@/components/ui/sidebar';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useDashboard } from '@/app/[locale]/dashboard/dashboard-context';
 import { AddWidgetSheet } from '@/app/[locale]/dashboard/components/add-widget-sheet';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/locales/client';
 import { FilterCommandMenu } from './filters/filter-command-menu';
 import ImportButton from './import/import-button';
 import { DailySummaryModal } from './daily-summary-modal';
@@ -19,14 +18,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     CloudUpload,
     CheckCircle2,
-    RefreshCw,
     Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
 export function DashboardHeader() {
     const pathname = usePathname();
-    const { toggleSidebar } = useSidebar();
     const {
         isCustomizing,
         toggleCustomizing,
@@ -37,7 +34,6 @@ export function DashboardHeader() {
     } = useDashboard();
     const { isPlusUser } = useData();
     const searchParams = useSearchParams();
-    const t = useI18n();
 
     const getTitle = () => {
         const tab = searchParams.get('tab');
@@ -68,9 +64,7 @@ export function DashboardHeader() {
             <div className="min-h-[64px] flex flex-wrap items-center justify-between gap-2 px-3 md:px-8">
                 {/* Left Side: Sidebar Toggle & Title */}
                 <div className="flex items-center gap-3 flex-shrink-0">
-                    <button onClick={toggleSidebar} className="p-2 text-muted-foreground hover:text-foreground lg:hidden">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
-                    </button>
+                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
                     <div className="flex items-baseline gap-3">
                         <h1 className="whitespace-nowrap text-sm font-bold uppercase tracking-wide text-foreground">{title}</h1>
                     </div>

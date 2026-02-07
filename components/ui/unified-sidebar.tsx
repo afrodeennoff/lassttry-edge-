@@ -220,7 +220,7 @@ const SIDEBAR_STYLE_CLASSES: Record<
     rail: "after:transition-colors after:duration-200 hover:bg-accent/40 hover:after:bg-border",
     header: "border-b border-border/60 px-3 py-3",
     brandCard: "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-border/60 bg-background px-2.5",
-    brandIcon: "flex size-8.5 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-foreground",
+    brandIcon: "flex size-8.5 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 text-primary",
     workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80",
     userCard:
       "mx-0.5 flex items-center gap-3 rounded-xl border border-border/60 bg-background p-2.5 transition-colors duration-200 hover:border-border",
@@ -253,7 +253,7 @@ const SIDEBAR_STYLE_CLASSES: Record<
     brandCard:
       "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white/[0.04] px-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
     brandIcon:
-      "flex size-8.5 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/15 text-primary",
+      "flex size-8.5 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-gradient-to-br from-primary/25 to-primary/10 text-primary",
     workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/85",
     userCard:
       "mx-0.5 flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.03] p-2.5 transition-colors duration-200 hover:border-white/25",
@@ -298,7 +298,7 @@ const SidebarItem = React.memo(({
   const isDisabled = Boolean(item.disabled)
   const isLink = Boolean(item.href) && !isDisabled
   const styles = SIDEBAR_STYLE_CLASSES[styleVariant]
-  const hoverAnimation = !reduceMotion && !isDisabled ? { x: 1 } : undefined
+  const hoverAnimation = !reduceMotion && !isDisabled ? { x: 1.5 } : undefined
   const tapAnimation = !reduceMotion && !isDisabled ? { scale: 0.995 } : undefined
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -311,38 +311,47 @@ const SidebarItem = React.memo(({
   }
 
   const content = (
-    <div className="relative flex w-full min-w-0 items-center gap-2.5">
+    <div className="flex items-center gap-3 w-full relative z-10">
       {active && (
         <motion.div
-          layoutId="activeSidebarTrack"
-          className={cn("absolute -left-2 top-1 bottom-1 w-0.5 rounded-full", styles.itemTrack)}
+          layoutId="activeHighlight"
+          className={cn("absolute left-0 w-1 h-5 rounded-full", styles.itemTrack)}
           transition={reduceMotion ? { duration: 0 } : fastSpring}
         />
       )}
 
       <motion.div
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 transform-gpu",
-          active ? styles.itemIconActive : styles.itemIconInactive,
+          "relative flex size-7 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 transform-gpu",
+          active ? cn(styles.itemIconActive, "scale-110") : styles.itemIconInactive,
           isDisabled && "opacity-70"
         )}
         animate={
           reduceMotion
             ? undefined
-            : { scale: active ? 1.03 : 1 }
+            : { scale: active ? 1.06 : 1 }
         }
         transition={reduceMotion ? undefined : subtleSpring}
       >
         <div className="size-4">{item.icon}</div>
+        {active && (
+          <motion.div
+            layoutId="activeGlow"
+            className="absolute inset-0 rounded-full bg-primary/25 blur-md -z-10"
+            initial={reduceMotion ? undefined : { opacity: 0, scale: 0.6 }}
+            animate={reduceMotion ? undefined : { opacity: 1, scale: 1.3 }}
+            transition={reduceMotion ? undefined : { duration: 0.24, ease: "easeOut" }}
+          />
+        )}
       </motion.div>
 
       <motion.span
         className={cn(
           "truncate text-[13px] font-medium transition-colors group-data-[collapsible=icon]:hidden",
-          active ? "text-foreground" : "text-muted-foreground group-hover/item:text-foreground",
+          active ? "font-semibold text-primary" : "text-muted-foreground group-hover/item:text-foreground",
           isDisabled && "text-muted-foreground/70"
         )}
-        animate={reduceMotion ? undefined : { x: active ? 0.75 : 0 }}
+        animate={reduceMotion ? undefined : { x: active ? 0.9 : 0 }}
         transition={reduceMotion ? undefined : { duration: 0.16, ease: "easeOut" }}
       >
         {label}
@@ -376,8 +385,10 @@ const SidebarItem = React.memo(({
           aria-disabled={isDisabled || undefined}
           disabled={isDisabled && !isLink}
           className={cn(
-            "relative mx-0.5 h-10 rounded-xl border border-transparent px-2.5 transition-all duration-200 group/item will-change-transform",
-            active ? styles.itemButtonActive : styles.itemButtonInactive,
+            "relative mx-0.5 h-10 rounded-xl border border-transparent px-2.5 transition-all duration-200 group/item overflow-visible will-change-transform",
+            active
+              ? cn(styles.itemButtonActive, "shadow-sm")
+              : styles.itemButtonInactive,
             isDisabled && "opacity-60"
           )}
         >
@@ -476,8 +487,8 @@ export function UnifiedSidebar({
           </motion.div>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <LogoText />
-            <span className={cn(styles.workspaceLabel, "tracking-[0.16em]")}>
-              Trading Workspace
+            <span className={cn(styles.workspaceLabel, "tracking-[0.14em]")}>
+              Workspace
             </span>
           </div>
         </motion.div>
