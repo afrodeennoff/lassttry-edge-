@@ -19,10 +19,8 @@ interface AddWidgetSheetProps {
   trigger?: React.ReactNode
 }
 
-interface PreviewCardProps {
-  onClick: () => void
+interface PreviewCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
-  className?: string
 }
 
 interface LazyWidgetPreviewProps {
@@ -97,12 +95,13 @@ const LazyWidgetPreview: React.FC<LazyWidgetPreviewProps> = ({
 }
 
 const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(
-  ({ onClick, className, children }, ref) => {
+  ({ onClick, className, children, ...props }, ref) => {
     const t = useI18n()
     const { isMobile } = useData()
     return (
       <div
         ref={ref}
+        {...props}
         className={cn(
           "cursor-pointer rounded-md relative group m-1 w-full overflow-hidden px-2",
           "active:scale-[0.98] transition-all duration-150 ease-in-out",
