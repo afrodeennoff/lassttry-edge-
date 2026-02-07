@@ -22,6 +22,15 @@ The payment system is built on top of Whop payment gateway and provides comprehe
 - **Access Control**: Middleware and hooks for protecting premium features
 - **Admin Tools**: Comprehensive admin interfaces for managing subscriptions and generating reports
 
+## Align with Whop's Get Started
+
+When you configure pricing or add new tiers, follow the official Whop Getting Started guide (https://docs.whop.com/get-started). Key steps to keep in sync with this project:
+
+1. **Create a Whop company/product** and define the plans you will sell (monthly, quarterly, yearly, lifetime) so the plan IDs map to the `PLAN_CONFIGS` entries in `server/payment-service.ts`.
+2. **Set up your checkout/embedded experience**, capture the purchase URL, and pass the metadata (user_id, plan, referral code) exactly as `createCheckoutSession` expects.
+3. **Configure the webhook endpoint (`/api/whop/webhook`)** and copy the `WHOP_WEBHOOK_SECRET` into your environment so the server can validate incoming events before `webhook-service` processes them.
+4. **Wire up payouts and invoices** inside Whop and rely on the `paymentService` helpers to record transactions/invoices locally whenever events fire.
+
 ## Installation & Setup
 
 ### 1. Install Dependencies

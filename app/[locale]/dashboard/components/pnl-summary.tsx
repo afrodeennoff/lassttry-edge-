@@ -32,7 +32,7 @@ export function PnLSummary({ className }: PnLSummaryProps) {
       if (!isWithinInterval(date, { start: startDay, end: endDay })) return
 
       daily.pnl += data.pnl || 0
-      daily.total += data.tradeNumber || 0
+      daily.total += data.tradeNumber || 0;
 
       (data.trades ?? []).forEach((trade) => {
         if ((trade.pnl || 0) > 0) {

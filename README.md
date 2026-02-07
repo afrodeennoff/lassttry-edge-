@@ -99,6 +99,12 @@
 - **Platform Integrations**: FTMO, ProjectX, ATAS, Interactive Brokers (IBKR)
 - **Deployment**: Vercel-optimized with edge functions
 
+### Whop Payments Reference
+
+- Follow the Whop Getting Started guide (https://docs.whop.com/get-started) when building your pricing/checkout flow, especially the sections on creating products, checkout links, and embedding Whop widgets.
+- Keep the `PLAN_CONFIGS` plan IDs in sync with the plans you configure inside Whop, and ensure the environment variables (`WHOP_API_KEY`, `WHOP_COMPANY_ID`, `WHOP_WEBHOOK_SECRET`, etc.) mirror the credentials you collect there.
+- Whop's webhooks are already wired up inside `server/webhook-service.ts`, so configure the webhook URL to point at `/api/whop/webhook` and keep the `WHOP_WEBHOOK_SECRET` in sync with what you enter on Whop's dashboard.
+
 ### Development Tools
 
 - **Package Manager**: Bun (recommended) or npm
