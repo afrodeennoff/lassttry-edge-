@@ -27,7 +27,6 @@ interface Comment {
 }
 
 interface CommentSectionProps {
-  postId: string
   comments: Comment[]
   onAddComment: (content: string, parentId: string | null) => Promise<Comment>
   onEditComment: (commentId: string, content: string) => Promise<void>
@@ -61,11 +60,11 @@ function CommentComponent({
     
     setIsSubmitting(true)
     try {
-      const addedComment = await onAddComment(replyContent, comment.id)
+      await onAddComment(replyContent, comment.id)
       setReplyContent('')
       setIsReplying(false)
       toast.success(t('community.comments.success.reply'))
-    } catch (error) {
+    } catch {
       toast.error(t('community.comments.error.reply'))
     } finally {
       setIsSubmitting(false)
@@ -80,7 +79,7 @@ function CommentComponent({
       await onEditComment(comment.id, content)
       setIsEditing(false)
       toast.success(t('community.comments.success.update'))
-    } catch (error) {
+    } catch {
       toast.error(t('community.comments.error.update'))
     } finally {
       setIsSubmitting(false)
@@ -94,7 +93,7 @@ function CommentComponent({
     try {
       await onDeleteComment(comment.id)
       toast.success(t('community.comments.success.delete'))
-    } catch (error) {
+    } catch {
       toast.error(t('community.comments.error.delete'))
     } finally {
       setIsSubmitting(false)
@@ -239,7 +238,6 @@ function CommentComponent({
 }
 
 export function CommentSection({
-  postId,
   comments,
   onAddComment,
   onEditComment,
@@ -255,10 +253,10 @@ export function CommentSection({
     
     setIsSubmitting(true)
     try {
-      const addedComment = await onAddComment(newComment, null)
+      await onAddComment(newComment, null)
       setNewComment('')
       toast.success(t('community.comments.success.add'))
-    } catch (error) {
+    } catch {
       toast.error(t('community.comments.error.add'))
     } finally {
       setIsSubmitting(false)

@@ -60,6 +60,7 @@ export async function getPosts() {
 
       // Remove the comments array from the post object since we only need the count
       const { comments, ...postWithoutComments } = post
+      void comments
       return {
         ...postWithoutComments,
         _count: {

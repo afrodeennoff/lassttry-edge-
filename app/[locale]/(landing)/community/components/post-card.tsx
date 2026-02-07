@@ -1,9 +1,9 @@
 'use client'
 
-import { Post, PostStatus, PostType, Vote, VoteType } from '@/prisma/generated/prisma'
+import { PostStatus, PostType, Vote, VoteType } from '@/prisma/generated/prisma'
 import { formatDistanceToNow } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
-import { ArrowBigDown, ArrowBigUp, MessageSquare, ImageIcon, Pencil, ExternalLink, Link as LinkIcon, Copy, Check, MoreHorizontal, Settings2 } from 'lucide-react'
+import { ArrowBigDown, ArrowBigUp, MessageSquare, ImageIcon, Pencil, ExternalLink, Copy, Check, MoreHorizontal, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useI18n, useCurrentLocale } from '@/locales/client'
@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/dialog'
 import { votePost, deletePost, getComments, addComment, editComment, deleteComment, editPost, updatePostStatus } from '@/app/[locale]/(landing)/actions/community'
 import { toast } from 'sonner'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { CommentSection } from './comment-section'
 import { Textarea } from '@/components/ui/textarea'
@@ -44,6 +44,18 @@ interface Props {
   post: ExtendedPost
   isExpanded?: boolean
   isAuthor: boolean
+}
+
+interface PostComment {
+  id: string
+  content: string
+  createdAt: Date
+  user: {
+    id: string
+    email: string
+  }
+  parentId: string | null
+  replies: PostComment[]
 }
 
 const typeColors: Record<PostType, string> = {
@@ -71,7 +83,7 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(post.content)
   const [isCommentsOpen, setIsCommentsOpen] = useState(isExpanded)
-  const [comments, setComments] = useState<any[]>([])
+  const [comments, setComments] = useState<PostComment[]>([])
   const [commentCount, setCommentCount] = useState<number>(post._count.comments)
   const user = useUserStore(state => state.user)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
@@ -87,16 +99,10 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
     try {
       const fetchedComments = await getComments(post.id)
       setComments(fetchedComments)
-    } catch (error) {
+    } catch {
       toast.error('Failed to load comments')
     }
-  }, [post.id]);
-
-  useEffect(() => {
-    if (isCommentsOpen) {
-      loadComments()
-    }
-  }, [isCommentsOpen, loadComments])
+  }, [post.id])
 
   async function handleVote(type: VoteType) {
     if (!user) {
@@ -134,7 +140,7 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
       setOptimisticVotes(newVotes)
       await votePost(post.id, type)
       router.refresh()
-    } catch (error) {
+    } catch {
       // Revert optimistic update
       setOptimisticVotes(post.votes)
       toast.error('Failed to vote')
@@ -146,7 +152,7 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
       await deletePost(post.id)
       router.refresh()
       toast.success('Post deleted')
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete post')
     }
   }
@@ -157,7 +163,7 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
       router.refresh()
       setIsEditing(false)
       toast.success('Post updated')
-    } catch (error) {
+    } catch {
       toast.error('Failed to update post')
     }
   }
@@ -197,12 +203,19 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
     }, 2000)
   }
 
+  const handleToggleComments = async () => {
+    if (!isCommentsOpen) {
+      await loadComments()
+    }
+    setIsCommentsOpen(prev => !prev)
+  }
+
   async function handleStatusChange(status: PostStatus) {
     try {
       await updatePostStatus(post.id, status)
       router.refresh()
       toast.success('Post status updated')
-    } catch (error) {
+    } catch {
       toast.error('Failed to update post status')
     }
   }
@@ -380,7 +393,7 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
                 {t('community.post.score')}: {score}
               </span>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsCommentsOpen(!isCommentsOpen)}>
+            <Button variant="ghost" size="sm" onClick={handleToggleComments}>
               <MessageSquare className="mr-1 h-4 w-4" />
               {commentCount} {t('community.post.comments')}
             </Button>
@@ -390,7 +403,6 @@ export function PostCard({ post, isExpanded = false, isAuthor }: Props) {
           <div className="border-t px-6 py-4">
             <div className="max-w-3xl mx-auto space-y-6">
               <CommentSection
-                postId={post.id}
                 comments={comments}
                 onAddComment={handleAddComment}
                 onEditComment={handleEditComment}

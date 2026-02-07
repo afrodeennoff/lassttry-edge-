@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import { whop } from '@/lib/whop'
-import { createClient } from '@/server/auth'
 import { logger } from '@/lib/logger'
 import crypto from 'crypto'
 import { PromotionType, TransactionStatus, TransactionType, InvoiceStatus } from '@/prisma/generated/prisma'
@@ -59,7 +58,7 @@ export interface CheckoutSessionOptions {
   planKey: string
   userId: string
   email: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   promotionCode?: string
   referralCode?: string
 }
@@ -80,7 +79,7 @@ export class PaymentService {
     error?: string
   }> {
     try {
-      const { planKey, userId, email, metadata = {}, promotionCode, referralCode } = options
+      const { planKey, userId, email, metadata = {}, referralCode } = options
       const plan = PLAN_CONFIGS[planKey]
 
       if (!plan) {
@@ -89,7 +88,7 @@ export class PaymentService {
 
       const companyId = process.env.WHOP_COMPANY_ID || 'biz_jh37YZGpH5dWIY'
 
-      const checkoutMetadata: Record<string, any> = {
+      const checkoutMetadata: Record<string, unknown> = {
         user_id: userId,
         email,
         plan: planKey,
@@ -181,7 +180,7 @@ export class PaymentService {
     currency?: string
     type?: TransactionType
     status?: TransactionStatus
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   }): Promise<{ success: boolean; transactionId?: string; error?: string }> {
     try {
       const transaction = await prisma.paymentTransaction.create({
@@ -219,7 +218,7 @@ export class PaymentService {
     amountDue: number
     currency?: string
     dueDate?: Date
-    lines?: any[]
+    lines?: unknown[]
     invoicePdf?: string
     hostedInvoiceUrl?: string
   }): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
@@ -310,7 +309,7 @@ export class PaymentService {
     status?: TransactionStatus | string
   }): Promise<{
     success: boolean
-    transactions?: any[]
+    transactions?: unknown[]
     error?: string
   }> {
     try {
@@ -337,7 +336,7 @@ export class PaymentService {
     status?: InvoiceStatus | string
   }): Promise<{
     success: boolean
-    invoices?: any[]
+    invoices?: unknown[]
     error?: string
   }> {
     try {
