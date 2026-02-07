@@ -17,7 +17,7 @@ export default {
             },
             subscriptionPayments: {
                 title: "4. Abonnement et paiements",
-                content: "Nous proposons des plans payants sur une base mensuelle, trimestrielle, annuelle et à vie. Le paiement est traité via Stripe. Les remboursements ne sont généralement pas fournis après la période d'abonnement, mais peuvent être considérés au cas par cas. Tout remboursement peut être soumis aux frais de traitement facturés par notre fournisseur de services de paiement.",
+                content: "Nous proposons des plans payants sur une base mensuelle, trimestrielle, annuelle et à vie. Le paiement est traité via Whop (https://docs.whop.com/get-started). Les remboursements ne sont généralement pas fournis après la période d'abonnement, mais peuvent être considérés au cas par cas. Tout remboursement peut être soumis aux frais de traitement facturés par notre fournisseur de services de paiement.",
                 storageClarification: "Le stockage illimité prévu dans le plan à vie couvre les textes, images et documents standards liés aux trades. L'enregistrement ou le stockage de fichiers vidéo n'est pas pris en charge.",
                 fairUse: "Le terme \"illimité\" s'entend dans le cadre d'un usage normal et non abusif du service. Nous nous réservons le droit de limiter ou restreindre l'usage en cas d'utilisation excessive ou contraire à la finalité de la plateforme.",
                 lifetimePlan: {
