@@ -1,173 +1,109 @@
-
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
-const mockData = [
-    { name: 'S1', eqs: 82, discipline: 90, pnl: 400 },
-    { name: 'S2', eqs: 95, discipline: 98, pnl: -210 },
-    { name: 'S3', eqs: 42, discipline: 30, pnl: 1400 },
-    { name: 'S4', eqs: 88, discipline: 85, pnl: -150 },
-    { name: 'S5', eqs: 92, discipline: 95, pnl: 650 },
-    { name: 'S6', eqs: 96, discipline: 94, pnl: 800 },
+const data = [
+    { session: 'Mon', score: 72, pnl: 240 },
+    { session: 'Tue', score: 81, pnl: 390 },
+    { session: 'Wed', score: 77, pnl: -110 },
+    { session: 'Thu', score: 88, pnl: 520 },
+    { session: 'Fri', score: 92, pnl: 760 },
 ];
 
-const logs = [
-    { time: "10:42:01", level: "INFO", msg: "Initializing neural handshake with Broker API..." },
-    { time: "10:42:03", level: "INFO", msg: "Parsing last 50 execution ticks..." },
-    { time: "10:42:08", level: "WARN", msg: "Analysis: Entry slippage > 2.5s detected on Trade #491." },
-    { time: "10:42:15", level: "CRIT", msg: "Pattern Match: 'Revenge Tilt' detected (Confidence: 94%)." },
-    { time: "10:42:16", level: "WARN", msg: "Position size deviation +150% from baseline." },
-    { time: "10:42:18", level: "ACTN", msg: "Intervention: Locking terminal for 15m cooling period..." },
-    { time: "10:42:25", level: "SYST", msg: "Optimizing: Risk parameters adjusted for next session." }
+const signals = [
+    'Reduced position size after two losses: rule respected.',
+    'Best win-rate window: 09:40 - 10:35 session block.',
+    'High-confidence edge appears when checklist is complete.'
 ];
 
 const AnalysisDemo: React.FC = () => {
-    const [logIndex, setLogIndex] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setLogIndex((prev) => (prev < logs.length - 1 ? prev + 1 : 0));
-        }, 1500);
-        return () => clearInterval(interval);
-    }, []);
-
     return (
-        <section id="performance-visualization" className="py-fluid-xl relative bg-[#050505] border-t border-white/5">
-            <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none"></div>
+        <section id="performance-visualization" className="py-fluid-xl border-b border-white/8 bg-[#040404]">
+            <div className="container-fluid">
+                <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-teal-300">Live Analysis</p>
+                        <h2 className="mt-3 text-fluid-2xl sm:text-fluid-4xl font-black tracking-tight leading-[0.96]">
+                            Convert Journal Noise
+                            <br />
+                            <span className="text-zinc-500">Into Actionable Signals</span>
+                        </h2>
+                    </div>
+                    <p className="max-w-md text-sm text-zinc-400">
+                        Behavioral metrics and execution quality sit beside your PnL, so you can make decisions before damage compounds.
+                    </p>
+                </div>
 
-            <div className="container-fluid relative z-10">
-                <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-10">
+                <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
+                        className="rounded-2xl border border-white/10 bg-zinc-950/80 p-4 sm:p-6"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-20"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
-                            </span>
-                            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-teal-500 font-mono">Live Interceptor</h2>
-                        </div>
-                        <h3 className="text-fluid-2xl md:text-fluid-4xl font-bold tracking-tight text-white leading-tight">
-                            Predictive <span className="text-zinc-600">Intervention.</span>
-                        </h3>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        className="text-zinc-500 text-sm max-w-sm leading-relaxed border-l-2 border-zinc-800 pl-6"
-                    >
-                        Our AI models don't just record your trades. They <strong className="text-white">predict failure points</strong> before they happen and intervene in real-time.
-                    </motion.div>
-                </div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="grid lg:grid-cols-3 bg-[#080808] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
-                >
-                    {/* Main Chart Area */}
-                    <div className="lg:col-span-2 p-8 md:p-10 relative bg-gradient-to-b from-[#0a0a0a] to-[#080808]">
-                        {/* Scanning Line Effect */}
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                            <div className="w-[1px] h-full bg-teal-500/10 absolute top-0 left-0 animate-[scan_4s_linear_infinite] shadow-[0_0_30px_rgba(45,212,191,0.1)]"></div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-6 mb-12 relative z-10">
-                            <div className="space-y-1">
-                                <h4 className="font-mono text-[10px] uppercase text-zinc-500 tracking-[0.2em]">Neural Confidence</h4>
-                                <div className="flex items-baseline gap-3">
-                                    <span className="text-4xl font-bold tracking-tighter text-white">94.2%</span>
-                                    <span className="text-xs text-teal-500 font-mono bg-teal-500/10 px-2 py-0.5 rounded">HIGH_FIDELITY</span>
-                                </div>
+                        <div className="mb-5 flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Execution Index</p>
+                                <p className="mt-1 text-2xl font-black text-white">92 / 100</p>
                             </div>
+                            <span className="rounded-lg border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">
+                                +14% Weekly
+                            </span>
                         </div>
 
-                        <div className="h-[300px] w-full relative z-10">
+                        <div className="h-[280px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={mockData}>
+                                <AreaChart data={data} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
                                     <defs>
-                                        <linearGradient id="eqsGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.15} />
+                                        <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.38} />
                                             <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
-                                    <XAxis dataKey="name" stroke="#52525b" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#52525b' }} />
-                                    <YAxis stroke="#52525b" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#52525b' }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#212121" vertical={false} />
+                                    <XAxis dataKey="session" stroke="#6b7280" fontSize={11} axisLine={false} tickLine={false} />
+                                    <YAxis stroke="#6b7280" fontSize={11} axisLine={false} tickLine={false} />
                                     <Tooltip
-                                        cursor={{ stroke: '#2dd4bf', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                        contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', fontSize: '11px', borderRadius: '6px', color: '#f4f4f5', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' }}
+                                        contentStyle={{
+                                            backgroundColor: '#09090b',
+                                            border: '1px solid #2a2a2f',
+                                            borderRadius: '10px',
+                                            fontSize: '11px'
+                                        }}
                                     />
-                                    <Area type="monotone" dataKey="eqs" stroke="#2dd4bf" strokeWidth={2} fill="url(#eqsGradient)" animationDuration={2000} />
+                                    <Area type="monotone" dataKey="score" stroke="#2dd4bf" strokeWidth={2.4} fill="url(#scoreFill)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* AI Terminal Sidebar */}
-                    <div className="bg-[#050505] p-0 flex flex-col border-t lg:border-t-0 lg:border-l border-white/5 font-mono text-xs relative">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#080808]">
-                            <h4 className="text-[10px] uppercase text-zinc-400 tracking-widest font-bold">Terminal Output</h4>
-                            <div className="flex gap-1.5">
-                                <span className="w-2 h-2 bg-red-500/20 rounded-full border border-red-500/50"></span>
-                                <span className="w-2 h-2 bg-yellow-500/20 rounded-full border border-yellow-500/50"></span>
-                                <span className="w-2 h-2 bg-green-500/20 rounded-full border border-green-500/50"></span>
-                            </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.08 }}
+                        className="rounded-2xl border border-white/10 bg-black/50 p-4 sm:p-6"
+                    >
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">AI Findings</p>
+                        <h3 className="mt-2 text-xl font-black tracking-tight">Session Intelligence Feed</h3>
+
+                        <div className="mt-4 space-y-3">
+                            {signals.map((signal, i) => (
+                                <div key={signal} className="rounded-xl border border-white/8 bg-white/[0.02] p-3.5">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Signal 0{i + 1}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-zinc-300">{signal}</p>
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="flex-grow p-6 overflow-hidden relative">
-                            <div className="flex flex-col justify-end h-full gap-3">
-                                <AnimatePresence mode="popLayout">
-                                    {logs.slice(0, logIndex + 1).slice(-6).map((log, i) => (
-                                        <motion.div
-                                            key={`${logIndex}-${i}`}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            className="flex gap-3 text-[10px] md:text-[11px] leading-relaxed font-mono"
-                                        >
-                                            <span className="text-zinc-600 flex-shrink-0">[{log.time}]</span>
-                                            <span className={`font-bold w-8 flex-shrink-0 ${log.level === 'INFO' ? 'text-blue-400' :
-                                                log.level === 'WARN' ? 'text-yellow-400' :
-                                                    log.level === 'CRIT' ? 'text-red-500' :
-                                                        log.level === 'ACTN' ? 'text-teal-400' :
-                                                            'text-zinc-400'
-                                                }`}>{log.level}</span>
-                                            <span className="text-zinc-300">{log.msg}</span>
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                                <motion.div
-                                    animate={{ opacity: [0, 1, 0] }}
-                                    transition={{ repeat: Infinity, duration: 0.8 }}
-                                    className="w-2 h-4 bg-teal-500/50 mt-1"
-                                />
-                            </div>
+                        <div className="mt-4 rounded-xl border border-teal-400/20 bg-teal-400/10 p-3.5">
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-teal-300">Intervention Suggestion</p>
+                            <p className="mt-1 text-sm text-zinc-100">Enable auto cool-down after 2 consecutive red trades.</p>
                         </div>
-
-                        <div className="p-6 border-t border-white/5 bg-[#080808]">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-[10px] uppercase text-zinc-500 tracking-widest">Anomaly Probability</span>
-                                <span className="text-xs font-bold text-red-400">Critical (89%)</span>
-                            </div>
-                            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    whileInView={{ width: '89%' }}
-                                    transition={{ delay: 0.5, duration: 1 }}
-                                    className="h-full bg-gradient-to-r from-red-600 to-red-400"
-                                ></motion.div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </section>
     );

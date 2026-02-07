@@ -22,7 +22,7 @@ describe('Property-Based Tests', () => {
             action: fc.string(),
             inputs: fc.constant({}),
             environmentContext: fc.record({
-              deploymentEnv: fc.constantFrom('development', 'staging', 'production' as const),
+              deploymentEnv: fc.constantFrom<'development' | 'staging' | 'production'>('development', 'staging', 'production'),
               region: fc.string(),
               telemetryEnabled: fc.boolean(),
             }),
@@ -36,6 +36,7 @@ describe('Property-Based Tests', () => {
               riskAssessment: {
                 severityTier: 'Medium' as SeverityTier,
                 ...assessment,
+                residualRiskScore: 0,
               },
               features: [],
               dataHandling: {

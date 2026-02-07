@@ -33,5 +33,7 @@
   "/[locale]/teams/dashboard/trader/[slug]",
   "/[locale]/teams/join",
   "/[locale]/teams/manage",
-  "/[locale]/terms"
+  "/[locale]/terms",
+  "/[locale]/updates",
+  "/[locale]/updates/[slug]"
 ]

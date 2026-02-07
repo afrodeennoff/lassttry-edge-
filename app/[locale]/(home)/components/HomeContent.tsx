@@ -24,10 +24,12 @@ export default function HomeContent() {
     };
 
     return (
-        <div className="selection:bg-teal-500/30 relative bg-[#050505] text-white overflow-x-hidden landing-scrollbar font-sans">
-            <div className="fixed inset-0 grid-pattern pointer-events-none opacity-50"></div>
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-teal-500/5 blur-[120px] rounded-full pointer-events-none"></div>
-            <div className="noise"></div>
+        <div className="selection:bg-teal-500/30 relative bg-[#040404] text-white overflow-x-hidden landing-scrollbar font-sans">
+            <div className="fixed inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
+            <div className="pointer-events-none fixed inset-0">
+                <div className="absolute left-1/2 top-[-220px] h-[560px] w-[min(1000px,92vw)] -translate-x-1/2 rounded-full bg-teal-500/12 blur-[120px]" />
+                <div className="absolute -left-24 bottom-16 h-64 w-64 rounded-full bg-emerald-400/8 blur-[100px]" />
+            </div>
 
             <main className="relative z-10 w-full">
                 <Hero onStart={handleLogin} />

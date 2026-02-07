@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 interface AuthenticationLayoutProps {
@@ -11,15 +11,8 @@ export default function AuthenticationLayout({
   children
 }: AuthenticationLayoutProps) {
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.slice(1)); // Remove the # and parse
 
@@ -32,7 +25,7 @@ export default function AuthenticationLayout({
       // Clear the hash after showing the toast
       router.replace('/authentication');
     }
-  }, [router, isClient]);
+  }, [router]);
 
   return children;
 }

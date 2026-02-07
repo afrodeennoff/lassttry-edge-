@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const REQUIRED_MANIFEST_FIELDS = [
   'schemaVersion',
@@ -27,7 +28,7 @@ function checkManifests() {
   }
 
   const widgetFiles = fs.readdirSync(widgetsDir)
-    .filter(file => file.endsWith('-widget.tsx') || file.endsWith('-widget.tsx'))
+    .filter((file) => file.endsWith('-widget.tsx') || file.endsWith('-widget.ts'))
 
   console.log(`Checking ${widgetFiles.length} widget files...`)
 
@@ -66,7 +67,7 @@ function checkManifests() {
           warnings.push(`P99 latency exceeds threshold in ${widgetName}`)
         }
         if (manifest.slos.errorRate > 0.001) {
-          warnings.push(`Error rate exceeds threshold in ${name}`)
+          warnings.push(`Error rate exceeds threshold in ${widgetName}`)
         }
       }
 
@@ -100,8 +101,12 @@ function checkManifests() {
   return { errors, warnings }
 }
 
-if (require.main === module) {
+const isDirectRun =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isDirectRun) {
   checkManifests()
 }
 
-module.exports = { checkManifests }
+export { checkManifests }

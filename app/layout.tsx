@@ -1,13 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import { connection } from "next/server";
 import { ScrollLockFix } from "@/components/scroll-lock-fix";
-
-const inter = Inter({ subsets: ["latin"] });
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -133,8 +130,6 @@ export default async function RootLayout({
       <head>
         {/* Resource Hinting for Performance */}
         <link rel="dns-prefetch" href="https://qunt-edge.vercel.app" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* Mobile-First Meta Tags */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
@@ -309,7 +304,7 @@ export default async function RootLayout({
           `}
         </style>
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <ScrollLockFix />
         <SpeedInsights />
         <Analytics />

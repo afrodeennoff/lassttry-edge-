@@ -1,50 +1,56 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
+const fitList = [
+    "Discretionary traders building repeatable routines",
+    "Prop firm candidates optimizing consistency",
+    "Funded traders protecting existing edge",
+    "Team leads auditing process quality"
+];
+
+const noFitList = [
+    "Signal-copy workflows with no journaling discipline",
+    "Impulse-driven sessions without risk framework",
+    "Vanity metric tracking with no review loop",
+    "Users looking for alert-only tools"
+];
+
 const Qualification: React.FC = () => {
     return (
-        <section className="py-fluid-xl border-t border-white/5 bg-[#050505]">
+        <section className="py-fluid-xl border-b border-white/8 bg-[#040404]">
             <div className="container-fluid">
-                <div className="grid md:grid-cols-2 gap-2 bg-white/5 border border-white/5 p-1 md:p-2 rounded-sm overflow-hidden">
+                <div className="grid gap-4 lg:grid-cols-2">
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -16 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="p-8 sm:p-10 lg:p-16 bg-[#080808]"
+                        className="rounded-2xl border border-teal-400/20 bg-teal-400/10 p-6"
                     >
-                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-teal-500 mb-10 mono">Ideal Candidate</h3>
-                        <ul className="space-y-6">
-                            {[
-                                "Discretionary traders seeking institutional structure",
-                                "Prop firm applicants targeting 100% consistency",
-                                "Funded traders protecting existing capital edges",
-                                "Traders tired of self-deception and PnL noise"
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-start gap-4 text-zinc-200">
-                                    <span className="text-teal-500 mt-1">✓</span>
-                                    <span className="text-sm font-medium leading-relaxed tracking-tight">{item}</span>
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-teal-300">Best Fit</p>
+                        <h3 className="mt-2 text-2xl font-black tracking-tight">High-Discipline Traders</h3>
+                        <ul className="mt-4 space-y-3">
+                            {fitList.map((item) => (
+                                <li key={item} className="flex gap-3 text-sm text-zinc-100">
+                                    <span className="mt-0.5 text-teal-200">✓</span>
+                                    <span>{item}</span>
                                 </li>
                             ))}
                         </ul>
                     </motion.div>
+
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: 16 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="p-8 sm:p-10 lg:p-16 bg-black"
+                        className="rounded-2xl border border-white/10 bg-zinc-950/80 p-6"
                     >
-                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 mb-10 mono">Hard Refusals</h3>
-                        <ul className="space-y-6 opacity-60">
-                            {[
-                                "Signal seekers or copy-trading accounts",
-                                "Social traders chasing dopamine and clout",
-                                "Casual dabblers trading for excitement",
-                                "Motivation chasers seeking 'mindset' coaches"
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-start gap-4 text-zinc-400">
-                                    <span className="text-zinc-700 mt-1">✕</span>
-                                    <span className="text-sm italic font-light leading-relaxed tracking-tight">{item}</span>
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Not Ideal</p>
+                        <h3 className="mt-2 text-2xl font-black tracking-tight">Noise-First Trading</h3>
+                        <ul className="mt-4 space-y-3">
+                            {noFitList.map((item) => (
+                                <li key={item} className="flex gap-3 text-sm text-zinc-400">
+                                    <span className="mt-0.5 text-zinc-600">✕</span>
+                                    <span>{item}</span>
                                 </li>
                             ))}
                         </ul>

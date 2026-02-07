@@ -11,19 +11,21 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", hover = false, size = "md", clickable = false, onClick, children, ...props }, ref) => {
-    const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const isInteractive = clickable || typeof onClick === "function"
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (clickable && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault()
         onClick?.(e as any)
       }
-    }, [clickable, onClick])
+    }
 
     return (
       <article
         ref={ref}
         role={clickable ? "button" : undefined}
         tabIndex={clickable ? 0 : undefined}
-        onKeyDown={handleKeyDown}
+        onKeyDown={isInteractive ? handleKeyDown : undefined}
         className={cn(
           "relative overflow-hidden rounded-xl transition-all duration-300 group",
           {
@@ -44,7 +46,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           },
           className
         )}
-        onClick={onClick}
+        onClick={isInteractive ? onClick : undefined}
         {...props}
       >
         {/* Scanning Line Animation */}

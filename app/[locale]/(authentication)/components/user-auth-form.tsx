@@ -4,7 +4,6 @@ import { signInWithDiscord, signInWithEmail, verifyOtp, signInWithGoogle, signIn
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
@@ -45,7 +44,7 @@ const otpFormSchema = z.object({
     otp: z.string().length(6, "Verification code must be 6 digits"),
 })
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
+type UserAuthFormProps = React.HTMLAttributes<HTMLDivElement>
 
 type AuthMethod = 'email' | 'discord' | 'google' | null
 

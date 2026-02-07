@@ -3,6 +3,7 @@ import { createI18nMiddleware } from "next-international/middleware"
 import { createServerClient } from "@supabase/ssr"
 import { geolocation } from "@vercel/functions"
 import { User } from "@supabase/supabase-js"
+import { assertProductionEnv, assertRequiredEnv, getEnv } from "@/lib/env"
 
 const MAINTENANCE_MODE = false
 const SUPPORTED_LOCALES = ["en", "fr", "de", "es", "it", "pt", "vi", "hi", "ja", "zh", "yo"]
@@ -63,7 +64,15 @@ const I18nMiddleware = createI18nMiddleware({
   urlMappingStrategy: "redirect", // Aligned with 'Actual URL: /en/pricing' spec
 })
 
+assertProductionEnv()
+
 async function updateSession(request: NextRequest) {
+  assertRequiredEnv([
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ])
+  const env = getEnv()
+
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -71,8 +80,8 @@ async function updateSession(request: NextRequest) {
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL!,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -82,9 +91,12 @@ async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, {
               ...options,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-              httpOnly: false,
+              secure:
+                process.env.NODE_ENV === "production"
+                  ? true
+                  : (options?.secure ?? false),
+              sameSite: options?.sameSite ?? "lax",
+              httpOnly: options?.httpOnly ?? true,
             })
           })
         },
@@ -121,13 +133,9 @@ async function updateSession(request: NextRequest) {
 
   if (user && !error) {
     response.headers.set("x-user-id", user.id)
-    response.headers.set("x-user-email", user.email || "")
     response.headers.set("x-auth-status", "authenticated")
   } else {
     response.headers.set("x-auth-status", "unauthenticated")
-    if (error) {
-      response.headers.set("x-auth-error", (error as any).message || "Unknown error")
-    }
   }
 
   return { response, user, error }
@@ -240,7 +248,9 @@ export default async function middleware(req: NextRequest) {
     const isLocalFile = origin === 'null' || referer?.startsWith('file://') || (!origin && !referer);
     const isDev = process.env.NODE_ENV === 'development';
 
-    console.log('Embed request debug:', { origin, referer, isLocalFile, nodeEnv: process.env.NODE_ENV, pathname });
+    if (isDev) {
+      console.log('Embed request debug:', { origin, referer, isLocalFile, nodeEnv: process.env.NODE_ENV, pathname });
+    }
 
     if (isLocalFile) {
       response.headers.delete('Content-Security-Policy');

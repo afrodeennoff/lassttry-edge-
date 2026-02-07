@@ -1,4 +1,3 @@
-// @ts-ignore
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { AutoSaveService, OfflineQueueManager } from '../auto-save-service'
 import { DashboardLayout } from '@/prisma/generated/prisma'
@@ -70,9 +69,9 @@ describe('AutoSaveService', () => {
         })
 
         it('should prevent concurrent saves', async () => {
-            let resolveSave: (value: unknown) => void
-            const slowSaveFunction = vi.fn(() => 
-                new Promise(resolve => {
+            let resolveSave: ((value: { success: boolean; error?: string }) => void) | undefined
+            const slowSaveFunction = vi.fn(() =>
+                new Promise<{ success: boolean; error?: string }>(resolve => {
                     resolveSave = resolve
                 })
             )
@@ -84,7 +83,7 @@ describe('AutoSaveService', () => {
             await new Promise(resolve => setTimeout(resolve, 50))
             expect(slowSaveFunction).toHaveBeenCalledTimes(1)
 
-            resolveSave!(undefined)
+            resolveSave?.({ success: true })
             await new Promise(resolve => setTimeout(resolve, 50))
         })
     })

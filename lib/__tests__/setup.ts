@@ -6,6 +6,13 @@ import pg from 'pg'
 let prisma: PrismaClient
 let pool: pg.Pool
 
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient
+  // eslint-disable-next-line no-var
+  var pool: pg.Pool
+}
+
 beforeAll(async () => {
   const connectionString = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL
 
@@ -21,8 +28,8 @@ beforeAll(async () => {
   const adapter = new PrismaPg(pool)
   prisma = new PrismaClient({ adapter })
 
-  global.prisma = prisma
-  global.pool = pool
+  globalThis.prisma = prisma
+  globalThis.pool = pool
 })
 
 afterAll(async () => {

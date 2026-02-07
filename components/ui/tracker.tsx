@@ -1,3 +1,5 @@
+"use client"
+
 // Tremor Tracker [v1.0.0]
 
 import React from "react"
