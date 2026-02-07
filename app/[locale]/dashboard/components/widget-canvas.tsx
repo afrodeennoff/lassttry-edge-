@@ -292,6 +292,22 @@ export default function WidgetCanvas() {
     return generateResponsiveLayout(currentLayout)
   }, [currentLayout])
 
+  const widgetPriorityById = useMemo(() => {
+    const sortedWidgets = [...currentLayout].sort((a, b) => {
+      if (a.y !== b.y) return a.y - b.y
+      return a.x - b.x
+    })
+
+    const immediateCount = isMobile ? 2 : 4
+    const nearCount = isMobile ? 3 : 4
+
+    return sortedWidgets.reduce((acc, widget, index) => {
+      acc[widget.i] =
+        index < immediateCount ? "immediate" : index < immediateCount + nearCount ? "near" : "deferred"
+      return acc
+    }, {} as Record<string, "immediate" | "near" | "deferred">)
+  }, [currentLayout, isMobile])
+
   useAutoScroll(isMobile && isCustomizing)
 
   const renderWidget = useCallback((widget: Widget) => {
@@ -309,8 +325,10 @@ export default function WidgetCanvas() {
       return widget.size as WidgetSize
     })()
 
-    return getWidgetComponent(widget.type as WidgetType, effectiveSize)
-  }, [isMobile, removeWidget])
+    const priority = widgetPriorityById[widget.i] ?? "deferred"
+
+    return getWidgetComponent(widget.type as WidgetType, effectiveSize, { priority })
+  }, [isMobile, removeWidget, widgetPriorityById])
 
   return (
     <div className={cn(

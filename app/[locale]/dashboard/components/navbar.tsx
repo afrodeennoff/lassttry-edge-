@@ -3,18 +3,14 @@
 import { useState } from 'react'
 import {
   Pencil,
-  Plus,
   RefreshCw,
   Sparkles,
-  LayoutDashboard,
-  Settings2,
   CloudUpload,
   CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import ImportButton from './import/import-button'
-import { useI18n } from "@/locales/client"
 import { useKeyboardShortcuts } from '../../../../hooks/use-keyboard-shortcuts'
 import { ActiveFilterTags } from './filters/active-filter-tags'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -29,7 +25,6 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { PnLSummary } from './pnl-summary'
 
 export default function Navbar() {
-  const t = useI18n()
   const {
     isCustomizing,
     toggleCustomizing,

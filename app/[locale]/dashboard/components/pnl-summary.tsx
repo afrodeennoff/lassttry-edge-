@@ -28,17 +28,17 @@ export function PnLSummary({ className }: PnLSummaryProps) {
     const endDay = endOfDay(now)
 
     Object.entries(calendarData ?? {}).forEach(([dateStr, data]) => {
+      const dayData = data as unknown as { pnl?: number; trades?: Array<{ pnl?: number }> }
       const date = parseISO(dateStr)
       if (!isWithinInterval(date, { start: startDay, end: endDay })) return
 
-      daily.pnl += data.pnl || 0
-      daily.total += data.tradeNumber || 0;
-
-      (data.trades ?? []).forEach((trade) => {
+      daily.pnl += dayData.pnl ?? 0
+      for (const trade of dayData.trades ?? []) {
+        daily.total += 1
         if ((trade.pnl || 0) > 0) {
           daily.wins += 1
         }
-      })
+      }
     })
 
     const winRate = daily.total > 0 ? Math.round((daily.wins / daily.total) * 100) : 0
