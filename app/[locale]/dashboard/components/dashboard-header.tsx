@@ -47,10 +47,10 @@ export function DashboardHeader() {
         if (isDashboardRoot) {
             if (tab === 'table') return 'Trades';
             if (tab === 'accounts') return 'Accounts';
-            if (tab === 'future') return 'Chart the Future';
+            if (tab === 'chart') return 'Chart the Future';
             return 'Overview';
         }
-        if (pathname.includes('strategies')) return 'Journal';
+        if (pathname.includes('strategies')) return 'Trade Desk';
         if (pathname.includes('reports')) return 'Analytics';
         if (pathname.includes('behavior')) return 'Behavior';
         if (pathname.includes('calendar')) return 'Calendar';

@@ -38,7 +38,7 @@ export default function Home() {
           <AccountsOverview size="large" />
         </TabsContent>
 
-        <TabsContent value="future" className="flex-1">
+        <TabsContent value="chart" className="flex-1">
           <ChartTheFuturePanel />
         </TabsContent>
 
@@ -49,5 +49,4 @@ export default function Home() {
     </div>
   );
 }
-
 

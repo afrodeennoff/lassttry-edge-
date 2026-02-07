@@ -18,7 +18,6 @@ import {
 } from "lucide-react"
 import React, { useState, useEffect } from "react"
 import { useData } from "@/context/data-provider"
-import { useTheme } from "@/context/theme-provider"
 import { useUserStore } from "@/store/user-store"
 import ReferralButton from "@/components/referral-button"
 import { UnifiedSidebar, UnifiedSidebarItem } from "@/components/ui/unified-sidebar"
@@ -26,7 +25,6 @@ import { checkAdminStatus } from "@/app/[locale]/dashboard/settings/actions"
 
 export function DashboardSidebar() {
   const { refreshAllData } = useData()
-  const { intensity, setIntensity } = useTheme()
   const user = useUserStore(state => state.supabaseUser)
   const timezone = useUserStore(state => state.timezone)
   const setTimezone = useUserStore(state => state.setTimezone)
@@ -56,7 +54,7 @@ export function DashboardSidebar() {
       group: "Trading"
     },
     {
-      href: "/dashboard?tab=future",
+      href: "/dashboard?tab=chart",
       icon: <Sparkles className="size-4.5" />,
       label: "Chart the Future",
       group: "Trading"
@@ -71,7 +69,7 @@ export function DashboardSidebar() {
     {
       href: "/dashboard/strategies",
       icon: <BookOpen className="size-4.5" />,
-      label: "Journal",
+      label: "Trade Desk",
       i18nKey: "dashboard.strategies",
       group: "Trading"
     },
@@ -158,6 +156,7 @@ export function DashboardSidebar() {
     <UnifiedSidebar
       items={navItems}
       user={user?.user_metadata}
+      styleVariant="glassy"
       actions={
         <>
           <ReferralButton />

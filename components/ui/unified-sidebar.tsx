@@ -3,7 +3,7 @@
 import React, { useMemo, useCallback } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/locales/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +13,7 @@ import {
   LogOut,
   ChevronsLeft,
   ChevronsRight,
-  Globe
+  Globe,
 } from "lucide-react"
 import {
   Sidebar,
@@ -29,7 +29,13 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export interface UnifiedSidebarItem {
   href?: string
@@ -57,29 +63,63 @@ export interface UnifiedSidebarConfig {
     onChange: (value: string) => void
   }
   onLogout?: () => void
+  styleVariant?: UnifiedSidebarStyle
 }
+
+export type UnifiedSidebarStyle = "minimal" | "glassy"
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.1,
-      duration: 0.4,
-      ease: [0.21, 0.47, 0.32, 0.98]
-    }
-  }
+      staggerChildren: 0.03,
+      delayChildren: 0.06,
+      duration: 0.3,
+      ease: [0.21, 0.47, 0.32, 0.98],
+    },
+  },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, x: -12, filter: "blur(4px)" },
+  hidden: { opacity: 0, x: -8 },
   visible: {
     opacity: 1,
     x: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.4, ease: [0.21, 0.47, 0.32, 0.98] }
-  }
+    transition: { duration: 0.24, ease: [0.21, 0.47, 0.32, 0.98] },
+  },
+}
+
+const fastSpring = {
+  type: "spring" as const,
+  stiffness: 340,
+  damping: 30,
+  mass: 0.65,
+}
+
+const subtleSpring = {
+  type: "spring" as const,
+  stiffness: 280,
+  damping: 26,
+  mass: 0.7,
+}
+
+function stripLocalePrefix(pathname: string) {
+  const withoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "")
+  return withoutLocale.length > 0 ? withoutLocale : "/"
+}
+
+function getUserInitials(user?: UnifiedSidebarConfig["user"]) {
+  const raw = user?.full_name || user?.email || "User"
+  const parts = raw
+    .replace(/@.*/, "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+
+  if (parts.length === 0) return "U"
+  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("")
 }
 
 /**
@@ -89,104 +129,267 @@ function useActiveLink() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const checkActive = useCallback((href: string) => {
-    if (!pathname) return false
+  const normalizedPathname = useMemo(() => {
+    if (!pathname) return ""
+    return stripLocalePrefix(pathname)
+  }, [pathname])
 
-    // Handle query params matching (e.g. ?tab=)
-    if (href.includes("?tab=")) {
-      const tab = href.split("tab=")[1]
-      const activeTab = searchParams.get("tab") || "widgets"
-      return pathname === "/dashboard" && activeTab === tab
-    }
+  const checkActive = useCallback(
+    (href: string) => {
+      if (!normalizedPathname) return false
 
-    // Handle exact dashboard match
-    if (href === "/dashboard") return pathname === "/dashboard" && (searchParams.get("tab") || "widgets") === "widgets"
+      const [basePath, queryString] = href.split("?")
+      const hrefParams = new URLSearchParams(queryString ?? "")
+      const hrefTab = hrefParams.get("tab")
 
-    // Handle root /teams/manage vs /teams/dashboard distinction
-    if (href === '/teams/manage' && pathname.includes('/teams/manage')) return true
-    if (href === '/teams/dashboard' && pathname.includes('/teams/dashboard')) return true
+      // Handle tab-aware dashboard links
+      if (basePath === "/dashboard" && hrefTab) {
+        const activeTab = searchParams.get("tab") || "widgets"
+        return normalizedPathname === "/dashboard" && activeTab === hrefTab
+      }
 
-    // Default prefix match
-    return pathname.startsWith(href)
-  }, [pathname, searchParams])
+      // Handle root dashboard route (widgets tab)
+      if (basePath === "/dashboard") {
+        return (
+          normalizedPathname === "/dashboard" &&
+          (searchParams.get("tab") || "widgets") === "widgets"
+        )
+      }
+
+      // Handle root /teams/manage vs /teams/dashboard distinction
+      if (basePath === "/teams/manage" && normalizedPathname.includes("/teams/manage")) {
+        return true
+      }
+
+      if (basePath === "/teams/dashboard" && normalizedPathname.includes("/teams/dashboard")) {
+        return true
+      }
+
+      // Default exact or nested match
+      return (
+        normalizedPathname === basePath ||
+        normalizedPathname.startsWith(`${basePath}/`)
+      )
+    },
+    [normalizedPathname, searchParams]
+  )
 
   return { checkActive }
 }
 
+type SidebarState = "expanded" | "collapsed"
+
+type SidebarItemProps = {
+  item: UnifiedSidebarItem
+  state: SidebarState
+  active: boolean
+  styleVariant: UnifiedSidebarStyle
+  reduceMotion: boolean
+}
+
+const SIDEBAR_STYLE_CLASSES: Record<
+  UnifiedSidebarStyle,
+  {
+    sidebar: string
+    rail: string
+    header: string
+    brandCard: string
+    brandIcon: string
+    workspaceLabel: string
+    userCard: string
+    avatar: string
+    avatarFallback: string
+    content: string
+    groupLabel: string
+    groupLine: string
+    itemTrack: string
+    itemIconActive: string
+    itemIconInactive: string
+    itemButtonActive: string
+    itemButtonInactive: string
+    selectTrigger: string
+    collapsedMeta: string
+    collapsedLine: string
+    footer: string
+    logout: string
+    collapse: string
+  }
+> = {
+  minimal: {
+    sidebar: "border-r border-border/60 bg-background",
+    rail: "after:transition-colors after:duration-200 hover:bg-accent/40 hover:after:bg-border",
+    header: "border-b border-border/60 px-3 py-3",
+    brandCard: "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-border/60 bg-background px-2.5",
+    brandIcon: "flex size-8.5 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-foreground",
+    workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80",
+    userCard:
+      "mx-0.5 flex items-center gap-3 rounded-xl border border-border/60 bg-background p-2.5 transition-colors duration-200 hover:border-border",
+    avatar: "size-9 border border-border/60 ring-1 ring-border/30",
+    avatarFallback: "bg-muted text-[11px] font-bold uppercase text-foreground",
+    content: "custom-scrollbar flex flex-col gap-4 px-2 py-3",
+    groupLabel: "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
+    groupLine: "h-px flex-1 bg-border/70",
+    itemTrack: "bg-foreground/80",
+    itemIconActive: "border-border/70 bg-background text-foreground",
+    itemIconInactive:
+      "border-border/60 bg-background text-muted-foreground group-hover/item:border-border group-hover/item:text-foreground",
+    itemButtonActive: "border-border/70 bg-accent/50 text-foreground",
+    itemButtonInactive: "hover:border-border/70 hover:bg-accent/35",
+    selectTrigger:
+      "h-9 rounded-xl border-input/60 bg-background text-[12px] font-medium hover:border-border focus:ring-sidebar-ring",
+    collapsedMeta: "flex flex-col items-center gap-2 py-3 opacity-40",
+    collapsedLine: "h-8 w-px bg-border",
+    footer: "border-t border-border/60 bg-background p-2.5",
+    logout:
+      "flex h-9 w-full items-center gap-3 rounded-xl px-3 text-muted-foreground transition-all duration-200 hover:bg-accent/50 hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+    collapse:
+      "flex h-9 w-full items-center gap-3 rounded-xl border border-transparent px-3 text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-accent/45 hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+  },
+  glassy: {
+    sidebar:
+      "border-r border-white/10 bg-gradient-to-b from-background/95 via-background/80 to-background/70 backdrop-blur-xl",
+    rail: "after:transition-colors after:duration-200 hover:bg-primary/10 hover:after:bg-primary/40",
+    header: "border-b border-white/10 px-3 py-3",
+    brandCard:
+      "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white/[0.04] px-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
+    brandIcon:
+      "flex size-8.5 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/15 text-primary",
+    workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/85",
+    userCard:
+      "mx-0.5 flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.03] p-2.5 transition-colors duration-200 hover:border-white/25",
+    avatar: "size-9 border border-white/15 ring-1 ring-white/10",
+    avatarFallback: "bg-primary/20 text-[11px] font-bold uppercase text-primary",
+    content: "custom-scrollbar flex flex-col gap-4 px-2 py-3",
+    groupLabel: "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/75",
+    groupLine: "h-px flex-1 bg-white/15",
+    itemTrack: "bg-primary",
+    itemIconActive:
+      "border-primary/30 bg-primary/15 text-primary shadow-[0_0_0_1px_rgba(var(--primary),0.15)]",
+    itemIconInactive:
+      "border-white/15 bg-white/[0.03] text-muted-foreground group-hover/item:border-white/25 group-hover/item:text-foreground",
+    itemButtonActive:
+      "border-primary/25 bg-primary/12 text-foreground shadow-[0_0_0_1px_rgba(var(--primary),0.10),0_6px_20px_rgba(0,0,0,0.12)]",
+    itemButtonInactive: "hover:border-white/20 hover:bg-white/[0.04]",
+    selectTrigger:
+      "h-9 rounded-xl border-white/20 bg-white/[0.03] text-[12px] font-medium hover:border-white/30 focus:ring-sidebar-ring",
+    collapsedMeta: "flex flex-col items-center gap-2 py-3 opacity-30",
+    collapsedLine: "h-8 w-px bg-gradient-to-b from-white/35 to-transparent",
+    footer: "border-t border-white/10 bg-background/75 p-2.5 backdrop-blur-sm",
+    logout:
+      "flex h-9 w-full items-center gap-3 rounded-xl px-3 text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+    collapse:
+      "flex h-9 w-full items-center gap-3 rounded-xl border border-transparent px-3 text-muted-foreground transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04] hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+  },
+}
+
 /**
- * Memoized Individual Sidebar Item
+ * Memoized individual sidebar item
  */
 const SidebarItem = React.memo(({
   item,
   state,
-  active
-}: {
-  item: UnifiedSidebarItem,
-  state: string,
-  active: boolean
-}) => {
+  active,
+  styleVariant,
+  reduceMotion,
+}: SidebarItemProps) => {
   const t = useI18n()
-  const label = item.i18nKey ? (t as any)(item.i18nKey) : item.label
+  const translate = t as unknown as (key: string) => string
+  const label = item.i18nKey ? translate(item.i18nKey) : item.label
+  const isDisabled = Boolean(item.disabled)
+  const isLink = Boolean(item.href) && !isDisabled
+  const styles = SIDEBAR_STYLE_CLASSES[styleVariant]
+  const hoverAnimation = !reduceMotion && !isDisabled ? { x: 2 } : undefined
+  const tapAnimation = !reduceMotion && !isDisabled ? { scale: 0.992 } : undefined
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (isDisabled) {
+      event.preventDefault()
+      return
+    }
+
+    item.action?.()
+  }
 
   const content = (
-    <div className="flex items-center gap-3 w-full relative z-10">
-      <div className="relative flex items-center justify-center">
-        <div className={cn(
-          "size-4.5 transition-all duration-300",
-          active ? "text-primary scale-110 drop-shadow-[0_0_6px_rgba(var(--primary),0.4)]" : "group-hover/item:text-primary/90 group-hover/item:scale-110"
-        )}>
-          {item.icon}
-        </div>
-        {active && (
-          <motion.div
-            layoutId="activeGlow"
-            className="absolute inset-0 bg-primary/25 blur-lg rounded-full -z-10"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1.5 }}
-            transition={{ duration: 0.4 }}
-          />
-        )}
-      </div>
-      <span className={cn(
-        "text-[13px] group-data-[collapsible=icon]:hidden font-medium transition-colors duration-200",
-        active ? "font-semibold text-primary" : "text-muted-foreground group-hover/item:text-foreground"
-      )}>{label}</span>
-      {item.badge}
+    <div className="relative flex w-full min-w-0 items-center gap-2.5">
       {active && (
         <motion.div
-          layoutId="activeHighlight"
-          className="absolute left-0 w-1 h-5 bg-primary rounded-full shadow-[0_0_12px_rgba(var(--primary),0.8)]"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          layoutId="activeSidebarTrack"
+          className={cn("absolute -left-2 top-1 bottom-1 w-0.5 rounded-full", styles.itemTrack)}
+          transition={reduceMotion ? { duration: 0 } : fastSpring}
         />
+      )}
+
+      <motion.div
+        className={cn(
+          "flex size-7 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 transform-gpu",
+          active ? styles.itemIconActive : styles.itemIconInactive,
+          isDisabled && "opacity-70"
+        )}
+        animate={
+          reduceMotion
+            ? undefined
+            : { scale: active ? 1.04 : 1, rotate: active ? 0.5 : 0 }
+        }
+        transition={reduceMotion ? undefined : subtleSpring}
+      >
+        <div className="size-4">{item.icon}</div>
+      </motion.div>
+
+      <motion.span
+        className={cn(
+          "truncate text-[13px] font-medium transition-colors group-data-[collapsible=icon]:hidden",
+          active ? "text-foreground" : "text-muted-foreground group-hover/item:text-foreground",
+          isDisabled && "text-muted-foreground/70"
+        )}
+        animate={reduceMotion ? undefined : { x: active ? 0.75 : 0 }}
+        transition={reduceMotion ? undefined : { duration: 0.18, ease: "easeOut" }}
+      >
+        {label}
+      </motion.span>
+
+      {item.badge && (
+        <motion.span
+          className="ml-auto shrink-0 group-data-[collapsible=icon]:hidden"
+          animate={reduceMotion ? undefined : { scale: active ? 1.02 : 1 }}
+          transition={reduceMotion ? undefined : subtleSpring}
+        >
+          {item.badge}
+        </motion.span>
       )}
     </div>
   )
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild={!!item.href}
-        isActive={active}
-        tooltip={state === "collapsed" ? label : undefined}
-        onClick={item.action}
-        className={cn(
-          "relative flex items-center gap-3 px-3 h-10 transition-all duration-300 group/item overflow-visible cursor-pointer rounded-lg mx-1 my-0.5",
-          "hover:bg-primary/5 border border-transparent",
-          active
-            ? "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/5 shadow-sm"
-            : "hover:border-border/40"
-        )}
+      <motion.div
+        layout={!reduceMotion}
+        transition={reduceMotion ? { duration: 0 } : subtleSpring}
+        whileHover={hoverAnimation}
+        whileTap={tapAnimation}
       >
-        {item.href ? (
-          <Link href={item.href}>
-            {content}
-          </Link>
-        ) : (
-          <span className="w-full text-left">
-            {content}
-          </span>
-        )}
-      </SidebarMenuButton>
+        <SidebarMenuButton
+          asChild={isLink}
+          isActive={active}
+          tooltip={state === "collapsed" ? label : undefined}
+          onClick={handleClick as React.MouseEventHandler<HTMLButtonElement>}
+          aria-disabled={isDisabled || undefined}
+          disabled={isDisabled && !isLink}
+          className={cn(
+            "relative mx-0.5 h-10 rounded-xl border border-transparent px-2.5 transition-all duration-200 group/item will-change-transform",
+            active ? styles.itemButtonActive : styles.itemButtonInactive,
+            isDisabled && "opacity-60"
+          )}
+        >
+          {isLink ? (
+            <Link href={item.href as string} aria-current={active ? "page" : undefined}>
+              {content}
+            </Link>
+          ) : (
+            content
+          )}
+        </SidebarMenuButton>
+      </motion.div>
     </SidebarMenuItem>
   )
 })
@@ -199,10 +402,13 @@ export function UnifiedSidebar({
   actions,
   showSubscription = true,
   timezone,
-  onLogout
+  onLogout,
+  styleVariant = "minimal",
 }: UnifiedSidebarConfig) {
   const { state, toggleSidebar } = useSidebar()
+  const shouldReduceMotion = useReducedMotion()
   const { checkActive } = useActiveLink()
+  const styles = SIDEBAR_STYLE_CLASSES[styleVariant]
 
   const groupedItems = useMemo(() => {
     return items.reduce((acc, item) => {
@@ -213,162 +419,254 @@ export function UnifiedSidebar({
     }, {} as Record<string, UnifiedSidebarItem[]>)
   }, [items])
 
-  const hasGroups = useMemo(() => Object.keys(groupedItems).length > 1, [groupedItems])
+  const hasGroups = useMemo(
+    () => Object.keys(groupedItems).length > 1,
+    [groupedItems]
+  )
+
+  const displayName = user?.full_name || user?.email?.split("@")[0] || "User"
+  const initials = useMemo(() => getUserInitials(user), [user])
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-background">
-      <SidebarRail className="after:transition-colors after:duration-200 hover:bg-sidebar-accent/10 hover:after:bg-sidebar-accent" />
+    <Sidebar
+      collapsible="icon"
+      className={cn(styles.sidebar, "transition-colors duration-300")}
+    >
+      <SidebarRail className={styles.rail} />
 
-      <SidebarHeader className="py-4 px-2 border-b border-border/50">
-        <div className="flex items-center gap-3 px-2 overflow-hidden h-12 mb-3">
-          <div className="flex items-center justify-center size-9 shrink-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl border border-primary/10 shadow-sm">
-            <Logo className="size-5 text-primary" />
+      <SidebarHeader className={styles.header}>
+        <motion.div
+          className={styles.brandCard}
+          initial={shouldReduceMotion ? undefined : { opacity: 0, y: -6 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={shouldReduceMotion ? undefined : subtleSpring}
+        >
+          <div className={styles.brandIcon}>
+            <Logo className="size-4.5" />
           </div>
-          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden transition-all duration-300 opacity-100">
+          <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <LogoText />
+            <span className={styles.workspaceLabel}>
+              Workspace
+            </span>
           </div>
-        </div>
+        </motion.div>
 
         {user && (
-          <div className={cn(
-            "mx-1 flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-card/80 to-card/40 border border-border/40 hover:border-border/80 transition-all duration-300 group/user",
-            "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:border-none"
-          )}>
-            <Avatar className="size-9 border border-border/50 shadow-sm ring-1 ring-border/20 transition-transform duration-300 group-hover/user:scale-105">
+          <motion.div
+            className={cn(
+              styles.userCard,
+              "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+            )}
+            initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={shouldReduceMotion ? undefined : subtleSpring}
+            whileHover={
+              shouldReduceMotion || state === "collapsed"
+                ? undefined
+                : { y: -1, scale: 1.005 }
+            }
+          >
+            <Avatar className={styles.avatar}>
               <AvatarImage src={user.avatar_url} />
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-[10px] font-bold uppercase">
-                {user.email?.[0] || 'U'}
+              <AvatarFallback className={styles.avatarFallback}>
+                {initials}
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex flex-col min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[13px] font-semibold tracking-tight text-foreground truncate group-hover/user:text-primary transition-colors">
-                  {user.full_name || user.email?.split('@')[0]}
+                <span className="truncate text-[13px] font-semibold text-foreground">
+                  {displayName}
                 </span>
-                {showSubscription && <SubscriptionBadge className="scale-90 origin-right shadow-none" />}
+                {showSubscription && (
+                  <SubscriptionBadge className="origin-right scale-90 shadow-none" />
+                )}
               </div>
-              <span className="text-[11px] font-medium text-muted-foreground truncate lowercase group-hover/user:text-muted-foreground/80">{user.email}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {user.email}
+              </span>
             </div>
-          </div>
+          </motion.div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="flex flex-col gap-6 p-3 custom-scrollbar">
+      <SidebarContent className={styles.content}>
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col gap-1.5"
+          layout={!shouldReduceMotion}
+          variants={shouldReduceMotion ? undefined : containerVariants}
+          initial={shouldReduceMotion ? undefined : "hidden"}
+          animate={shouldReduceMotion ? undefined : "visible"}
+          transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
+          className="flex flex-col gap-2"
         >
           {Object.entries(groupedItems).map(([group, groupItems]) => (
-            <SidebarGroup key={group} className="p-0">
+            <motion.div
+              key={group}
+              layout={!shouldReduceMotion}
+              transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
+            >
+              <SidebarGroup className="p-0">
               {hasGroups && group !== "default" && (
-                <SidebarGroupLabel className="text-[10px] font-bold uppercase text-muted-foreground/70 tracking-widest px-4 py-2 mt-2">
-                  {group}
+                <SidebarGroupLabel className="px-2 pb-1 pt-2">
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={shouldReduceMotion ? undefined : { opacity: 0, x: -4 }}
+                    animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+                    transition={shouldReduceMotion ? undefined : { duration: 0.18, ease: "easeOut" }}
+                  >
+                    <span className={styles.groupLabel}>
+                      {group}
+                    </span>
+                    <div className={styles.groupLine} />
+                  </motion.div>
                 </SidebarGroupLabel>
               )}
               <SidebarGroupContent>
-                <SidebarMenu className="gap-1.5">
-                  {groupItems.map((item) => (
-                    <motion.div key={item.label} variants={itemVariants}>
+                <SidebarMenu className="gap-1">
+                  {groupItems.map((item, index) => (
+                    <motion.div
+                      key={`${item.href || item.label}-${index}`}
+                      layout={!shouldReduceMotion}
+                      variants={shouldReduceMotion ? undefined : itemVariants}
+                      transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
+                    >
                       <SidebarItem
                         item={item}
-                        state={state}
-                        active={item.href ? checkActive(item.href) : false}
+                        state={state as SidebarState}
+                        styleVariant={styleVariant}
+                        reduceMotion={Boolean(shouldReduceMotion)}
+                        active={!item.disabled && !!item.href && checkActive(item.href)}
                       />
                     </motion.div>
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
-            </SidebarGroup>
+              </SidebarGroup>
+            </motion.div>
           ))}
 
           {actions && (
-            <SidebarGroup className="p-0">
+            <SidebarGroup className="p-0 pt-2">
               <SidebarGroupContent>
-                <SidebarMenu className="gap-1.5">
-                  {actions}
-                </SidebarMenu>
+                <SidebarMenu className="gap-1">{actions}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           )}
 
-          {timezone && state === "expanded" && (
-            <SidebarGroup className="p-0 mt-auto pt-4">
-              <SidebarGroupLabel className="text-[10px] font-bold uppercase text-muted-foreground/50 tracking-widest px-4 mb-2">
-                Preferences
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu className="gap-1.5">
-                  <motion.div variants={itemVariants}>
-                    <SidebarMenuItem>
-                      <div className="px-2">
-                        <Select value={timezone.value} onValueChange={timezone.onChange}>
-                          <SelectTrigger className="h-9 text-[12px] font-medium bg-background/50 border-input/40 hover:border-border/80 transition-colors focus:ring-sidebar-ring">
-                            <div className="flex items-center gap-2 truncate">
-                              <Globe className="size-3.5 text-muted-foreground" />
-                              <SelectValue placeholder="Select timezone" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {timezone.options.map(tz => (
-                              <SelectItem key={tz} value={tz} className="text-[12px]">
-                                {tz}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </SidebarMenuItem>
-                  </motion.div>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
+          <AnimatePresence initial={false}>
+            {timezone && state === "expanded" && (
+              <motion.div
+                key="timezone-prefs"
+                layout={!shouldReduceMotion}
+                initial={shouldReduceMotion ? undefined : { opacity: 0, y: 6 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: 6 }}
+                transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
+              >
+                <SidebarGroup className="mt-auto p-0 pt-3">
+                  <SidebarGroupLabel className="px-2 pb-1">
+                    <div className="flex items-center gap-2">
+                      <span className={styles.groupLabel}>
+                        Preferences
+                      </span>
+                      <div className={styles.groupLine} />
+                    </div>
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu className="gap-1">
+                      <motion.div
+                        variants={shouldReduceMotion ? undefined : itemVariants}
+                        initial={shouldReduceMotion ? undefined : "hidden"}
+                        animate={shouldReduceMotion ? undefined : "visible"}
+                      >
+                        <SidebarMenuItem>
+                          <div className="px-1.5">
+                            <Select value={timezone.value} onValueChange={timezone.onChange}>
+                              <SelectTrigger className={styles.selectTrigger}>
+                                <div className="flex items-center gap-2 truncate">
+                                  <Globe className="size-3.5 text-muted-foreground" />
+                                  <SelectValue placeholder="Select timezone" />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timezone.options.map((tz) => (
+                                  <SelectItem key={tz} value={tz} className="text-[12px]">
+                                    {tz}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </SidebarMenuItem>
+                      </motion.div>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {state === "collapsed" && (
-            <div className="flex flex-col items-center gap-2 py-4 opacity-20">
-              <div className="size-px h-10 bg-gradient-to-b from-muted/50 to-transparent" />
-              <span className="text-[9px] font-semibold uppercase text-muted-foreground tracking-[0.4em] leading-none text-center" style={{ writingMode: 'vertical-rl' }}>NAV</span>
-            </div>
-          )}
+          <AnimatePresence initial={false}>
+            {state === "collapsed" && (
+              <motion.div
+                key="collapsed-indicator"
+                className={styles.collapsedMeta}
+                initial={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
+                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+              >
+                <div className={styles.collapsedLine} />
+                <span
+                  className="text-[9px] font-semibold uppercase tracking-[0.28em] text-muted-foreground"
+                  style={{ writingMode: "vertical-rl" }}
+                >
+                  Menu
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/40 p-3 flex flex-col gap-1 bg-gradient-to-b from-background/50 to-background backdrop-blur-md">
-        <div className="flex flex-col gap-1">
+      <SidebarFooter className={styles.footer}>
+        <div className="flex flex-col gap-1.5">
           {onLogout && (
-            <button
+            <motion.button
+              type="button"
               onClick={onLogout}
-              className={cn(
-                "flex items-center gap-3 px-3 h-9 w-full rounded-lg transition-all duration-300",
-                "hover:bg-destructive/10 text-muted-foreground hover:text-destructive group/logout",
-                "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-              )}
+              className={styles.logout}
+              whileHover={shouldReduceMotion ? undefined : { x: 1 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
+              transition={shouldReduceMotion ? undefined : subtleSpring}
             >
-              <LogOut className="size-4 shrink-0 transition-transform group-hover/logout:-translate-x-0.5" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider group-data-[collapsible=icon]:hidden truncate">Logout</span>
-            </button>
+              <LogOut className="size-4 shrink-0" />
+              <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] group-data-[collapsible=icon]:hidden">
+                Logout
+              </span>
+            </motion.button>
           )}
 
-          <button
+          <motion.button
+            type="button"
             onClick={toggleSidebar}
-            className={cn(
-              "flex items-center gap-3 px-3 h-9 w-full rounded-lg transition-all duration-300",
-              "hover:bg-accent/5 text-muted-foreground hover:text-foreground border border-transparent hover:border-border/30",
-              "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-            )}
+            className={styles.collapse}
+            whileHover={shouldReduceMotion ? undefined : { x: 1 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.992 }}
+            transition={shouldReduceMotion ? undefined : subtleSpring}
           >
             {state === "expanded" ? (
               <>
                 <ChevronsLeft className="size-4 shrink-0" />
-                <span className="text-[11px] font-semibold uppercase tracking-wider group-data-[collapsible=icon]:hidden truncate">Collapse</span>
+                <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] group-data-[collapsible=icon]:hidden">
+                  Collapse
+                </span>
               </>
             ) : (
               <ChevronsRight className="size-4 shrink-0" />
             )}
-          </button>
+          </motion.button>
         </div>
       </SidebarFooter>
     </Sidebar>

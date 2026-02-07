@@ -74,6 +74,7 @@ export function TeamsSidebar() {
     <UnifiedSidebar
       items={navItems}
       user={user?.user_metadata}
+      styleVariant="minimal"
       showSubscription={false}
       timezone={{
         value: timezone,

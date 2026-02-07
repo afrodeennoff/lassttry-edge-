@@ -1,15 +1,9 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Mail, BarChart, UserPlus, Send } from "lucide-react"
 import { UnifiedSidebar, UnifiedSidebarItem } from "@/components/ui/unified-sidebar"
 
-interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> { }
-
-export function SidebarNav({ className, ...props }: SidebarNavProps) {
-  const pathname = usePathname()
-
+export function SidebarNav() {
   const routes: UnifiedSidebarItem[] = [
     {
       href: "/admin/newsletter-builder",
@@ -36,6 +30,7 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
   return (
     <UnifiedSidebar
       items={routes}
+      styleVariant="minimal"
     />
   )
 }

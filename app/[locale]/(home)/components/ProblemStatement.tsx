@@ -1,68 +1,70 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'
+import { AlertTriangle, Brain, Repeat } from 'lucide-react'
 
 const problems = [
-    {
-        title: "Outcome Bias",
-        desc: "Winning trades hide process mistakes. The habit survives until volatility exposes it."
-    },
-    {
-        title: "Emotional Drift",
-        desc: "Small frustration compounds into over-sizing and off-plan entries across the session."
-    },
-    {
-        title: "Broken Feedback Loops",
-        desc: "Without structured review, traders optimize what happened, not what should repeat."
-    }
-];
+  {
+    title: 'Outcome Bias',
+    desc: 'Winning trades can hide broken decisions. The process decays before PnL reveals it.',
+    icon: AlertTriangle,
+  },
+  {
+    title: 'Emotional Drift',
+    desc: 'Small frustration compounds into over-sizing, overtrading, and plan violations.',
+    icon: Brain,
+  },
+  {
+    title: 'No Feedback Loop',
+    desc: 'Without structured review, you repeat noise instead of reinforcing edge.',
+    icon: Repeat,
+  },
+]
 
-const ProblemStatement: React.FC = () => {
-    return (
-        <section id="problem" className="py-fluid-xl border-y border-white/8 bg-[#050505]">
-            <div className="container-fluid">
-                <div className="grid gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-teal-300">Core Problem</p>
-                        <h2 className="mt-3 text-fluid-3xl sm:text-fluid-5xl font-black tracking-tight leading-[0.95]">
-                            PnL Tells You
-                            <br />
-                            <span className="text-zinc-500">What Happened.</span>
-                        </h2>
-                        <p className="mt-4 max-w-xl text-sm sm:text-base text-zinc-300">
-                            But sustainable performance comes from diagnosing the decisions behind the result.
-                            Qunt Edge shifts your review from profit snapshots to execution intelligence.
-                        </p>
+export default function ProblemStatement() {
+  return (
+    <section id="problem" className="border-y border-border/70 bg-card/30 py-fluid-xl">
+      <div className="container-fluid">
+        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Core Problem</p>
+            <h2 className="mt-3 text-fluid-3xl font-black leading-[0.95] tracking-tight sm:text-fluid-5xl">
+              PnL Explains
+              <br />
+              <span className="text-muted-foreground">What Happened.</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
+              Sustainable performance comes from diagnosing decisions, not just counting outcomes. Qunt Edge shifts your review from
+              money snapshots to execution intelligence.
+            </p>
 
-                        <div className="mt-6 rounded-xl border border-teal-400/20 bg-teal-400/10 p-4">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">Framework Shift</p>
-                            <p className="mt-2 text-sm text-zinc-100">Audit execution first. Profit becomes a byproduct, not a compass.</p>
-                        </div>
-                    </motion.div>
-
-                    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                        {problems.map((item, i) => (
-                            <motion.div
-                                key={item.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.07 }}
-                                className="rounded-xl border border-white/10 bg-zinc-950/80 p-5"
-                            >
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">0{i + 1}</p>
-                                <h3 className="mt-2 text-lg font-black tracking-tight">{item.title}</h3>
-                                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{item.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
+            <div className="mt-6 rounded-xl border border-primary/25 bg-primary/10 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Framework Shift</p>
+              <p className="mt-1 text-sm text-foreground">Audit behavior first. Profit becomes a byproduct, not your compass.</p>
             </div>
-        </section>
-    );
-};
+          </motion.div>
 
-export default ProblemStatement;
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {problems.map((item, i) => {
+              const Icon = item.icon
+              return (
+                <motion.article
+                  key={item.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.07 }}
+                  className="rounded-xl border border-border/70 bg-card/70 p-5"
+                >
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <h3 className="text-lg font-black tracking-tight">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+                </motion.article>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
