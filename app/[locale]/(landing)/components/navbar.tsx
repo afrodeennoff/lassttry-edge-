@@ -1,0 +1,660 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Logo } from "@/components/logo"
+import { Moon, Sun, Users, BarChart3, Calendar, BookOpen, Database, LineChart, Menu, Globe, Laptop, Github, Cpu } from "lucide-react"
+import { motion } from "framer-motion"
+import {
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
+    navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
+import { useTheme } from '@/context/theme-provider'
+import { cn } from '@/lib/utils'
+import { useChangeLocale, useI18n } from "@/locales/client"
+import { usePathname } from "next/navigation"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
+import { LanguageSelector } from "@/components/ui/language-selector"
+
+interface ListItemProps extends React.ComponentPropsWithoutRef<"a"> {
+    title: string;
+    icon?: React.ReactNode;
+}
+
+const ListItem = React.forwardRef<HTMLAnchorElement, ListItemProps>(
+    ({ className, title, children, icon, ...props }, ref) => {
+        return (
+            <li>
+                <NavigationMenuLink asChild>
+                    <a
+                        ref={ref}
+                        className={`block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${className}`}
+                        {...props}
+                    >
+                        <div className="text-sm font-medium leading-none flex items-center">
+                            {icon}
+                            <span className="ml-2">{title}</span>
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground mt-1">
+                            {children}
+                        </p>
+                    </a>
+                </NavigationMenuLink>
+            </li>
+        )
+    })
+ListItem.displayName = "ListItem"
+
+const MobileNavItem = ({ href, children, onClick, className }: { href: string; children: React.ReactNode; onClick?: () => void, className?: string }) => (
+    <li>
+        <Link href={href} className={cn("block py-2 hover:text-primary transition-colors", className)} onClick={onClick}>
+            {children}
+        </Link>
+    </li>
+)
+
+// Animation variants for mobile menu
+const listVariant = {
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.1,
+        },
+    },
+    hidden: {
+        opacity: 0,
+    },
+}
+
+const itemVariant = {
+    hidden: {
+        opacity: 0,
+        y: 20
+    },
+    show: {
+        opacity: 1,
+        y: 0
+    },
+}
+
+export default function Navbar() {
+    const { theme, setTheme } = useTheme()
+    const [isOpen, setIsOpen] = useState(false)
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+    const [isVisible, setIsVisible] = useState(true)
+    const [lastScrollY, setLastScrollY] = useState(0)
+    const t = useI18n() as (key: string) => string
+    const pathname = usePathname()
+
+    const toggleMenu = () => {
+        setIsOpen(!isOpen)
+    }
+
+    const closeMenu = () => {
+        setIsOpen(false)
+    }
+
+    // Add/remove data attribute when mobile menu visibility changes
+    useEffect(() => {
+        if (isOpen) {
+            document.body.setAttribute('data-mobile-navbar', 'open')
+        } else {
+            document.body.removeAttribute('data-mobile-navbar')
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.removeAttribute('data-mobile-navbar')
+        }
+    }, [isOpen])
+
+    // Lock/unlock body scroll when mobile menu is open
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            document.body.style.overflow = isOpen ? 'hidden' : ''
+        }
+
+        // Cleanup on unmount
+        return () => {
+            if (typeof window !== 'undefined') {
+                document.body.style.overflow = ''
+            }
+        }
+    }, [isOpen])
+
+    useEffect(() => {
+        const controlNavbar = () => {
+            if (typeof window !== 'undefined') {
+                const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+
+                if (scrollPercent <= 25) {
+                    setIsVisible(true)
+                } else if (window.scrollY > lastScrollY) {
+                    setIsVisible(false)
+                } else {
+                    setIsVisible(true)
+                }
+
+                setLastScrollY(window.scrollY)
+            }
+        }
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('scroll', controlNavbar)
+
+            return () => {
+                window.removeEventListener('scroll', controlNavbar)
+            }
+        }
+    }, [lastScrollY])
+
+
+    const languages = [
+        { value: 'en', label: 'English' },
+        { value: 'fr', label: 'Français' },
+        // Add more languages here
+    ]
+
+    const changeLocale = useChangeLocale()
+    const handleThemeChange = (value: string) => {
+        setTheme(value as "light" | "dark" | "system")
+    }
+
+    const handleLanguageChange = (value: string) => {
+        changeLocale(value as "en" | "fr")
+    }
+
+    const getThemeIcon = () => {
+        if (theme === 'light') return <Sun className="h-5 w-5" />;
+        if (theme === 'dark') return <Moon className="h-5 w-5" />;
+        // For 'system' theme, we need to check the actual applied theme
+        if (typeof window !== 'undefined') {
+            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
+        }
+        // Fallback to Laptop icon if we can't determine
+        return <Laptop className="h-5 w-5" />;
+    };
+
+    type NavChild = {
+        path: string
+        title: string
+        icon?: React.ReactNode
+    }
+
+    type NavLink = {
+        title: string
+        path?: string
+        children?: NavChild[]
+    }
+
+    const links: NavLink[] = [
+        {
+            title: t('landing.navbar.features') as string,
+            children: [
+                {
+                    path: "/#data-import",
+                    title: t('landing.navbar.dataImport') as string,
+                    icon: <Database className="h-4 w-4" />,
+                },
+                {
+                    path: "/#performance-visualization",
+                    title: t('landing.navbar.performanceVisualization') as string,
+                    icon: <LineChart className="h-4 w-4" />,
+                },
+                {
+                    path: "/#daily-performance",
+                    title: t('landing.navbar.dailyPerformance') as string,
+                    icon: <Calendar className="h-4 w-4" />,
+                },
+                {
+                    path: "/#ai-journaling",
+                    title: t('landing.navbar.aiJournaling') as string,
+                    icon: <BookOpen className="h-4 w-4" />,
+                },
+            ],
+        },
+        {
+            title: t('landing.navbar.pricing') as string,
+            path: "/pricing",
+        },
+        {
+            title: t('landing.navbar.updates') as string,
+            children: [
+                {
+                    path: "/updates",
+                    title: t('landing.navbar.productUpdates') as string,
+                    icon: <BarChart3 className="h-4 w-4" />,
+                },
+                {
+                    path: "/community",
+                    title: t('landing.navbar.community') as string,
+                    icon: <Users className="h-4 w-4" />,
+                },
+            ],
+        },
+        {
+            title: t('landing.navbar.developers') as string,
+            children: [
+                {
+                    path: "https://github.com/afrodeennoff/lassttry-edge-",
+                    title: t('landing.navbar.openSource') as string,
+                    icon: <Github className="h-4 w-4" />,
+                },
+                {
+                    path: "https://www.youtube.com/@hugodemenez",
+                    title: t('landing.navbar.youtube') as string,
+                    icon: <Menu className="h-4 w-4" />,
+                },
+                {
+                    path: "/docs",
+                    title: t('landing.navbar.documentation') as string,
+                    icon: <BookOpen className="h-4 w-4" />,
+                },
+                {
+                    path: "/api",
+                    title: t('landing.navbar.api') as string,
+                    icon: <Cpu className="h-4 w-4" />,
+                },
+                {
+                    path: "https://discord.gg/efHDc43M",
+                    title: t('landing.navbar.joinCommunity') as string,
+                    icon: <Users className="h-4 w-4" />,
+                },
+            ],
+        },
+        {
+            title: t('landing.navbar.propFirms') as string,
+            path: "/propfirms",
+        },
+        {
+            title: t('landing.navbar.teams') as string,
+            path: "/teams",
+        },
+        {
+            title: t('landing.navbar.support') as string,
+            path: "/support",
+        },
+        {
+            title: "FAQ",
+            path: "/faq",
+        },
+        {
+            title: t('landing.navbar.about') as string,
+            path: "/about",
+        },
+    ]
+
+    return (
+        <>
+            {/* Desktop hover backdrop */}
+            <div className={`fixed inset-0 bg-background/80  backdrop-blur-xs z-40 transition-opacity duration-300 ${hoveredItem ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+
+            <span className={`h-14 fixed top-0 left-0 right-0 bg-background z-50 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}></span>
+            <header className={`w-full fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+                <div className="container-fluid h-14 flex items-center justify-between text-foreground">
+                    <Link href="/" className="flex items-center space-x-2 touch-target">
+                        <Logo className='w-5 h-5 sm:w-6 sm:h-6 fill-black dark:fill-white' />
+                        <span className="font-bold text-lg sm:text-xl">Qunt Edge</span>
+                    </Link>
+                    <div className="hidden lg:block">
+                        <NavigationMenu>
+                            <NavigationMenuList className="list-none">
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('features')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <NavigationMenuTrigger className='bg-transparent touch-target'>{t('landing.navbar.features')}</NavigationMenuTrigger>
+                                    <NavigationMenuContent onMouseEnter={() => setHoveredItem('features')} onMouseLeave={() => setHoveredItem(null)}>
+                                        <ul className="grid gap-3 p-6 md:w-[500px] lg:w-[600px] lg:grid-cols-[.75fr_1fr] list-none">
+                                            <li className="row-span-3">
+                                                <NavigationMenuLink asChild>
+                                                    <Link className="flex h-full w-full select-none flex-col justify-end rounded-md bg-linear-to-b from-muted/50 to-muted p-6 no-underline outline-hidden focus:shadow-md" href="/">
+                                                        <Logo className='w-6 h-6' />
+                                                        <div className="mb-2 mt-4 text-lg font-medium">
+                                                            Qunt Edge
+                                                        </div>
+                                                        <p className="text-sm leading-tight text-muted-foreground">
+                                                            {t('landing.navbar.elevateTrading')}
+                                                        </p>
+                                                    </Link>
+                                                </NavigationMenuLink>
+                                            </li>
+                                            <ListItem href="/#data-import" title={t('landing.navbar.dataImport')} icon={<Database className="h-4 w-4" />}>
+                                                {t('landing.navbar.dataImportDescription')}
+                                            </ListItem>
+                                            <ListItem href="/#performance-visualization" title={t('landing.navbar.performanceVisualization')} icon={<LineChart className="h-4 w-4" />}>
+                                                {t('landing.navbar.performanceVisualizationDescription')}
+                                            </ListItem>
+                                            <ListItem href="/#daily-performance" title={t('landing.navbar.dailyPerformance')} icon={<Calendar className="h-4 w-4" />}>
+                                                {t('landing.navbar.dailyPerformanceDescription')}
+                                            </ListItem>
+                                            <ListItem href="/#ai-journaling" title={t('landing.navbar.aiJournaling')} icon={<BookOpen className="h-4 w-4" />}>
+                                                {t('landing.navbar.aiJournalingDescription')}
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('pricing')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/pricing" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            {t('landing.navbar.pricing')}
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('propfirms')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/propfirms" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            {t('landing.navbar.propFirms')}
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('teams')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/teams" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            {t('landing.navbar.teams')}
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('support')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/support" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            {t('landing.navbar.support')}
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('faq')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/faq" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            FAQ
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('about')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <Link href="/about" legacyBehavior passHref>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                                            {t('landing.navbar.about')}
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('updates')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <NavigationMenuTrigger className='bg-transparent'>{t('landing.navbar.updates')}</NavigationMenuTrigger>
+                                    <NavigationMenuContent onMouseEnter={() => setHoveredItem('updates')} onMouseLeave={() => setHoveredItem(null)}>
+                                        <ul className="grid gap-3 p-6 md:w-[500px] lg:w-[600px] list-none">
+                                            <ListItem href="/updates" title={t('landing.navbar.productUpdates')} icon={<BarChart3 className="h-4 w-4" />}>
+                                                {t('landing.navbar.productUpdatesDescription')}
+                                            </ListItem>
+                                            <ListItem href="/community" title={t('landing.navbar.community')} icon={<Users className="h-4 w-4" />}>
+                                                {t('landing.navbar.communityDescription')}
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                                <NavigationMenuItem onMouseEnter={() => setHoveredItem('developers')} onMouseLeave={() => setHoveredItem(null)}>
+                                    <NavigationMenuTrigger className='bg-transparent'>{t('landing.navbar.developers')}</NavigationMenuTrigger>
+                                    <NavigationMenuContent onMouseEnter={() => setHoveredItem('developers')} onMouseLeave={() => setHoveredItem(null)}>
+                                        <ul className="grid gap-3 p-6 md:w-[500px] lg:w-[600px] list-none">
+                                            <ListItem href="https://github.com/afrodeennoff/lassttry-edge-" title={t('landing.navbar.openSource')} icon={<Github className="h-4 w-4" />}>
+                                                {t('landing.navbar.openSourceDescription')}
+                                            </ListItem>
+                                            <ListItem href="https://www.youtube.com/@hugodemenez" title={t('landing.navbar.youtube')} icon={<Menu className="h-4 w-4" />}>
+                                                {t('landing.navbar.youtubeDescription')}
+                                            </ListItem>
+                                            <ListItem href="https://discord.gg/efHDc43M" title={t('landing.navbar.joinCommunity')} icon={<Users className="h-4 w-4" />}>
+                                                {t('landing.navbar.joinCommunityDescription')}
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                            </NavigationMenuList>
+                            <Separator orientation="vertical" className="h-6 mx-2 sm:mx-4" />
+                            <Button variant="ghost" className="text-sm font-medium hover:text-accent-foreground touch-target h-9 px-3 sm:px-4" asChild>
+                                <Link href={"/authentication"}>{t('landing.navbar.signIn')}</Link>
+                            </Button>
+                        </NavigationMenu>
+                    </div>
+
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                        <LanguageSelector />
+                        <Popover modal>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" className="hidden lg:inline-flex touch-target h-9 w-9 sm:h-10 sm:w-10 px-0">
+                                    {getThemeIcon()}
+                                    <span className="sr-only">{t('landing.navbar.toggleTheme')}</span>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0" align="end">
+                                <Command>
+                                    <CommandList>
+                                        <CommandGroup>
+                                            <CommandItem onSelect={() => handleThemeChange("light")} className="touch-target">
+                                                <Sun className="mr-2 h-4 w-4" />
+                                                <span>{t('landing.navbar.lightMode')}</span>
+                                            </CommandItem>
+                                            <CommandItem onSelect={() => handleThemeChange("dark")} className="touch-target">
+                                                <Moon className="mr-2 h-4 w-4" />
+                                                <span>{t('landing.navbar.darkMode')}</span>
+                                            </CommandItem>
+                                            <CommandItem onSelect={() => handleThemeChange("system")} className="touch-target">
+                                                <Laptop className="mr-2 h-4 w-4" />
+                                                <span>{t('landing.navbar.systemTheme')}</span>
+                                            </CommandItem>
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <button
+                            type="button"
+                            className="ml-auto lg:hidden touch-target p-2 rounded-md hover:bg-accent transition-colors"
+                            onClick={toggleMenu}
+                            aria-label="Toggle menu"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={20}
+                                height={16}
+                                fill="none"
+                                className="sm:w-[18px] sm:h-[13px]"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M0 12.195v-2.007h18v2.007H0Zm0-5.017V5.172h18v2.006H0Zm0-5.016V.155h18v2.007H0Z"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {isOpen && (
+                <motion.div
+                    className="fixed bg-background -top-[2px] right-0 left-0 bottom-0 h-screen z-50 px-2"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{
+                        duration: 0.3,
+                        ease: "easeOut"
+                    }}
+                >
+                    <motion.div
+                        className="mt-4 flex justify-between p-3 px-4 relative ml-px"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: 0.3,
+                            ease: "easeOut",
+                            delay: 0.1
+                        }}
+                    >
+                        <motion.button
+                            type="button"
+                            onClick={closeMenu}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.1 }}
+                        >
+                            <span className="sr-only">Qunt Edge Logo</span>
+                            <Logo className='w-6 h-6 fill-black dark:fill-white' />
+                        </motion.button>
+
+                        <motion.button
+                            type="button"
+                            className="ml-auto lg:hidden p-2 absolute right-[10px] top-2"
+                            onClick={closeMenu}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.1 }}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                className="fill-primary"
+                            >
+                                <path fill="none" d="M0 0h24v24H0V0z" />
+                                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                            </svg>
+                        </motion.button>
+                    </motion.div>
+
+                    <div className="h-screen pb-[150px] overflow-auto">
+                        <motion.ul
+                            initial="hidden"
+                            animate="show"
+                            className="px-3 pt-8 text-xl text-[#878787] space-y-8 mb-8 overflow-auto"
+                            variants={listVariant}
+                        >
+                            {links.map(({ path, title, children }, index) => {
+                                const isActive = path === "/updates" ? pathname.includes("updates") : path === pathname;
+
+                                if (path) {
+                                    return (
+                                        <motion.li variants={itemVariant} key={path}>
+                                            <motion.div
+                                                whileHover={{ x: 4 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <Link
+                                                    href={path}
+                                                    className={cn(isActive && "text-primary", "block")}
+                                                    onClick={closeMenu}
+                                                >
+                                                    {title}
+                                                </Link>
+                                            </motion.div>
+                                        </motion.li>
+                                    );
+                                }
+
+                                return (
+                                    <motion.li key={title} variants={itemVariant}>
+                                        <Accordion collapsible type="single">
+                                            <AccordionItem value={`item-${index}`} className="border-none">
+                                                <AccordionTrigger className="flex items-center justify-between w-full font-normal p-0 hover:no-underline">
+                                                    <span className="text-[#878787]">{title}</span>
+                                                </AccordionTrigger>
+
+                                                {children && (
+                                                    <AccordionContent className="text-xl">
+                                                        <motion.ul
+                                                            className="space-y-8 ml-4 mt-6"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            transition={{ duration: 0.2 }}
+                                                        >
+                                                            {children.map((child, childIndex) => {
+                                                                return (
+                                                                    <motion.li
+                                                                        key={child.path}
+                                                                        initial={{ opacity: 0, x: -10 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: childIndex * 0.05 }}
+                                                                    >
+                                                                        <Link
+                                                                            href={child.path}
+                                                                            className="block hover:text-primary transition-colors"
+                                                                            onClick={closeMenu}
+                                                                        >
+                                                                            {child.title}
+                                                                        </Link>
+                                                                    </motion.li>
+                                                                )
+                                                            })}
+                                                        </motion.ul>
+                                                    </AccordionContent>
+                                                )}
+                                            </AccordionItem>
+                                        </Accordion>
+                                    </motion.li>
+                                );
+                            })}
+                        </motion.ul>
+
+                        <div className="flex flex-col gap-4 px-3 pb-12">
+                            <div className="flex gap-4">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button className="p-3 rounded-full bg-accent hover:bg-accent/80 transition-colors">
+                                            {getThemeIcon()}
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[200px] p-0" align="start">
+                                        <Command>
+                                            <CommandList>
+                                                <CommandGroup>
+                                                    <CommandItem onSelect={() => handleThemeChange("light")}>Light</CommandItem>
+                                                    <CommandItem onSelect={() => handleThemeChange("dark")}>Dark</CommandItem>
+                                                    <CommandItem onSelect={() => handleThemeChange("system")}>System</CommandItem>
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button className="p-3 rounded-full bg-accent hover:bg-accent/80 transition-colors">
+                                            <Globe className="h-5 w-5" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[200px] p-0" align="start">
+                                        <Command>
+                                            <CommandList>
+                                                <CommandGroup>
+                                                    {languages.map((language) => (
+                                                        <CommandItem
+                                                            key={language.value}
+                                                            onSelect={() => handleLanguageChange(language.value)}
+                                                        >
+                                                            {language.label}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            <Button className="w-full" asChild>
+                                <Link href="/authentication">
+                                    {t('landing.navbar.signIn')}
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+        </>
+    )
+}
