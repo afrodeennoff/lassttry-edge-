@@ -76,6 +76,9 @@ export const getPost = cache(async (slug: string, locale: string) => {
       slug,
     }
   } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null
+    }
     console.error(`Error reading MDX file: ${fullPath}`, error)
     return null
   }
@@ -84,7 +87,12 @@ export const getPost = cache(async (slug: string, locale: string) => {
 // Cache the posts list
 export const getAllPosts = cache(async (locale: string) => {
   const localeDirectory = path.join(postsDirectory, locale)
-  
+
+  // Missing locale directories are expected for locales without translated updates.
+  if (!fs.existsSync(localeDirectory)) {
+    return []
+  }
+
   try {
     const files = fs.readdirSync(localeDirectory)
     const posts = await Promise.all(

@@ -24,14 +24,14 @@ export default function HomeContent() {
     };
 
     return (
-        <div className="selection:bg-teal-500/30 relative bg-[#040404] text-white overflow-x-hidden landing-scrollbar font-sans">
+        <div className="selection:bg-primary/30 relative overflow-x-hidden bg-base text-fg-primary landing-scrollbar">
             <div className="fixed inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
             <div className="pointer-events-none fixed inset-0">
-                <div className="absolute left-1/2 top-[-220px] h-[560px] w-[min(1000px,92vw)] -translate-x-1/2 rounded-full bg-teal-500/12 blur-[120px]" />
-                <div className="absolute -left-24 bottom-16 h-64 w-64 rounded-full bg-emerald-400/8 blur-[100px]" />
+                <div className="absolute left-1/2 top-[-220px] h-[560px] w-[min(1000px,92vw)] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
+                <div className="absolute -left-24 bottom-16 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
             </div>
 
-            <main className="relative z-10 w-full">
+            <main className="relative z-10 mx-auto w-full max-w-[1500px]">
                 <Hero onStart={handleLogin} />
                 <ProblemStatement />
                 <AnalysisDemo />

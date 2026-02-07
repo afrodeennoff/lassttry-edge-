@@ -63,7 +63,7 @@ import {
   cancelTeamInvitation,
   createTeam
 } from '@/app/[locale]/dashboard/settings/actions'
-import { redirect, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface Team {
@@ -96,6 +96,7 @@ export function TeamManagement({
 }: TeamManagementProps) {
 
   const pathname = usePathname()
+  const router = useRouter()
   const [firstTeamId, setFirstTeamId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -130,9 +131,9 @@ export function TeamManagement({
     loadInitialData()
     // If we found a team, redirect to it
     if (firstTeamId) {
-      redirect(`/teams/dashboard/${firstTeamId}`)
+      router.replace(`/teams/dashboard/${firstTeamId}`)
     }
-  }, [firstTeamId, pathname])
+  }, [firstTeamId, pathname, router])
   const t = useI18n()
 
   // State

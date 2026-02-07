@@ -3,7 +3,7 @@ import { createI18nMiddleware } from "next-international/middleware"
 import { createServerClient } from "@supabase/ssr"
 import { geolocation } from "@vercel/functions"
 import { User } from "@supabase/supabase-js"
-import { assertProductionEnv, assertRequiredEnv, getEnv } from "@/lib/env"
+import { assertProductionEnv, getEnv } from "@/lib/env"
 
 const MAINTENANCE_MODE = false
 const SUPPORTED_LOCALES = ["en", "fr", "de", "es", "it", "pt", "vi", "hi", "ja", "zh", "yo"]
@@ -67,10 +67,6 @@ const I18nMiddleware = createI18nMiddleware({
 assertProductionEnv()
 
 async function updateSession(request: NextRequest) {
-  assertRequiredEnv([
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  ])
   const env = getEnv()
 
   const response = NextResponse.next({
@@ -78,6 +74,15 @@ async function updateSession(request: NextRequest) {
       headers: request.headers,
     },
   })
+
+  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    response.headers.set("x-auth-status", "unauthenticated")
+    return {
+      response,
+      user: null,
+      error: new Error("Supabase environment is not configured"),
+    }
+  }
 
   const supabase = createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -147,7 +152,7 @@ async function updateSession(request: NextRequest) {
  * 🟡 Protected: Members' Club (Dashboard/Teams)
  * 🔴 Admin: Control Room (Master Admin Only)
  */
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
 
   // --- Security Guard (Proxy) Tier Identification ---

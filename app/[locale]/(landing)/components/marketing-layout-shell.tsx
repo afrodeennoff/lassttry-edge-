@@ -16,7 +16,7 @@ export default function MarketingLayoutShell({
   return (
     <div className={cn("min-h-screen w-full overflow-x-hidden", className)}>
       <Navbar />
-      <div className={cn("mt-8 sm:mt-20", contentClassName)}>{children}</div>
+      <div className={cn("pt-24 sm:pt-28 xl:pt-32", contentClassName)}>{children}</div>
       <Footer />
     </div>
   );

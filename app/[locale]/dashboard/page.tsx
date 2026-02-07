@@ -4,11 +4,10 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { TradeTableReview } from "./components/tables/trade-table-review";
 import { AccountsOverview } from "./components/accounts/accounts-overview";
 import WidgetCanvas from "./components/widget-canvas";
+import { ChartTheFuturePanel } from "./components/chart-the-future-panel";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { clearReferralCode } from "@/lib/referral-storage";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 
 export default function Home() {
@@ -39,6 +38,10 @@ export default function Home() {
           <AccountsOverview size="large" />
         </TabsContent>
 
+        <TabsContent value="future" className="flex-1">
+          <ChartTheFuturePanel />
+        </TabsContent>
+
         <TabsContent value="widgets" className="px-4 mt-2">
           <WidgetCanvas />
         </TabsContent>
@@ -46,6 +49,5 @@ export default function Home() {
     </div>
   );
 }
-
 
 

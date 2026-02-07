@@ -1,8 +1,11 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
 
+const isStandaloneBuild = process.env.NEXT_OUTPUT_STANDALONE === "true";
+
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(isStandaloneBuild ? { output: "standalone" as const } : {}),
+  outputFileTracingRoot: process.cwd(),
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -30,15 +33,19 @@ const nextConfig: NextConfig = {
     ],
   },
   compress: true,
-  outputFileTracingIncludes: {
-    '/*': [
-      '**/node_modules/@prisma/engines/libquery_engine-rhel-openssl-3.0.x.so.node',
-      '**/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
-    ],
-    '/app/api/**': [
-      '**/node_modules/.prisma/client/**',
-    ],
-  },
+  ...(isStandaloneBuild
+    ? {
+      outputFileTracingIncludes: {
+        '/*': [
+          '**/node_modules/@prisma/engines/libquery_engine-rhel-openssl-3.0.x.so.node',
+          '**/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+        ],
+        '/app/api/**': [
+          '**/node_modules/.prisma/client/**',
+        ],
+      },
+    }
+    : {}),
   async headers() {
     return [
       {

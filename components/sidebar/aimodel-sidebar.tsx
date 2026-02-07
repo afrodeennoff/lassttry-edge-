@@ -12,6 +12,7 @@ import { checkAdminStatus } from "@/app/[locale]/dashboard/settings/actions";
 import { signOut } from "@/server/auth";
 import {
     LayoutDashboard,
+    Sparkles,
     TrendingUp,
     Activity,
     BookOpen,
@@ -73,6 +74,7 @@ export function AIModelSidebar() {
         if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
             if (tab === 'table') setActiveTab('Trades');
             else if (tab === 'accounts') setActiveTab('Accounts');
+            else if (tab === 'future') setActiveTab('Chart the Future');
             else if (pathname.includes('strategies')) setActiveTab('Journal');
             else if (pathname.includes('reports')) setActiveTab('Reports');
             else if (pathname.includes('behavior')) setActiveTab('Behavior');
@@ -137,6 +139,7 @@ export function AIModelSidebar() {
                 title: 'Inventory',
                 items: [
                     { label: 'Dashboard', href: '/dashboard?tab=widgets', icon: <LayoutDashboard className="w-5 h-5" /> },
+                    { label: 'Chart the Future', href: '/dashboard?tab=future', icon: <Sparkles className="w-5 h-5" /> },
                     { label: 'Trades', href: '/dashboard?tab=table', icon: <TrendingUp className="w-5 h-5" /> },
                     { label: 'Accounts', href: '/dashboard?tab=accounts', icon: <Activity className="w-5 h-5" /> },
                     { label: 'Journal', href: '/dashboard/strategies', icon: <BookOpen className="w-5 h-5" /> },

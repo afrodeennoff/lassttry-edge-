@@ -2,7 +2,7 @@ import { DashboardHeader } from "./components/dashboard-header";
 import { createClient } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { DashboardProvider } from "./dashboard-context";
-import { AIModelSidebar } from "@/components/sidebar/aimodel-sidebar";
+import { DashboardSidebar } from "@/components/sidebar/dashboard-sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
 
 export default async function DashboardLayout({
@@ -22,7 +22,7 @@ export default async function DashboardLayout({
   return (
     <DashboardProvider>
       <div className="flex min-h-screen w-full bg-background selection:bg-accent-teal/30 selection:text-fg-primary">
-        <AIModelSidebar />
+        <DashboardSidebar />
         <SidebarInset className="flex-1 relative overflow-hidden">
           {/* Global Background Effects */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
@@ -42,4 +42,3 @@ export default async function DashboardLayout({
     </DashboardProvider>
   );
 }
-

@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   RefreshCw,
   Settings,
+  Sparkles,
   TrendingUp,
   Shield,
 } from "lucide-react"
@@ -52,6 +53,12 @@ export function DashboardSidebar() {
       icon: <TrendingUp className="size-4.5" />,
       label: "Trades",
       i18nKey: "dashboard.trades",
+      group: "Trading"
+    },
+    {
+      href: "/dashboard?tab=future",
+      icon: <Sparkles className="size-4.5" />,
+      label: "Chart the Future",
       group: "Trading"
     },
     {

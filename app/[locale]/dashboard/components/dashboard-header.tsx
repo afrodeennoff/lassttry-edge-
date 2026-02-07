@@ -47,6 +47,7 @@ export function DashboardHeader() {
         if (isDashboardRoot) {
             if (tab === 'table') return 'Trades';
             if (tab === 'accounts') return 'Accounts';
+            if (tab === 'future') return 'Chart the Future';
             return 'Overview';
         }
         if (pathname.includes('strategies')) return 'Journal';
@@ -63,15 +64,15 @@ export function DashboardHeader() {
     const currentLayout = layouts || { desktop: [], mobile: [] };
 
     return (
-        <header className="border-b border-white/5 bg-[#020202]/95 backdrop-blur-md sticky top-0 z-50 overflow-hidden">
+        <header className="sticky top-0 z-50 overflow-hidden border-b border-border/70 bg-background/95 backdrop-blur-md">
             <div className="min-h-[64px] flex flex-wrap items-center justify-between gap-2 px-3 md:px-8">
                 {/* Left Side: Sidebar Toggle & Title */}
                 <div className="flex items-center gap-3 flex-shrink-0">
-                    <button onClick={toggleSidebar} className="p-2 text-zinc-500 hover:text-white lg:hidden">
+                    <button onClick={toggleSidebar} className="p-2 text-muted-foreground hover:text-foreground lg:hidden">
                         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
                     </button>
                     <div className="flex items-baseline gap-3">
-                        <h1 className="text-sm font-bold text-white tracking-wide uppercase whitespace-nowrap">{title}</h1>
+                        <h1 className="whitespace-nowrap text-sm font-bold uppercase tracking-wide text-foreground">{title}</h1>
                     </div>
                 </div>
 
@@ -95,8 +96,8 @@ export function DashboardHeader() {
 
                         {!isPlusUser() && (
                             <Link href="/dashboard/billing">
-                                <button className="h-8 px-4 gap-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-500 text-[9px] font-black uppercase tracking-widest hover:border-teal-500/50 hover:bg-teal-500/20 transition-all flex items-center group">
-                                    <Sparkles className="w-3 h-3 animate-pulse group-hover:scale-110 transition-transform" />
+                                <button className="group flex h-8 items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-4 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:border-primary/50 hover:bg-primary/20">
+                                    <Sparkles className="h-3 w-3 animate-pulse transition-transform group-hover:scale-110" />
                                     <span>UPGRADE</span>
                                 </button>
                             </Link>
@@ -105,12 +106,12 @@ export function DashboardHeader() {
 
                     {/* Customization Group (Conditional) */}
                     {title === 'Overview' && (
-                        <div className="flex items-center gap-1.5 p-1 bg-white/5 rounded-lg border border-white/5 ml-1">
+                        <div className="ml-1 flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/70 p-1">
                             <AddWidgetSheet
                                 onAddWidget={addWidget}
                                 isCustomizing={isCustomizing}
                                 trigger={
-                                    <button className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2">
+                                    <button className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                                         <span>+ ADD</span>
                                     </button>
                                 }
@@ -121,8 +122,8 @@ export function DashboardHeader() {
                                 className={cn(
                                     "text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md transition-all duration-300 border",
                                     isCustomizing
-                                        ? "bg-teal-500 text-black border-teal-500 shadow-[0_0_15px_rgba(45,212,191,0.3)]"
-                                        : "text-zinc-400 border-transparent hover:text-white hover:bg-white/5"
+                                        ? "border-primary bg-primary text-primary-foreground shadow-[0_0_14px_hsl(var(--primary)/0.25)]"
+                                        : "border-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                                 )}
                             >
                                 {isCustomizing ? 'LOCK' : 'EDIT'}
@@ -131,7 +132,7 @@ export function DashboardHeader() {
                             {isCustomizing && autoSaveStatus.hasPending && (
                                 <button
                                     onClick={flushPendingSaves}
-                                    className="p-1.5 text-teal-400 hover:bg-teal-400/10 rounded-md transition-all animate-pulse"
+                                    className="animate-pulse rounded-md p-1.5 text-primary transition-all hover:bg-primary/10"
                                     title="Save Changes"
                                 >
                                     <CloudUpload className="w-4 h-4" />
@@ -139,12 +140,12 @@ export function DashboardHeader() {
                             )}
 
                             {!autoSaveStatus.hasPending && isCustomizing && (
-                                <div className="px-2 text-teal-500/60">
+                                <div className="px-2 text-primary/70">
                                     <CheckCircle2 className="w-4 h-4" />
                                 </div>
                             )}
 
-                            <div className="w-px h-4 bg-white/10 mx-1" />
+                            <div className="mx-1 h-4 w-px bg-border/70" />
                             <ShareButton currentLayout={currentLayout} />
                         </div>
                     )}
@@ -156,7 +157,7 @@ export function DashboardHeader() {
                 <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
-                    className="px-8 pb-3 -mt-1"
+                    className="px-4 pb-3 -mt-1 sm:px-8"
                 >
                     <ActiveFilterTags showAccountNumbers={true} />
                 </motion.div>
