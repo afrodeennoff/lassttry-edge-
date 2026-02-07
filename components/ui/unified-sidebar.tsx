@@ -11,8 +11,6 @@ import { SubscriptionBadge } from "@/components/subscription-badge"
 import { Logo, LogoText } from "@/components/logo"
 import {
   LogOut,
-  ChevronsLeft,
-  ChevronsRight,
   Globe,
 } from "lucide-react"
 import {
@@ -21,7 +19,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -212,14 +209,13 @@ const SIDEBAR_STYLE_CLASSES: Record<
     collapsedLine: string
     footer: string
     logout: string
-    collapse: string
   }
 > = {
   minimal: {
     sidebar: "border-r border-border/60 bg-background",
-    rail: "after:transition-colors after:duration-200 hover:bg-accent/40 hover:after:bg-border",
-    header: "border-b border-border/60 px-3 py-3",
-    brandCard: "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-border/60 bg-background px-2.5",
+    rail: "after:bg-border/70 after:transition-colors after:duration-200 hover:bg-accent/20 hover:after:bg-primary/35",
+    header: "border-b border-border/60 px-2.5 py-2.5",
+    brandCard: "mb-2 flex h-11 items-center gap-2.5 overflow-hidden rounded-xl border border-border/60 bg-background px-2.5",
     brandIcon: "flex size-8.5 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 text-primary",
     workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80",
     userCard:
@@ -242,16 +238,14 @@ const SIDEBAR_STYLE_CLASSES: Record<
     footer: "border-t border-border/60 bg-background p-2.5",
     logout:
       "flex h-9 w-full items-center gap-3 rounded-xl px-3 text-muted-foreground transition-all duration-200 hover:bg-accent/50 hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
-    collapse:
-      "flex h-9 w-full items-center gap-3 rounded-xl border border-transparent px-3 text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-accent/45 hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
   },
   glassy: {
     sidebar:
       "border-r border-white/10 bg-gradient-to-b from-background/95 via-background/80 to-background/70 backdrop-blur-xl",
-    rail: "after:transition-colors after:duration-200 hover:bg-primary/10 hover:after:bg-primary/40",
-    header: "border-b border-white/10 px-3 py-3",
+    rail: "after:bg-white/25 after:transition-colors after:duration-200 hover:bg-primary/10 hover:after:bg-primary/45",
+    header: "border-b border-white/10 px-2.5 py-2.5",
     brandCard:
-      "mb-3 flex h-12 items-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white/[0.04] px-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
+      "mb-2 flex h-11 items-center gap-2.5 overflow-hidden rounded-xl border border-white/15 bg-white/[0.04] px-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]",
     brandIcon:
       "flex size-8.5 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-gradient-to-br from-primary/25 to-primary/10 text-primary",
     workspaceLabel: "truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/85",
@@ -277,8 +271,6 @@ const SIDEBAR_STYLE_CLASSES: Record<
     footer: "border-t border-white/10 bg-background/75 p-2.5 backdrop-blur-sm",
     logout:
       "flex h-9 w-full items-center gap-3 rounded-xl px-3 text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
-    collapse:
-      "flex h-9 w-full items-center gap-3 rounded-xl border border-transparent px-3 text-muted-foreground transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04] hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
   },
 }
 
@@ -416,7 +408,7 @@ export function UnifiedSidebar({
   onLogout,
   styleVariant = "minimal",
 }: UnifiedSidebarConfig) {
-  const { state, toggleSidebar } = useSidebar()
+  const { state } = useSidebar()
   const shouldReduceMotion = useReducedMotion()
   const { checkActive } = useActiveLink()
   const styles = SIDEBAR_STYLE_CLASSES[styleVariant]
@@ -430,11 +422,6 @@ export function UnifiedSidebar({
     }, {} as Record<string, UnifiedSidebarItem[]>)
   }, [items])
 
-  const hasGroups = useMemo(
-    () => Object.keys(groupedItems).length > 1,
-    [groupedItems]
-  )
-
   const displayName = user?.full_name || user?.email?.split("@")[0] || "User"
   const initials = useMemo(() => getUserInitials(user), [user])
 
@@ -446,30 +433,10 @@ export function UnifiedSidebar({
       <SidebarRail className={styles.rail} />
 
       <SidebarHeader className={styles.header}>
-        <motion.button
-          type="button"
-          onClick={toggleSidebar}
-          className={cn(styles.collapse, "mb-2 h-8")}
-          whileHover={shouldReduceMotion ? undefined : { x: 1 }}
-          whileTap={shouldReduceMotion ? undefined : { scale: 0.995 }}
-          transition={shouldReduceMotion ? undefined : subtleSpring}
-        >
-          {state === "expanded" ? (
-            <>
-              <ChevronsLeft className="size-4 shrink-0" />
-              <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] group-data-[collapsible=icon]:hidden">
-                Collapse
-              </span>
-            </>
-          ) : (
-            <ChevronsRight className="size-4 shrink-0" />
-          )}
-        </motion.button>
-
         <motion.div
           className={cn(
             styles.brandCard,
-            "group-data-[collapsible=icon]:mb-2 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:shadow-none"
+            "group-data-[collapsible=icon]:mb-1 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:shadow-none"
           )}
           initial={shouldReduceMotion ? undefined : { opacity: 0, y: -6 }}
           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -478,16 +445,16 @@ export function UnifiedSidebar({
           <motion.div
             className={cn(
               styles.brandIcon,
-              "ring-1 ring-inset ring-white/10 shadow-[0_4px_14px_rgba(0,0,0,0.16)]"
+              "ring-1 ring-inset ring-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.14)] group-data-[collapsible=icon]:size-8.5"
             )}
             whileHover={shouldReduceMotion ? undefined : { scale: 1.04 }}
             transition={shouldReduceMotion ? undefined : subtleSpring}
           >
             <Logo className="size-4.5" />
           </motion.div>
-          <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+          <div className="flex min-w-0 flex-col leading-none group-data-[collapsible=icon]:hidden">
             <LogoText />
-            <span className={cn(styles.workspaceLabel, "tracking-[0.14em]")}>
+            <span className={cn(styles.workspaceLabel, "mt-1 tracking-[0.12em]")}>
               Workspace
             </span>
           </div>
@@ -548,21 +515,6 @@ export function UnifiedSidebar({
               transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
             >
               <SidebarGroup className="p-0">
-              {hasGroups && group !== "default" && (
-                <SidebarGroupLabel className="px-2 pb-1 pt-2">
-                  <motion.div
-                    className="flex items-center gap-2"
-                    initial={shouldReduceMotion ? undefined : { opacity: 0, x: -4 }}
-                    animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
-                    transition={shouldReduceMotion ? undefined : { duration: 0.18, ease: "easeOut" }}
-                  >
-                    <span className={styles.groupLabel}>
-                      {group}
-                    </span>
-                    <div className={styles.groupLine} />
-                  </motion.div>
-                </SidebarGroupLabel>
-              )}
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
                   {groupItems.map((item, index) => (
@@ -606,14 +558,6 @@ export function UnifiedSidebar({
                 transition={shouldReduceMotion ? { duration: 0 } : subtleSpring}
               >
                 <SidebarGroup className="mt-auto p-0 pt-3">
-                  <SidebarGroupLabel className="px-2 pb-1">
-                    <div className="flex items-center gap-2">
-                      <span className={styles.groupLabel}>
-                        Preferences
-                      </span>
-                      <div className={styles.groupLine} />
-                    </div>
-                  </SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu className="gap-1">
                       <motion.div

@@ -61,7 +61,7 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => {
             const Icon = feature.icon
             return (
@@ -70,8 +70,9 @@ export default function Features() {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="group rounded-2xl border border-border/70 bg-card/75 p-5"
+                transition={{ delay: i * 0.05, duration: 0.35 }}
+                whileHover={{ y: -3 }}
+                className="group rounded-2xl border border-border/70 bg-card/75 p-5 transition-all duration-150 ease-in-out hover:border-primary/25 hover:bg-card/90 active:scale-[0.99]"
               >
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
                   <Icon className="h-4.5 w-4.5" />

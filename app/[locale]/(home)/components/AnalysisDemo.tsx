@@ -35,12 +35,12 @@ export default function AnalysisDemo() {
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-3.5 lg:grid-cols-[1.1fr_0.9fr]">
           <motion.article
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-2xl border border-border/70 bg-card/80 p-4 sm:p-6"
+            className="rounded-2xl border border-border/70 bg-card/80 p-4 transition-all duration-150 ease-in-out hover:border-primary/20 hover:bg-card/90 active:scale-[0.995] sm:p-6"
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -83,14 +83,17 @@ export default function AnalysisDemo() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.08 }}
-            className="rounded-2xl border border-border/70 bg-card/70 p-4 sm:p-6"
+            className="rounded-2xl border border-border/70 bg-card/70 p-4 transition-all duration-150 ease-in-out hover:border-primary/20 hover:bg-card/85 active:scale-[0.995] sm:p-6"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">AI Findings</p>
             <h3 className="mt-2 text-xl font-black tracking-tight">Session Intelligence Feed</h3>
 
             <div className="mt-4 space-y-3">
               {signals.map((signal, i) => (
-                <div key={signal} className="rounded-xl border border-border/70 bg-background/45 p-3.5">
+                <div
+                  key={signal}
+                  className="rounded-xl border border-border/70 bg-background/45 p-3.5 transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background/60 active:scale-[0.99]"
+                >
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">Signal 0{i + 1}</p>
                   <p className="mt-1 text-sm leading-relaxed text-foreground/85">{signal}</p>
                 </div>

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
@@ -9,7 +10,13 @@ export default function CTA({ onStart }: CTAProps) {
   return (
     <section className="py-fluid-xl">
       <div className="container-fluid">
-        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/80 px-6 py-10 sm:px-10 sm:py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/80 px-6 py-10 sm:px-10 sm:py-12"
+        >
           <div className="pointer-events-none absolute -right-24 -top-16 h-64 w-64 rounded-full bg-primary/15 blur-[90px]" />
 
           <div className="relative z-10 text-center">
@@ -39,7 +46,7 @@ export default function CTA({ onStart }: CTAProps) {
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

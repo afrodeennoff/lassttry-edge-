@@ -18,7 +18,7 @@ import { WIDGET_REGISTRY, getWidgetComponent } from '../config/widget-registry'
 import { useAutoScroll } from '../../../../hooks/use-auto-scroll'
 import { cn } from '@/lib/utils'
 import { Widget, WidgetType, WidgetSize } from '../types/dashboard'
-import { useDashboard, sizeToGrid, getWidgetGrid } from '../dashboard-context'
+import { useDashboard, getWidgetGrid } from '../dashboard-context'
 import { motion } from 'framer-motion'
 
 // Add a function to pre-calculate widget dimensions
@@ -100,6 +100,7 @@ function WidgetWrapper({ children, onRemove, onChangeSize, isCustomizing, size, 
   const { isMobile } = useDashboard()
   const widgetRef = useRef<HTMLDivElement>(null)
   const [isSizePopoverOpen, setIsSizePopoverOpen] = useState(false)
+  const [isMouseNearby, setIsMouseNearby] = useState(false)
 
   const handleSizeChange = (newSize: WidgetSize) => {
     onChangeSize(newSize)
@@ -125,16 +126,59 @@ function WidgetWrapper({ children, onRemove, onChangeSize, isCustomizing, size, 
     return config.allowedSizes.includes(size)
   }
 
+  useEffect(() => {
+    if (!isCustomizing || isMobile) {
+      return
+    }
+
+    const threshold = 88
+    const handleMouseMove = (e: MouseEvent) => {
+      const el = widgetRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const isNear =
+        e.clientX >= rect.left - threshold &&
+        e.clientX <= rect.right + threshold &&
+        e.clientY >= rect.top - threshold &&
+        e.clientY <= rect.bottom + threshold
+      setIsMouseNearby(isNear)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => document.removeEventListener('mousemove', handleMouseMove)
+  }, [isCustomizing, isMobile])
+
+  const showControls = isCustomizing && (isMobile || isMouseNearby)
+  const isReferenceWidget =
+    currentType === 'expectancy' ||
+    currentType === 'riskMetrics' ||
+    currentType === 'tradingScore'
+  const isUnifiedStyledWidget = !isReferenceWidget
+
   return (
     <motion.div
+      ref={widgetRef}
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="relative h-full w-full rounded-2xl bg-card/40 backdrop-blur-md border border-white/5 shadow-2xl group isolate overflow-clip premium-glow-hover transition-all duration-300"
+      className={cn(
+        "relative h-full w-full rounded-2xl group isolate overflow-clip transition-all duration-300",
+        isUnifiedStyledWidget
+          ? "bg-[linear-gradient(140deg,rgba(14,20,28,0.92),rgba(7,12,19,0.9))] backdrop-blur-xl border border-cyan-400/15 shadow-[0_26px_70px_-38px_rgba(6,182,212,0.42)] hover:border-cyan-300/35 hover:shadow-[0_32px_95px_-45px_rgba(56,189,248,0.5)]"
+          : "bg-card/40 backdrop-blur-md border border-white/5 shadow-2xl premium-glow-hover"
+      )}
       onTouchStart={handleTouchStart}
     >
+      {isUnifiedStyledWidget && (
+        <>
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/55 to-transparent pointer-events-none" />
+          <div className="absolute -top-20 -right-16 h-40 w-40 rounded-full bg-cyan-500/12 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-16 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+        </>
+      )}
+
       <div className={cn("h-full w-full transition-all duration-500",
-        isCustomizing && "group-hover:blur-[4px] scale-[0.98]",
+        isCustomizing && showControls && "group-hover:blur-[4px] scale-[0.98]",
         isCustomizing && isMobile && "blur-[4px] scale-[0.98]"
       )}>
         {children}
@@ -142,19 +186,31 @@ function WidgetWrapper({ children, onRemove, onChangeSize, isCustomizing, size, 
 
       {isCustomizing && (
         <>
-          <div className="absolute inset-0 border-2 border-dashed border-transparent hover:border-accent transition-colors duration-200 pointer-events-none" />
-          <div className="absolute inset-0 bg-background/50 dark:bg-background/70 transition-opacity duration-200 pointer-events-none" />
+          <div className={cn(
+            "absolute inset-0 border-2 border-dashed border-transparent transition-colors duration-200 pointer-events-none",
+            showControls && "border-accent/70"
+          )} />
+          <div className={cn(
+            "absolute inset-0 bg-background/0 dark:bg-background/0 transition-colors duration-200 pointer-events-none",
+            showControls && "bg-background/50 dark:bg-background/70"
+          )} />
 
           {/* Drag Handle - Covers the whole area but underneath the buttons */}
-          <div className="absolute inset-0 flex items-center justify-center drag-handle cursor-grab active:cursor-grabbing z-10">
+          <div className={cn(
+            "absolute inset-0 flex items-center justify-center drag-handle cursor-grab active:cursor-grabbing z-10 transition-opacity duration-200",
+            showControls ? "opacity-100" : "opacity-0"
+          )}>
             <div className="flex flex-col items-center gap-2 text-muted-foreground select-none pointer-events-none">
               <GripVertical className="h-6 w-4" />
               <p className="text-sm font-medium">{t('widgets.dragToMove')}</p>
             </div>
           </div>
 
-          {/* Controls - Always visible in edit mode, highest z-index */}
-          <div className="absolute top-2 right-2 flex gap-2 z-50">
+          {/* Controls - visible only when mouse is near in edit mode */}
+          <div className={cn(
+            "absolute top-2 right-2 flex gap-2 z-50 transition-all duration-200",
+            showControls ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"
+          )}>
             <Popover open={isSizePopoverOpen} onOpenChange={setIsSizePopoverOpen}>
               <PopoverTrigger asChild>
                 <Button

@@ -16,13 +16,13 @@ const metrics = [
 
 export default function Hero({ onStart }: HeroProps) {
   return (
-    <section className="relative overflow-hidden pb-16 pt-28 sm:pt-36 lg:pb-20">
+    <section className="relative overflow-hidden pb-14 pt-26 sm:pt-34 lg:pb-16">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-[-200px] h-[440px] w-[min(980px,95vw)] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
       </div>
 
       <div className="container-fluid relative z-10">
-        <div className="grid items-start gap-8 lg:grid-cols-[1.03fr_0.97fr] lg:gap-10">
+        <div className="grid items-start gap-6 lg:grid-cols-[1.06fr_0.94fr] lg:gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -34,7 +34,7 @@ export default function Hero({ onStart }: HeroProps) {
               Behavior-First Trading OS
             </span>
 
-            <h1 className="mt-5 text-fluid-4xl font-black leading-[0.92] tracking-tight sm:text-fluid-6xl lg:text-fluid-7xl">
+            <h1 className="mt-5 text-fluid-4xl font-black leading-[0.93] tracking-tight sm:text-fluid-6xl lg:text-fluid-7xl">
               Stop Auditing
               <br />
               <span className="bg-gradient-to-r from-primary via-primary to-emerald-300 bg-clip-text text-transparent">
@@ -42,7 +42,7 @@ export default function Hero({ onStart }: HeroProps) {
               </span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg lg:mx-0">
+            <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg lg:mx-0">
               Qunt Edge turns noisy trade history into a disciplined review loop. Track execution quality, find process drift early,
               and compound consistency with measurable feedback.
             </p>
@@ -76,7 +76,7 @@ export default function Hero({ onStart }: HeroProps) {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.08 }}
-            className="rounded-2xl border border-border/70 bg-card/85 p-4 shadow-[0_24px_65px_-35px_hsl(var(--primary)/0.7)] sm:p-6"
+            className="rounded-2xl border border-border/70 bg-card/85 p-4 shadow-[0_24px_65px_-35px_hsl(var(--primary)/0.6)] sm:p-5"
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -88,9 +88,12 @@ export default function Hero({ onStart }: HeroProps) {
               </span>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {metrics.map((item) => (
-                <div key={item.label} className="flex items-center justify-between rounded-xl border border-border/70 bg-background/50 px-4 py-3">
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between rounded-xl border border-border/70 bg-background/50 px-4 py-3 transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:border-primary/25 hover:bg-background/65 active:scale-[0.99]"
+                >
                   <span className="text-sm text-muted-foreground">{item.label}</span>
                   <div className="text-right">
                     <p className="text-base font-black leading-none">{item.value}</p>

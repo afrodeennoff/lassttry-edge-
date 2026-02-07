@@ -3,7 +3,6 @@
 
 import React from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useDashboard } from '@/app/[locale]/dashboard/dashboard-context';
 import { AddWidgetSheet } from '@/app/[locale]/dashboard/components/add-widget-sheet';
 import { cn } from '@/lib/utils';
@@ -64,7 +63,6 @@ export function DashboardHeader() {
             <div className="min-h-[64px] flex flex-wrap items-center justify-between gap-2 px-3 md:px-8">
                 {/* Left Side: Sidebar Toggle & Title */}
                 <div className="flex items-center gap-3 flex-shrink-0">
-                    <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
                     <div className="flex items-baseline gap-3">
                         <h1 className="whitespace-nowrap text-sm font-bold uppercase tracking-wide text-foreground">{title}</h1>
                     </div>
