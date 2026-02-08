@@ -29,6 +29,16 @@ export async function POST(request: NextRequest) {
 
     const syncResult = await getTradovateTrades(tokenResult.accessToken);
     if (syncResult.error) {
+      // If it's just duplicate trades, return 200 with 0 saved
+      if (syncResult.error === "DUPLICATE_TRADES") {
+        return NextResponse.json({
+          success: true,
+          savedCount: 0,
+          ordersCount: syncResult.ordersCount ?? 0,
+          message: "DUPLICATE_TRADES",
+        });
+      }
+
       return NextResponse.json(
         { success: false, message: syncResult.error },
         { status: 400 }
