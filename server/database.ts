@@ -282,9 +282,9 @@ export async function getTradesAction(
   const where: Prisma.TradeWhereInput = { userId: currentUserId }
 
   if (!isSubscribed) {
-    const twoWeeksAgo = startOfDay(new Date())
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
-    where.entryDate = { gte: twoWeeksAgo.toISOString() }
+    const threeMonthsAgo = startOfDay(new Date())
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+    where.entryDate = { gte: threeMonthsAgo.toISOString() }
   }
 
   try {

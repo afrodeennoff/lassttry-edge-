@@ -759,12 +759,12 @@ export const DataProvider: React.FC<{
     // Apply all filters in a single pass
     return trades
       .filter((trade) => {
-        // Basic plan limit: 30 days of data
+        // Basic plan limit: 3 months of data
         if (!isPlusUser()) {
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const threeMonthsAgo = new Date();
+          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
           const tradeDate = new Date(trade.entryDate);
-          if (tradeDate < thirtyDaysAgo) {
+          if (tradeDate < threeMonthsAgo) {
             return false;
           }
         }
