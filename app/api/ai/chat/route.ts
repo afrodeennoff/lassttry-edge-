@@ -1,125 +1,42 @@
-import { streamText, stepCountIs, convertToModelMessages } from "ai";
 import { NextRequest } from "next/server";
-import { z } from 'zod/v3';
-import { getFinancialNews } from "./tools/get-financial-news";
-import { getJournalEntries } from "./tools/get-journal-entries";
-import { getMostTradedInstruments } from "./tools/get-most-traded-instruments";
-import { getLastTradesData } from "./tools/get-last-trade-data";
-import { getTradesDetails } from "./tools/get-trades-details";
-import { getTradesSummary } from "./tools/get-trades-summary";
-import { getCurrentWeekSummary } from "./tools/get-current-week-summary";
-import { getPreviousWeekSummary } from "./tools/get-previous-week-summary";
-import { getWeekSummaryForDate } from "./tools/get-week-summary-for-date";
-import { getPreviousConversation } from "./tools/get-previous-conversation";
-import { generateEquityChart } from "./tools/generate-equity-chart";
-import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
-import { buildSystemPrompt } from "./prompts";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { getRequestUser } from "@/lib/auth";
+import { summarizeTrades } from "@/lib/analytics";
+import { ok, fail, safeJson } from "@/lib/http";
 
-export const maxDuration = 60;
+const schema = z.object({
+  message: z.string().min(1),
+  scope: z.enum(["global", "account", "instrument"]).default("global"),
+  accountId: z.string().optional(),
+  instrument: z.string().optional()
+});
 
 export async function POST(req: NextRequest) {
-  try {
-      const { messages, username, locale, timezone } = await req.json();
-      console.log('[Chat Route] Received messages:', JSON.stringify(messages, null, 2));
-      
-      // Check if messages is valid
-      if (!messages || !Array.isArray(messages) || messages.length === 0) {
-        console.error('[Chat Route] Invalid messages array:', messages);
-        return new Response(JSON.stringify({ error: "No messages provided" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-    // Calculate current week and previous week boundaries in user's timezone
-    const now = new Date();
-    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday start
-    const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
-    const previousWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
-    const previousWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+  const user = getRequestUser(req);
+  if (!user) return fail("unauthorized", 401);
 
-    // Determine if this is the first message in the conversation
-    // A conversation starts with a user message, so if there's only one user message, it's the first
-    const userMessages = messages.filter((msg: any) => msg.role === 'user');
-    const isFirstMessage = userMessages.length === 1;
+  const parsed = schema.safeParse(await safeJson<unknown>(req));
+  if (!parsed.success) return fail("invalid payload", 400);
 
-    const convertedMessages = await convertToModelMessages(messages);
-    const systemPrompt = buildSystemPrompt({
-      locale,
-      username,
-      timezone,
-      currentWeekStart,
-      currentWeekEnd,
-      previousWeekStart,
-      previousWeekEnd,
-      isFirstMessage,
-    });
+  const where: Record<string, unknown> = { userId: user.userId };
+  if (parsed.data.scope === "account" && parsed.data.accountId) where.accountId = parsed.data.accountId;
+  if (parsed.data.scope === "instrument" && parsed.data.instrument) where.instrument = parsed.data.instrument;
 
-    const result = streamText({
-      model: 'openai/gpt-5-mini',
-      messages: convertedMessages,
-      system: systemPrompt,
+  const trades = await prisma.trade.findMany({ where, orderBy: { closeAt: "desc" }, take: 200 });
+  const summary = summarizeTrades(trades);
+  const lower = parsed.data.message.toLowerCase();
 
-      stopWhen: stepCountIs(10),
-      
-      onStepFinish: (step) => {
-        console.log('[Chat Route] Step finished:', JSON.stringify({
-          finishReason: step.finishReason,
-          hasText: !!step.text,
-          textLength: step.text?.length,
-          toolCalls: step.toolCalls?.map(tc => tc.toolName),
-          hasToolResults: !!step.toolResults?.length
-        }, null, 2));
-      },
+  const response = lower.includes("risk")
+    ? `Risk profile: win rate ${summary.winRate.toFixed(2)}%, avg RR ${summary.avgRiskReward.toFixed(2)}.`
+    : lower.includes("improve")
+    ? "Focus on setups with positive expectancy, and reduce size during low-performance sessions."
+    : `You took ${summary.count} trades with net PnL ${summary.netPnl.toFixed(2)}.`;
 
-      tools: {
-        // server-side tool with execute function
-        getJournalEntries,
-        getPreviousConversation,
-        getMostTradedInstruments,
-        getLastTradesData,
-        getTradesDetails,
-        getTradesSummary,
-        getCurrentWeekSummary,
-        getPreviousWeekSummary,
-        getWeekSummaryForDate,
-        getFinancialNews,
-        generateEquityChart,
-        // client-side tool that is automatically executed on the client
-        // askForConfirmation,
-        // askForLocation,
-      },
-      
-      onError: ({ error }) => {
-        console.error('[Chat Route] Stream error:', error);
-      },
-      
-      onFinish: (result) => {
-        console.log('[Chat Route] Stream finished:', JSON.stringify({
-          finishReason: result.finishReason,
-          hasText: !!result.text,
-          textLength: result.text?.length,
-          stepsCount: result.steps?.length,
-          usage: result.usage
-        }, null, 2));
-      }
-    });
-    return result.toUIMessageStreamResponse({
-      onError: (error) => {
-        console.error('[Chat Route] UI Stream error:', error);
-        return 'An error occurred during the chat response';
-      }
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify({ error: error.errors }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    console.error("Error in chat route:", error);
-    return new Response(JSON.stringify({ error: "Failed to process chat" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-} 
+  return ok({
+    message: parsed.data.message,
+    scope: parsed.data.scope,
+    response,
+    context: summary
+  });
+}

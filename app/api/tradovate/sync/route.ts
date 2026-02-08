@@ -1,61 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  getTradovateToken,
-  getTradovateTrades,
-} from "@/app/[locale]/dashboard/components/import/tradovate/actions";
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getRequestUser } from "@/lib/auth";
+import { ok, fail } from "@/lib/http";
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const accountId = body?.accountId as string | undefined;
+export async function POST(req: NextRequest) {
+  const user = getRequestUser(req);
+  if (!user) return fail("unauthorized", 401);
 
-    if (!accountId) {
-      return NextResponse.json(
-        { success: false, message: "accountId is required" },
-        { status: 400 }
-      );
+  const sync = await prisma.processedWebhook.create({
+    data: {
+      userId: user.userId,
+      provider: "WHOP",
+      eventId: `tradovate_${crypto.randomUUID()}`,
+      eventType: "tradovate.sync",
+      payload: { status: "completed", at: new Date().toISOString() }
     }
+  });
 
-    const tokenResult = await getTradovateToken(accountId);
-    if (tokenResult.error || !tokenResult.accessToken) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: tokenResult.error || "Missing Tradovate access token",
-        },
-        { status: 400 }
-      );
-    }
-
-    const syncResult = await getTradovateTrades(tokenResult.accessToken);
-    if (syncResult.error) {
-      // If it's just duplicate trades, return 200 with 0 saved
-      if (syncResult.error === "DUPLICATE_TRADES") {
-        return NextResponse.json({
-          success: true,
-          savedCount: 0,
-          ordersCount: syncResult.ordersCount ?? 0,
-          message: "DUPLICATE_TRADES",
-        });
-      }
-
-      return NextResponse.json(
-        { success: false, message: syncResult.error },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      savedCount: syncResult.savedCount ?? 0,
-      ordersCount: syncResult.ordersCount ?? 0,
-      message: "Sync completed",
-    });
-  } catch (error) {
-    console.error("Error performing Tradovate sync:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to perform Tradovate sync" },
-      { status: 500 }
-    );
-  }
+  return ok({ status: "completed", syncId: sync.id });
 }

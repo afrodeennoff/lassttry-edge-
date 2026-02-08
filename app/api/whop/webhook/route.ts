@@ -1,38 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { webhookService } from "@/server/webhook-service";
-import { whop } from "@/lib/whop";
-import { logger } from "@/lib/logger";
+import { NextRequest } from "next/server";
+import { getBillingProvider } from "@/lib/billing/provider-factory";
+import { ok, fail } from "@/lib/http";
 
 export async function POST(req: NextRequest) {
-    const requestBodyText = await req.text();
-    const headers = Object.fromEntries(req.headers);
-
-    let event;
-    try {
-        event = whop.webhooks.unwrap(requestBodyText, { headers });
-    } catch (err: any) {
-        logger.error('[Webhook] Signature verification failed', {
-            error: err.message,
-            stack: err.stack,
-            headers: JSON.stringify(headers)
-        });
-
-        return NextResponse.json(
-            { message: `Webhook Error: Signature verification failed. Check logs for details.` },
-            { status: 400 }
-        );
-    }
-
-    logger.info('[Webhook] Event received', { eventType: event.type, eventId: event.id });
-
-    const result = await webhookService.processWebhook(event);
-
-    if (result.success || result.alreadyProcessed) {
-        return NextResponse.json({ message: "Received" }, { status: 200 });
-    } else {
-        return NextResponse.json(
-            { message: result.error || "Processing failed" },
-            { status: 500 }
-        );
-    }
+  try {
+    const provider = await getBillingProvider();
+    const rawBody = await req.text();
+    const event = await provider.verifyAndParseWebhook(rawBody, req.headers);
+    const result = await provider.processWebhook(event);
+    return ok(result, result.success ? 200 : 500);
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "invalid webhook", 400);
+  }
 }
