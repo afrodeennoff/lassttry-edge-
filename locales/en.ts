@@ -1859,6 +1859,13 @@ export default {
     accounts: "Connected Accounts",
     syncTrades: "Sync Trades",
     syncComplete: "Trades synchronized successfully",
+    bulk: {
+      starting: "Starting bulk synchronization...",
+      syncing: "Syncing account {accountId}...",
+      complete: "Sync complete! {successCount} accounts synced, {totalNewTrades} new trades imported.",
+      upToDate: "Sync complete! {successCount} accounts are up to date.",
+      error: "An error occurred during bulk synchronization.",
+    },
     error: {
       oauthInit: "Failed to initialize OAuth flow",
       oauthCallback: "Failed to complete OAuth authentication",

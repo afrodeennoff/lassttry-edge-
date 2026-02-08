@@ -1964,6 +1964,13 @@ export default {
     accounts: "Comptes Connectés",
     syncTrades: "Synchroniser les Trades",
     syncComplete: "Trades synchronisés avec succès",
+    bulk: {
+      starting: "Démarrage de la synchronisation groupée...",
+      syncing: "Synchronisation du compte {accountId}...",
+      complete: "Synchronisation terminée ! {successCount} comptes synchronisés, {totalNewTrades} nouveaux trades importés.",
+      upToDate: "Synchronisation terminée ! {successCount} comptes sont à jour.",
+      error: "Une erreur est survenue lors de la synchronisation groupée.",
+    },
     error: {
       oauthInit: "Échec de l'initialisation du flux OAuth",
       oauthCallback: "Échec de l'authentification OAuth",
