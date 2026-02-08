@@ -76,7 +76,7 @@ if (result1.success) {
         groupId: result1.data.groupId,
     });
 } else {
-    console.log('❌ FAIL - Validation errors:', result1.error.errors);
+    console.log('❌ FAIL - Validation errors:', result1.error.issues);
 }
 
 console.log('\nTest 2: Numbers with null groupId');
@@ -89,7 +89,7 @@ if (result2.success) {
         groupId: result2.data.groupId,
     });
 } else {
-    console.log('❌ FAIL - Validation errors:', result2.error.errors);
+    console.log('❌ FAIL - Validation errors:', result2.error.issues);
 }
 
 console.log('\nTest 3: With groupId string');
@@ -102,7 +102,7 @@ if (result3.success) {
         groupId: result3.data.groupId,
     });
 } else {
-    console.log('❌ FAIL - Validation errors:', result3.error.errors);
+    console.log('❌ FAIL - Validation errors:', result3.error.issues);
 }
 
 console.log('\n=== All tests completed ===');
