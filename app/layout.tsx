@@ -161,42 +161,54 @@ export default async function RootLayout({
           {`
             // Function to prevent Google Translate from modifying the DOM
             function preventGoogleTranslate() {
-              // Prevent Google Translate from modifying the DOM
-              const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                  if (mutation.type === 'childList' && 
-                      mutation.target.classList && 
-                      mutation.target.classList.contains('goog-te-menu-frame')) {
-                    // Prevent Google Translate from modifying our React components
-                    const elements = document.querySelectorAll('[class*="goog-te-"]');
-                    elements.forEach((el) => {
-                      if (el.tagName === 'SPAN' && el.parentElement) {
-                        // Preserve the original text content
-                        const originalText = el.getAttribute('data-original-text') || el.textContent;
-                        el.textContent = originalText;
-                      }
-                    });
-                  }
-                });
-              });
-
-              // Start observing the document with the configured parameters
-              observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['class']
-              });
-
-              // Prevent Google Translate from initializing
-              if (window.google && window.google.translate) {
-                window.google.translate.TranslateElement = function() {
-                  return {
-                    translate: function() {
-                      return false;
+              try {
+                // Prevent Google Translate from modifying the DOM
+                const observer = new MutationObserver((mutations) => {
+                  mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' && 
+                        mutation.target.classList && 
+                        mutation.target.classList.contains('goog-te-menu-frame')) {
+                      // Prevent Google Translate from modifying our React components
+                      const elements = document.querySelectorAll('[class*="goog-te-"]');
+                      elements.forEach((el) => {
+                        if (el.tagName === 'SPAN' && el.parentElement) {
+                          // Preserve the original text content
+                          const originalText = el.getAttribute('data-original-text') || el.textContent;
+                          el.textContent = originalText;
+                        }
+                      });
                     }
-                  };
+                  });
+                });
+
+                const startObserving = function() {
+                  if (!document.body) return;
+                  observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['class']
+                  });
                 };
+
+                if (document.body) {
+                  startObserving();
+                } else {
+                  document.addEventListener('DOMContentLoaded', startObserving, { once: true });
+                }
+
+                // Prevent Google Translate from initializing
+                if (window.google && window.google.translate) {
+                  window.google.translate.TranslateElement = function() {
+                    return {
+                      translate: function() {
+                        return false;
+                      }
+                    };
+                  };
+                }
+              } catch (e) {
+                // Avoid blocking hydration if this guard script fails
               }
             }
 
