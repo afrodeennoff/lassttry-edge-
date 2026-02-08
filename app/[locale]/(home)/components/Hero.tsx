@@ -9,9 +9,9 @@ interface HeroProps {
 }
 
 const metrics = [
-  { label: 'Execution Score', value: '91.4', delta: '+6.1%' },
-  { label: 'Rule Compliance', value: '96%', delta: '+2.8%' },
-  { label: 'Max Drift Events', value: '2', delta: '-41%' },
+  { label: 'Process Discipline', value: '93.2', delta: '+7.4%' },
+  { label: 'Plan Adherence', value: '97%', delta: '+3.2%' },
+  { label: 'Impulse Entries', value: '1', delta: '-58%' },
 ]
 
 export default function Hero({ onStart }: HeroProps) {
@@ -30,20 +30,20 @@ export default function Hero({ onStart }: HeroProps) {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/12 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-primary">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Behavior-First Trading OS
+            Execution Intelligence Platform
           </span>
 
           <h1 className="mt-5 text-fluid-4xl font-black leading-[0.92] tracking-tight sm:text-fluid-6xl lg:text-fluid-7xl">
-            Trade With
+            Build a Trading
             <br />
             <span className="bg-gradient-to-r from-primary via-primary to-emerald-300 bg-clip-text text-transparent">
-              Structured Clarity
+              System You Trust
             </span>
           </h1>
 
           <p className="mx-auto mt-5 max-w-3xl text-base text-muted-foreground sm:text-lg">
-            Qunt Edge turns noisy trade history into a disciplined review loop. Track execution quality, catch process drift
-            early, and improve consistency with clear measurable feedback.
+            Qunt Edge turns every session into a measurable feedback loop. Review execution quality, detect drift before it compounds,
+            and coach better decisions with objective, repeatable data.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -51,7 +51,7 @@ export default function Hero({ onStart }: HeroProps) {
               onClick={onStart}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-[11px] font-black uppercase tracking-[0.15em] text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
             >
-              Start Free
+              Start Assessment
               <ArrowRight className="h-4 w-4" />
             </button>
 
@@ -59,7 +59,7 @@ export default function Hero({ onStart }: HeroProps) {
               href="/pricing"
               className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border/70 px-6 text-[11px] font-black uppercase tracking-[0.15em] text-foreground transition-colors hover:bg-muted/70 sm:w-auto"
             >
-              See Pricing
+              Compare Plans
             </Link>
           </div>
 
@@ -80,10 +80,10 @@ export default function Hero({ onStart }: HeroProps) {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Session Pulse</p>
-              <h2 className="mt-1 text-lg font-black tracking-tight">Execution Control Panel</h2>
+              <h2 className="mt-1 text-lg font-black tracking-tight">Performance Snapshot</h2>
             </div>
             <span className="rounded-lg border border-primary/30 bg-primary/12 px-2 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-primary">
-              Live
+              Real-Time
             </span>
           </div>
 
@@ -108,7 +108,7 @@ export default function Hero({ onStart }: HeroProps) {
           <div className="mt-4 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Insight</p>
             <p className="mt-1 text-sm text-foreground/90">
-              Your volatile sessions perform <span className="font-black text-primary">31% better</span> with full pre-trade checklist completion.
+              Sessions with completed pre-trade plans show <span className="font-black text-primary">34% lower drawdown variance</span> across the last 20 trading days.
             </p>
           </div>
         </motion.aside>
