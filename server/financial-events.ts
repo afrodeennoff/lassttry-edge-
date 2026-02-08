@@ -1,16 +1,8 @@
 'use server'
 
-import { PrismaClient, FinancialEvent } from '@/prisma/generated/prisma'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+import { FinancialEvent } from '@/prisma/generated/prisma'
+import { prisma } from '@/lib/prisma'
 import { format } from 'date-fns'
-
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-})
-
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
 
 /**
  * Retrieves financial events for a given month.

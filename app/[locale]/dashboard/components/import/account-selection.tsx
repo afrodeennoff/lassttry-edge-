@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,10 @@ export default function AccountSelection({
   const [isAddingNewAccount, setIsAddingNewAccount] = useState(false)
   const [localAccounts, setLocalAccounts] = useState<string[]>(accounts)
   const t = useI18n()
+
+  useEffect(() => {
+    setLocalAccounts(prev => Array.from(new Set([...prev, ...accounts])))
+  }, [accounts])
 
   const handleAddAccount = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 import { whop } from '@/lib/whop'
-import { PrismaClient } from '@/prisma/generated/prisma'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+import type { PrismaClient } from '@/prisma/generated/prisma'
 import { logger } from '@/lib/logger'
 import { subscriptionManager } from './subscription-manager'
 import { paymentService } from './payment-service'
@@ -85,11 +84,6 @@ export class WebhookService {
   }
 
   private async processEvent(event: WebhookEvent): Promise<WebhookProcessingResult> {
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-    })
-    const adapter = new PrismaPg(pool)
-    const prisma = new PrismaClient({ adapter })
     let lockAcquired = false
 
     try {
@@ -153,8 +147,6 @@ export class WebhookService {
         processed: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       }
-    } finally {
-      await pool.end()
     }
   }
 

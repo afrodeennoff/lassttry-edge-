@@ -68,14 +68,17 @@ export default function ImportButton() {
   const [selectedAccountNumbers, setSelectedAccountNumbers] = useState<string[]>([]);
   const user = useUserStore((state) => state.user);
   const supabaseUser = useUserStore((state) => state.supabaseUser);
+  const accounts = useUserStore((state) => state.accounts);
   const trades = useTradesStore((state) => state.trades);
   const setTradesStore = useTradesStore((state) => state.setTrades);
-  const { refreshTradesOnly } = useData();
+  const { refreshTradesOnly, refreshUserDataOnly } = useData();
   const t = useI18n();
 
   const handleSave = useCallback(async () => {
     console.log("[ImportButton] First:", processedTrades);
-    if (!user || !supabaseUser) {
+    // Accept either hydrated app user or Supabase auth user.
+    // Requiring both blocks valid sessions during partial hydration.
+    if (!user && !supabaseUser) {
       toast.error(t("import.error.auth"), {
         description: t("import.error.authDescription"),
       });
@@ -127,12 +130,19 @@ export default function ImportButton() {
             description: t("import.error.duplicateTradesDescription"),
           });
         } else if (result.error === "INVALID_DATA") {
-          toast.error(t("import.error.accountRequired"), {
-            description:
-              typeof result.details === "string"
-                ? result.details
-                : t("import.error.accountRequiredDescription"),
-          });
+          const detailStr = String(result.details || "");
+          if (detailStr.includes("future entry date")) {
+            toast.error(t("import.error.futureDate"), {
+              description: t("import.error.futureDateDescription"),
+            });
+          } else {
+            toast.error(t("import.error.invalidData"), {
+              description:
+                typeof result.details === "string"
+                  ? result.details
+                  : t("import.error.invalidDataDescription"),
+            });
+          }
         } else if (result.error === "NO_TRADES_ADDED") {
           toast.error(t("import.error.noTradesAdded"), {
             description: t("import.error.noTradesAddedDescription"),
@@ -154,8 +164,9 @@ export default function ImportButton() {
       ];
       setTradesStore(mergedTrades);
 
-      // Keep server cache fresh (server action will update tags); avoid full refresh
-      await refreshTradesOnly({ force: false });
+      // Force-refresh both trades and account metadata after import.
+      await refreshTradesOnly({ force: true });
+      await refreshUserDataOnly({ force: true });
 
       // Show success message
       toast.success(t("import.success"), {
@@ -174,7 +185,7 @@ export default function ImportButton() {
     } finally {
       setIsSaving(false);
     }
-  }, [processedTrades, accountNumbers, selectedAccountNumbers, importType, user, supabaseUser, t, refreshTradesOnly]);
+  }, [processedTrades, accountNumbers, selectedAccountNumbers, importType, user, supabaseUser, trades, setTradesStore, t, refreshTradesOnly, refreshUserDataOnly]);
 
   const resetImportState = () => {
     setImportType("");
@@ -304,7 +315,10 @@ export default function ImportButton() {
       return (
         <Component
           accounts={Array.from(
-            new Set(trades.map((trade) => trade.accountNumber))
+            new Set([
+              ...accounts.map((account) => account.number),
+              ...trades.map((trade) => trade.accountNumber),
+            ])
           )}
           accountNumbers={accountNumbers}
           setAccountNumbers={setAccountNumbers}

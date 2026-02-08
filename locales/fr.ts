@@ -301,6 +301,10 @@ export default {
   "import.error.accountRequired": "Numéro de compte requis",
   "import.error.accountRequiredDescription":
     "Veuillez sélectionner un compte existant ou en créer un nouveau.",
+  "import.error.invalidData": "Données Invalides",
+  "import.error.invalidDataDescription": "Les données de transaction fournies sont invalides.",
+  "import.error.futureDate": "Date de Transaction Future",
+  "import.error.futureDateDescription": "Les transactions ne peuvent pas avoir une date d'entrée dans le futur.",
   "import.error.requiredFields": "Champs requis non mappés",
   "import.error.requiredFieldsDescription":
     "Veuillez mapper les champs requis suivants :",

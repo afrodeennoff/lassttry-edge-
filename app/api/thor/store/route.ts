@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Trade, PrismaClient } from '@/prisma/generated/prisma'
-import { PrismaPg } from '@prisma/adapter-pg'
-import pg from 'pg'
+import { Trade } from '@/prisma/generated/prisma'
+import { prisma } from '@/lib/prisma'
 import { saveTradesAction } from '@/server/database';
-
-// Create a new PrismaClient instance for this API route
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-})
-
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
 
 // Common authentication function to use across all methods
 async function authenticateRequest(req: NextRequest) {
@@ -149,8 +140,6 @@ export async function POST(req: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -234,8 +223,6 @@ export async function GET(req: NextRequest) {
       error: 'Failed to retrieve trades', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -282,7 +269,5 @@ export async function DELETE(req: NextRequest) {
       error: 'Failed to delete trades', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

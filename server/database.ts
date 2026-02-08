@@ -4,7 +4,7 @@ import { revalidatePath, updateTag } from 'next/cache'
 import { headers } from 'next/headers'
 import { Widget, Layouts } from '@/app/[locale]/dashboard/types/dashboard'
 import { createClient, getUserId } from './auth'
-import { startOfDay } from 'date-fns'
+import { startOfDay, isAfter } from 'date-fns'
 import { getSubscriptionDetails } from './subscription'
 import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
@@ -13,6 +13,26 @@ import { formatTimestamp } from '@/lib/date-utils'
 import { v5 as uuidv5 } from 'uuid'
 import { Decimal } from '@prisma/client-runtime-utils'
 import { logger } from '@/lib/logger'
+import { z } from 'zod'
+
+const importTradeSchema = z.object({
+  accountNumber: z.string().min(1, 'Account number is required'),
+  instrument: z.string().min(1, 'Instrument is required'),
+  side: z.string().optional(),
+  quantity: z.number().positive('Quantity must be positive'),
+  entryPrice: z.number(),
+  closePrice: z.number(),
+  pnl: z.number(),
+  commission: z.number().default(0),
+  entryDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid entry date'),
+  closeDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid close date'),
+  timeInPosition: z.number().optional(),
+  entryId: z.string().optional(),
+  closeId: z.string().optional(),
+  comment: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  groupId: z.string().optional(),
+})
 
 type TradeError =
   | 'DUPLICATE_TRADES'
@@ -54,21 +74,21 @@ const saveLocks = new Map<string, Promise<SaveLayoutResult>>()
 
 function validateLayouts(layouts: DashboardLayout): boolean {
   if (!layouts || typeof layouts !== 'object') return false
-  
+
   const validateArray = (arr: unknown): arr is Prisma.JsonArray => {
     if (!Array.isArray(arr)) return false
-    return arr.every(item => 
-      item && 
-      typeof item === 'object' && 
-      'i' in item && 
-      'type' in item && 
-      'x' in item && 
-      'y' in item && 
-      'w' in item && 
+    return arr.every(item =>
+      item &&
+      typeof item === 'object' &&
+      'i' in item &&
+      'type' in item &&
+      'x' in item &&
+      'y' in item &&
+      'w' in item &&
       'h' in item
     )
   }
-  
+
   return validateArray(layouts.desktop) && validateArray(layouts.mobile)
 }
 
@@ -130,18 +150,45 @@ export async function saveTradesAction(
   }
 
   try {
-    const userAssignedTrades = data.map(trade => {
-      return {
+    const now = new Date()
+    const userAssignedTrades: any[] = []
+    const validationErrors: string[] = []
+
+    for (const rawTrade of data) {
+      const validation = importTradeSchema.safeParse(rawTrade)
+
+      if (!validation.success) {
+        validationErrors.push(`Validation failed for trade ${rawTrade.instrument}: ${validation.error.message}`)
+        continue
+      }
+
+      const trade = validation.data
+
+      // Future date check
+      if (isAfter(new Date(trade.entryDate), now)) {
+        validationErrors.push(`Trade ${trade.instrument} has a future entry date`)
+        continue
+      }
+
+      userAssignedTrades.push({
         ...trade,
         userId: userId,
-        accountNumber: typeof trade.accountNumber === 'string' ? trade.accountNumber.trim() : '',
+        accountNumber: trade.accountNumber.trim(),
         entryPrice: new Decimal(trade.entryPrice),
         closePrice: new Decimal(trade.closePrice),
         pnl: new Decimal(trade.pnl),
         commission: new Decimal(trade.commission || 0),
         id: generateTradeUUID({ ...trade, userId: userId }),
+      })
+    }
+
+    if (validationErrors.length > 0 && userAssignedTrades.length === 0) {
+      return {
+        error: 'INVALID_DATA',
+        numberOfTradesAdded: 0,
+        details: validationErrors.join('; ')
       }
-    })
+    }
 
     const missingAccountNumberTrades = userAssignedTrades.filter(
       trade => !trade.accountNumber || trade.accountNumber.length === 0
@@ -192,6 +239,9 @@ export async function saveTradesAction(
       })
     })
 
+    updateTag(`trades-${userId}`)
+    updateTag(`user-data-${userId}`)
+
     if (result.count === 0) {
       logger.info('[saveTrades] No trades added. Duplicate check.')
       return {
@@ -200,7 +250,6 @@ export async function saveTradesAction(
       }
     }
 
-    updateTag(`trades-${userId}`)
     return { error: false, numberOfTradesAdded: result.count }
   } catch (error) {
     logger.error('[saveTrades] Database error', { error })
@@ -385,15 +434,15 @@ export async function loadDashboardLayoutAction(): Promise<Layouts | null> {
 export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promise<SaveLayoutResult> {
   const userId = await getUserId()
   const headersList = await headers()
-  
+
   if (!userId) {
     return { success: false, error: 'User not authenticated' }
   }
-  
+
   if (!layouts) {
     return { success: false, error: 'Layouts data is required' }
   }
-  
+
   if (!validateLayouts(layouts)) {
     logger.error('[saveDashboardLayout] Validation failed', { userId })
     return { success: false, error: 'Invalid layout structure' }
@@ -435,7 +484,7 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
   }
 
   const lockKey = `layout:${userId}`
-  
+
   if (saveLocks.has(lockKey)) {
     logger.info('[saveDashboardLayout] Debouncing concurrent save', { userId })
     return { success: true }
@@ -461,20 +510,20 @@ export async function saveDashboardLayoutAction(layouts: DashboardLayout): Promi
 
       updateTag(`dashboard-${userId}`)
       revalidatePath('/')
-      
+
       logger.info('[saveDashboardLayout] Success', { userId })
       return { success: true }
     } catch (error) {
       logger.error('[saveDashboardLayout] Error', { error, userId })
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown database error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown database error'
       }
     }
   })()
 
   saveLocks.set(lockKey, savePromise)
-  
+
   try {
     const result = await savePromise
     return result
@@ -629,7 +678,7 @@ export async function cleanupOldLayoutVersionsAction(
 ): Promise<void> {
   try {
     const totalCount = await prisma.layoutVersion.count({ where: { layoutId } })
-    
+
     if (totalCount <= keepCount) return
 
     const versionsToDelete = await prisma.layoutVersion.findMany({
@@ -647,9 +696,9 @@ export async function cleanupOldLayoutVersionsAction(
       }
     })
 
-    logger.info('[cleanupOldLayoutVersions] Success', { 
-      layoutId, 
-      deletedCount: versionsToDelete.length 
+    logger.info('[cleanupOldLayoutVersions] Success', {
+      layoutId,
+      deletedCount: versionsToDelete.length
     })
   } catch (error) {
     logger.error('[cleanupOldLayoutVersions] Error', { error, layoutId })
@@ -665,15 +714,15 @@ export async function saveDashboardLayoutWithVersionAction(
   }
 ): Promise<SaveLayoutResult> {
   const userId = await getUserId()
-  
+
   if (!userId) {
     return { success: false, error: 'User not authenticated' }
   }
-  
+
   if (!layouts) {
     return { success: false, error: 'Layouts data is required' }
   }
-  
+
   if (!validateLayouts(layouts)) {
     logger.error('[saveDashboardLayoutWithVersion] Validation failed', { userId })
     return { success: false, error: 'Invalid layout structure' }
@@ -687,7 +736,7 @@ export async function saveDashboardLayoutWithVersionAction(
       })
 
       const newVersion = (existing?.version ?? 0) + 1
-      
+
       const crypto = await import('crypto')
       const checksum = crypto.createHash('sha256')
         .update(JSON.stringify({ desktop: layouts.desktop, mobile: layouts.mobile }))
@@ -729,14 +778,14 @@ export async function saveDashboardLayoutWithVersionAction(
 
     updateTag(`dashboard-${userId}`)
     revalidatePath('/')
-    
+
     logger.info('[saveDashboardLayoutWithVersion] Success', { userId })
     return { success: true }
   } catch (error) {
     logger.error('[saveDashboardLayoutWithVersion] Error', { error, userId })
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown database error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown database error'
     }
   }
 }

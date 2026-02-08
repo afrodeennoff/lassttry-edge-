@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { PrismaClient } from "@/prisma/generated/prisma"
-import { PrismaPg } from "@prisma/adapter-pg"
-import pg from "pg"
+import { prisma } from "@/lib/prisma"
 import { Resend } from 'resend'
 import { headers } from 'next/headers'
 import { format, subDays, isEqual, startOfDay } from 'date-fns'
@@ -73,12 +71,6 @@ const calculateNextPaymentDate = (currentDate: Date, frequency: string): Date =>
 
 // Daily cron job handler - runs every day at 9 AM UTC
 export async function GET(req: Request) {
-  const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
   if (!process.env.RESEND_API_KEY) {
     console.error('RESEND_API_KEY is missing')
     return NextResponse.json({ error: 'Missing API key' }, { status: 500 })
@@ -254,7 +246,5 @@ export async function GET(req: Request) {
       { error: 'Internal server error' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
-} 
+}

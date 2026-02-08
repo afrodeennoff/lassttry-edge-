@@ -22,14 +22,14 @@ function formatDuration(seconds: number): string {
   if (seconds < 60) {
     return `${seconds}sec`
   }
-  
+
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
-  
+
   if (remainingSeconds === 0) {
     return `${minutes}min`
   }
-  
+
   return `${minutes}min ${remainingSeconds}sec`
 }
 
@@ -168,12 +168,12 @@ async function getContractById(accessToken: string, contractId: number): Promise
         'Accept': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       console.warn(`Failed to fetch contract ${contractId}:`, response.status, response.statusText)
       return null
     }
-    
+
     return await response.json()
   } catch (error) {
     console.warn(`Error fetching contract ${contractId}:`, error)
@@ -185,16 +185,16 @@ async function getContractById(accessToken: string, contractId: number): Promise
 async function getFillFeesByIds(accessToken: string, fillIds: number[]): Promise<TradovateFillFee[]> {
   try {
     if (fillIds.length === 0) return []
-    
+
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     const BATCH_SIZE = 5 // Limit batch size to 5 IDs at a time
-    
+
     const fees: TradovateFillFee[] = []
-    
+
     // Process in batches of 5 IDs
     for (let i = 0; i < fillIds.length; i += BATCH_SIZE) {
       const batch = fillIds.slice(i, i + BATCH_SIZE)
-      
+
       try {
         // Use GET with comma-separated IDs as per Tradovate API docs
         const idsParam = batch.join(',')
@@ -204,7 +204,7 @@ async function getFillFeesByIds(accessToken: string, fillIds: number[]): Promise
             'Accept': 'application/json'
           }
         })
-        
+
         if (response.ok) {
           const batchFees = await response.json()
           if (Array.isArray(batchFees)) {
@@ -222,7 +222,7 @@ async function getFillFeesByIds(accessToken: string, fillIds: number[]): Promise
               return null
             }
           })
-          
+
           const batchResults = await Promise.all(batchPromises)
           fees.push(...batchResults.filter(fee => fee !== null) as TradovateFillFee[])
         }
@@ -238,17 +238,17 @@ async function getFillFeesByIds(accessToken: string, fillIds: number[]): Promise
             return null
           }
         })
-        
+
         const batchResults = await Promise.all(batchPromises)
         fees.push(...batchResults.filter(fee => fee !== null) as TradovateFillFee[])
       }
-      
+
       // Small delay between batches to respect rate limits
       if (i + BATCH_SIZE < fillIds.length) {
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
-    
+
     return fees
   } catch (error) {
     logger.warn(`Error fetching fill fees:`, error)
@@ -267,12 +267,12 @@ async function getFillFeeById(accessToken: string, fillId: number): Promise<Trad
         'Accept': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       logger.warn(`Failed to fetch fill fee ${fillId}:`, { status: response.status, statusText: response.statusText })
       return null
     }
-    
+
     return await response.json()
   } catch (error) {
     logger.warn(`Error fetching fill fee ${fillId}:`, error)
@@ -290,12 +290,12 @@ async function getFillPairs(accessToken: string): Promise<TradovateFillPair[]> {
         'Accept': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       console.warn(`Failed to fetch fill pairs:`, response.status, response.statusText)
       return []
     }
-    
+
     const fillPairs = await response.json()
     return Array.isArray(fillPairs) ? fillPairs : []
   } catch (error) {
@@ -309,16 +309,16 @@ async function getFillsByIds(accessToken: string, fillIds: number[]): Promise<an
   console.warn('getFillsByIds')
   try {
     if (fillIds.length === 0) return []
-    
+
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     const BATCH_SIZE = 5 // Limit batch size to 5 IDs at a time
-    
+
     const fills: any[] = []
-    
+
     // Process in batches of 5 IDs
     for (let i = 0; i < fillIds.length; i += BATCH_SIZE) {
       const batch = fillIds.slice(i, i + BATCH_SIZE)
-      
+
       console.warn('batch', JSON.stringify(batch))
       try {
         // Use GET with comma-separated IDs as per Tradovate API docs
@@ -329,7 +329,7 @@ async function getFillsByIds(accessToken: string, fillIds: number[]): Promise<an
             'Accept': 'application/json'
           }
         })
-        
+
         if (response.ok) {
           const batchFills = await response.json()
           if (Array.isArray(batchFills)) {
@@ -347,7 +347,7 @@ async function getFillsByIds(accessToken: string, fillIds: number[]): Promise<an
               return null
             }
           })
-          
+
           const batchResults = await Promise.all(batchPromises)
           fills.push(...batchResults.filter(fill => fill !== null))
         }
@@ -364,17 +364,17 @@ async function getFillsByIds(accessToken: string, fillIds: number[]): Promise<an
             return null
           }
         })
-        
+
         const batchResults = await Promise.all(batchPromises)
         fills.push(...batchResults.filter(fill => fill !== null))
       }
-      
+
       // Small delay between batches to respect rate limits
       if (i + BATCH_SIZE < fillIds.length) {
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
-    
+
     return fills
   } catch (error) {
     logger.warn(`Error fetching fills:`, error)
@@ -393,12 +393,12 @@ async function getFillById(accessToken: string, fillId: number): Promise<any | n
         'Accept': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       logger.warn(`Failed to fetch fill ${fillId}:`, { status: response.status, statusText: response.statusText })
       return null
     }
-    
+
     return await response.json()
   } catch (error) {
     logger.warn(`Error fetching fill ${fillId}:`, error)
@@ -410,18 +410,18 @@ async function getFillById(accessToken: string, fillId: number): Promise<any | n
 async function getOrdersByIds(accessToken: string, orderIds: number[]): Promise<any[]> {
   try {
     if (orderIds.length === 0) return []
-    
+
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     console.warn('getOrdersByIds', JSON.stringify(orderIds))
     const BATCH_SIZE = 5 // Limit batch size to 5 IDs at a time
-    
+
     const orders: any[] = []
-    
+
     // Process in batches of 5 IDs
     for (let i = 0; i < orderIds.length; i += BATCH_SIZE) {
       const batch = orderIds.slice(i, i + BATCH_SIZE)
       console.warn('batch orders', JSON.stringify(batch))
-      
+
       try {
         // Use GET with comma-separated IDs as per Tradovate API docs
         const idsParam = batch.join(',')
@@ -431,7 +431,7 @@ async function getOrdersByIds(accessToken: string, orderIds: number[]): Promise<
             'Accept': 'application/json'
           }
         })
-        
+
         if (response.ok) {
           const batchOrders = await response.json()
           if (Array.isArray(batchOrders)) {
@@ -450,7 +450,7 @@ async function getOrdersByIds(accessToken: string, orderIds: number[]): Promise<
               return null
             }
           })
-          
+
           const batchResults = await Promise.all(batchPromises)
           orders.push(...batchResults.filter(order => order !== null))
         }
@@ -466,17 +466,17 @@ async function getOrdersByIds(accessToken: string, orderIds: number[]): Promise<
             return null
           }
         })
-        
+
         const batchResults = await Promise.all(batchPromises)
         orders.push(...batchResults.filter(order => order !== null))
       }
-      
+
       // Small delay between batches to respect rate limits
       if (i + BATCH_SIZE < orderIds.length) {
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
-    
+
     return orders
   } catch (error) {
     logger.warn(`Error fetching orders:`, error)
@@ -495,12 +495,12 @@ async function getOrderById(accessToken: string, orderId: number): Promise<any |
         'Accept': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       logger.warn(`Failed to fetch order ${orderId}:`, { status: response.status, statusText: response.statusText })
       return null
     }
-    
+
     return await response.json()
   } catch (error) {
     logger.warn(`Error fetching order ${orderId}:`, error)
@@ -539,7 +539,7 @@ export async function getTradovateUsername(accessToken: string): Promise<string>
   }
 
   const data: TradovateUserListResponse = await response.json()
-  
+
   if (data.errorText) {
     throw new Error(`Tradovate API error: ${data.errorText}`)
   }
@@ -580,7 +580,7 @@ export async function initiateTradovateOAuth(accountId: string = 'default'): Pro
     // Generate state parameter for security
     const state = crypto.randomBytes(32).toString('hex')
     console.log('Generated OAuth state:', state.substring(0, 8) + '...')
-    
+
     // Verify user is authenticated
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -597,7 +597,7 @@ export async function initiateTradovateOAuth(accountId: string = 'default'): Pro
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     console.log('Using auth URL:', authBaseUrl)
     console.log('Using API URL:', apiBaseUrl)
-    
+
     const authUrl = new URL(`${authBaseUrl}/oauth`)
     authUrl.searchParams.append('response_type', 'code')
     authUrl.searchParams.append('client_id', TRADOVATE_CLIENT_ID)
@@ -641,8 +641,8 @@ export async function getPropfirmName(accessToken: string): Promise<string> {
 
 export async function handleTradovateCallback(code: string, state: string): Promise<TradovateOAuthResult> {
   try {
-    console.log('Processing Tradovate OAuth callback (demo only):', { 
-      hasCode: !!code, 
+    console.log('Processing Tradovate OAuth callback (demo only):', {
+      hasCode: !!code,
       hasState: !!state,
       state: state?.substring(0, 8) + '...'
     })
@@ -668,7 +668,7 @@ export async function handleTradovateCallback(code: string, state: string): Prom
     // Exchange code for tokens using demo environment
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     console.log('Exchanging code for tokens:', { apiBaseUrl, userId: user.id })
-    
+
     const tokenResponse = await fetch(`${apiBaseUrl}/auth/oauthtoken`, {
       method: 'POST',
       headers: {
@@ -702,14 +702,14 @@ export async function handleTradovateCallback(code: string, state: string): Prom
       return { error: 'Invalid response format from Tradovate' }
     }
 
-    console.log('Token exchange response:', { 
+    console.log('Token exchange response:', {
       hasAccessToken: !!tokens?.access_token,
       hasRefreshToken: !!tokens?.refresh_token,
       expiresIn: tokens?.expires_in,
       scope: tokens?.scope,
       fullResponse: tokens
     })
-    
+
     // Validate the token response structure
     if (!tokens || typeof tokens !== 'object') {
       console.error('Invalid token response structure:', tokens)
@@ -725,10 +725,10 @@ export async function handleTradovateCallback(code: string, state: string): Prom
       })
       return { error: 'Invalid token response from Tradovate - missing required fields' }
     }
-    
+
     // Calculate expiration time
     const expiresAt = formatDateForAPI(new Date(Date.now() + (tokens.expires_in * 1000)))
-    
+
     // Get account information from the token to determine accountId
     // API provides an endpoint https://demo.tradovateapi.com/v1/auth/me
     const propfirm = await getPropfirmName(tokens.access_token)
@@ -743,7 +743,7 @@ export async function handleTradovateCallback(code: string, state: string): Prom
       logger.warn('Failed to store token in database:', storeResult.error)
       // Continue anyway - token is still valid for this session
     }
-    
+
     return {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
@@ -763,7 +763,7 @@ export async function handleTradovateCallback(code: string, state: string): Prom
 export async function renewTradovateAccessToken(accessToken: string, environment: 'demo' | 'live' = 'demo'): Promise<TradovateOAuthResult> {
   try {
     const apiBaseUrl = environment === 'demo' ? TRADOVATE_ENVIRONMENTS.demo.api : 'https://live.tradovateapi.com'
-    
+
     const renewal = await fetch(`${apiBaseUrl}/auth/renewAccessToken`, {
       method: 'GET',
       headers: {
@@ -780,7 +780,7 @@ export async function renewTradovateAccessToken(accessToken: string, environment
     }
 
     const renewalData = await renewal.json();
-    
+
     if (renewalData.errorText) {
       logger.error('Token renewal error:', renewalData.errorText);
       return { error: `Token renewal failed: ${renewalData.errorText}` };
@@ -869,10 +869,10 @@ export async function refreshTradovateToken(refreshToken: string): Promise<Trado
       })
       return { error: 'Invalid refresh token response from Tradovate - missing required fields' }
     }
-    
+
     // Calculate expiration time
     const expiresAt = formatDateForAPI(new Date(Date.now() + (tokens.expires_in * 1000)))
-    
+
     return {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
@@ -889,20 +889,20 @@ export async function testTradovateAuth(accessToken: string) {
   try {
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
     console.log('Testing Tradovate authentication with demo user list endpoint')
-    
+
     const response = await fetch(`${apiBaseUrl}/v1/user/list`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json'
       }
     })
-    
+
     console.log('User list endpoint response:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok
     })
-    
+
     if (response.ok) {
       const userData = await response.json()
       console.log('User data from demo user list:', userData)
@@ -921,12 +921,12 @@ export async function testTradovateAuth(accessToken: string) {
 export async function getTradovateAccounts(accessToken: string): Promise<TradovateAccountsResult> {
   try {
     const apiBaseUrl = TRADOVATE_ENVIRONMENTS.demo.api
-    console.log('Fetching Tradovate accounts (demo only):', { 
+    console.log('Fetching Tradovate accounts (demo only):', {
       apiBaseUrl,
       hasToken: !!accessToken,
       tokenPrefix: accessToken?.substring(0, 10) + '...'
     })
-    
+
     // Use simple account list endpoint that we validated works
     const response = await fetch(`${apiBaseUrl}/v1/account/list`, {
       headers: {
@@ -934,13 +934,13 @@ export async function getTradovateAccounts(accessToken: string): Promise<Tradova
         'Accept': 'application/json'
       }
     })
-    
+
     console.log('Account list response:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok
     })
-    
+
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Failed to fetch accounts:', { status: response.status, errorText })
@@ -948,11 +948,11 @@ export async function getTradovateAccounts(accessToken: string): Promise<Tradova
     }
 
     const accounts = await response.json()
-    console.log('Received accounts from Tradovate:', { 
+    console.log('Received accounts from Tradovate:', {
       accountCount: accounts.length,
       sampleAccount: accounts[0]
     })
-    
+
     if (!Array.isArray(accounts) || accounts.length === 0) {
       console.log('No accounts returned from Tradovate')
       return { error: 'No accounts found on demo environment' }
@@ -963,7 +963,7 @@ export async function getTradovateAccounts(accessToken: string): Promise<Tradova
       length: accounts.length,
       accounts: accounts
     })
-    
+
     return { accounts }
   } catch (error) {
     console.error('Failed to get Tradovate accounts:', error)
@@ -987,9 +987,9 @@ async function buildTradesFromFillPairs(
 
   for (const fillPair of fillPairs) {
     try {
-        // Get detailed fill information from pre-fetched data
-        const buyFillData = fillsById.get(fillPair.buyFillId)
-        const sellFillData = fillsById.get(fillPair.sellFillId)
+      // Get detailed fill information from pre-fetched data
+      const buyFillData = fillsById.get(fillPair.buyFillId)
+      const sellFillData = fillsById.get(fillPair.sellFillId)
 
       if (!buyFillData || !sellFillData) {
         logger.warn(`Missing fill details for pair ${fillPair.id}:`, { buyFill: !!buyFillData, sellFill: !!sellFillData })
@@ -1042,33 +1042,33 @@ async function buildTradesFromFillPairs(
       const buyTime = new Date(buyFill.timestamp)
       const sellTime = new Date(sellFill.timestamp)
       const isBuyFirst = buyTime < sellTime
-      
+
       // If buy happened first, it's a long trade (buy then sell)
       // If sell happened first, it's a short trade (sell then buy)
       const side = isBuyFirst ? 'Long' : 'Short'
-      
+
       // Calculate P&L using tick value (more accurate for futures)
       const tickDetail = tickDetails.find(detail => detail.ticker === contractSymbol)
       const tickSize = tickDetail?.tickSize || 0.25 // Default tick size for MES
       const tickValue = tickDetail?.tickValue || 5.0 // Default tick value for MES
-      
+
       // Determine entry and exit prices based on trade direction
       const entryPrice = isBuyFirst ? fillPair.buyPrice : fillPair.sellPrice
       const exitPrice = isBuyFirst ? fillPair.sellPrice : fillPair.buyPrice
       const entryTime = isBuyFirst ? buyTime : sellTime
       const exitTime = isBuyFirst ? sellTime : buyTime
-      
+
       // Calculate price difference (exit - entry)
       const priceDifference = exitPrice - entryPrice
       const ticks = priceDifference / tickSize
       let pnl = ticks * tickValue * fillPair.qty
-      
+
       // For short trades, we need to reverse the P&L calculation
       // Short: sell first (entry), buy later (exit) = profit when exit price < entry price
       if (!isBuyFirst) {
         pnl = -pnl // Reverse for short trades
       }
-      
+
       logger.debug(`P&L calculation for ${contractSymbol}`, {
         isBuyFirst,
         side: isBuyFirst ? 'Long' : 'Short',
@@ -1089,16 +1089,16 @@ async function buildTradesFromFillPairs(
       // Fee is per fill, but we need to calculate based on fill pair quantity
       const buyFillQty = buyFill.qty || 1
       const sellFillQty = sellFill.qty || 1
-      
+
       // Calculate fee per unit for each fill, then multiply by fill pair quantity
       const buyCommissionPerUnit = buyFillData.commission / buyFillQty
       const sellCommissionPerUnit = sellFillData.commission / sellFillQty
-      
+
       // Apply the fill pair quantity to get the correct commission
       const buyCommission = buyCommissionPerUnit * fillPair.qty
       const sellCommission = sellCommissionPerUnit * fillPair.qty
       const totalCommission = Number((buyCommission + sellCommission).toFixed(2))
-      
+
       logger.debug(`Commission calculation for ${contractSymbol}`, {
         buyFillQty,
         sellFillQty,
@@ -1199,6 +1199,10 @@ export async function storeTradovateToken(
       }
     })
 
+    // Revalidate user data to ensure new sync accounts appear
+    const { updateTag } = await import('next/cache')
+    updateTag(`user-data-${user.id}`)
+
     return { success: true }
   } catch (error) {
     console.error('Failed to store Tradovate token:', error)
@@ -1232,7 +1236,7 @@ export async function getTradovateToken(accountId: string = 'default') {
     // Check if token is expired
     const now = new Date()
     const expiresAt = syncData.tokenExpiresAt
-    
+
     if (expiresAt && expiresAt <= now) {
       return { error: 'Token expired' }
     }
@@ -1335,7 +1339,7 @@ export async function setCustomTradovateToken(
 
     // Store the custom token
     const result = await storeTradovateToken(accessToken, expiresAt, environment, accountId)
-    
+
     if (result.error) {
       return result
     }
@@ -1346,8 +1350,8 @@ export async function setCustomTradovateToken(
       expiresAt: expirationDate.toISOString()
     })
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `Custom token set for account ${accountId}`,
       accountId,
       expiresAt: expirationDate.toISOString()
@@ -1371,7 +1375,7 @@ export async function testCustomTradovateToken(
 
     // Test the token by making a simple API call
     const apiBaseUrl = environment === 'demo' ? TRADOVATE_ENVIRONMENTS.demo.api : 'https://live.tradovateapi.com'
-    
+
     const response = await fetch(`${apiBaseUrl}/v1/user/list`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -1385,9 +1389,9 @@ export async function testCustomTradovateToken(
         environment,
         userData: Array.isArray(userData) ? `Found ${userData.length} users` : 'User data received'
       })
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         message: 'Token is valid and working',
         environment,
         userData: Array.isArray(userData) ? userData.length : 1
@@ -1399,8 +1403,8 @@ export async function testCustomTradovateToken(
         statusText: response.statusText,
         errorText
       })
-      
-      return { 
+
+      return {
         error: `Token test failed: ${response.status} ${response.statusText}`,
         details: errorText
       }
@@ -1412,22 +1416,22 @@ export async function testCustomTradovateToken(
 }
 
 async function updateLastSyncedAt(userId: string, accessToken: string) {
-    // Update last synced at
-    const updateResult = await prisma.synchronization.updateMany({
-      where: {
-        userId: userId,
-        service: 'tradovate',
-        token: accessToken,
-      },
-      data: {
-        lastSyncedAt: new Date()
-      }
-    })
+  // Update last synced at
+  const updateResult = await prisma.synchronization.updateMany({
+    where: {
+      userId: userId,
+      service: 'tradovate',
+      token: accessToken,
+    },
+    data: {
+      lastSyncedAt: new Date()
+    }
+  })
 
-    return updateResult
+  return updateResult
 }
 
-  
+
 export async function getTradovateTrades(
   accessToken: string,
   options?: { userId?: string }
@@ -1436,7 +1440,7 @@ export async function getTradovateTrades(
     // If we are on the server
     // Identify user by access token
     logger.info('Fetching Tradovate fill pairs for improved trade building (demo only)')
-    
+
     // Resolve userId either from caller (e.g. cron) or current session
     let userId = options?.userId ?? null
     if (!userId) {
@@ -1454,7 +1458,7 @@ export async function getTradovateTrades(
     logger.info('Fetching fill pairs...')
     const fillPairs = await getFillPairs(accessToken)
     logger.info(`Received ${fillPairs.length} fill pairs from Tradovate`)
-    
+
     // Means there are no trades to import
     if (fillPairs.length === 0) {
       logger.info('No fill pairs returned from Tradovate')
@@ -1481,7 +1485,7 @@ export async function getTradovateTrades(
       allFillIds.add(pair.buyFillId)
       allFillIds.add(pair.sellFillId)
     })
-    
+
     logger.info(`Collecting ${allFillIds.size} unique fill IDs from ${fillPairs.length} fill pairs`)
 
     // Step 2: Fetch all fills and fees in parallel batches
@@ -1558,7 +1562,7 @@ export async function getTradovateTrades(
 
     // Build trades using fill pairs with account resolution
     const processedTrades = await buildTradesFromFillPairs(fillPairs, contracts, fillsById, ordersById, accountsById, userId, tickDetails)
-    
+
     await updateLastSyncedAt(userId, accessToken)
 
     if (processedTrades.length === 0) {
@@ -1569,18 +1573,18 @@ export async function getTradovateTrades(
     // Save trades to database
     logger.info(`Attempting to save ${processedTrades.length} fill pair trades to database`)
     const saveResult = await saveTradesAction(processedTrades, { userId })
-    
+
     if (saveResult.error) {
       if (saveResult.error === "DUPLICATE_TRADES") {
         logger.error('Failed to save trades:', { error: saveResult.error, details: saveResult.details })
-        return { 
+        return {
           error: "DUPLICATE_TRADES",
           processedTrades: processedTrades,
           ordersCount: fillPairs.length * 2
         }
       }
       logger.error('Failed to save trades:', { error: saveResult.error, details: saveResult.details })
-      return { 
+      return {
         error: `Failed to save trades: ${saveResult.error}`,
         processedTrades: processedTrades,
         ordersCount: fillPairs.length * 2
@@ -1588,9 +1592,9 @@ export async function getTradovateTrades(
     }
 
     logger.info(`Successfully saved ${saveResult.numberOfTradesAdded} fill pair trades`)
-    
-    
-    return { 
+
+
+    return {
       processedTrades: processedTrades,
       savedCount: saveResult.numberOfTradesAdded,
       ordersCount: fillPairs.length * 2
@@ -1612,13 +1616,13 @@ export async function updateDailySyncTimeAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const userId = await getUserId()
-    
+
     // Parse the UTC time string
     let syncDateTime: Date | null = null
     if (utcTimeString) {
       syncDateTime = new Date(utcTimeString)
     }
-    
+
     // Update the synchronization record
     await prisma.synchronization.updateMany({
       where: {
@@ -1630,7 +1634,7 @@ export async function updateDailySyncTimeAction(
         dailySyncTime: syncDateTime
       }
     })
-    
+
     return { success: true }
   } catch (error) {
     console.error('Error updating daily sync time:', error)
@@ -1639,4 +1643,3 @@ export async function updateDailySyncTimeAction(
 }
 
 
- 

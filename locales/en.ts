@@ -269,6 +269,10 @@ export default {
   "import.error.accountRequired": "Account number required",
   "import.error.accountRequiredDescription":
     "Please select an existing account or enter a new one.",
+  "import.error.invalidData": "Invalid Data",
+  "import.error.invalidDataDescription": "The provided trade data is invalid.",
+  "import.error.futureDate": "Future Trade Date",
+  "import.error.futureDateDescription": "Trades cannot have an entry date in the future.",
   "import.error.requiredFields": "Required fields not mapped",
   "import.error.requiredFieldsDescription":
     "Please map the following required fields:",

@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { PrismaClient } from "@/prisma/generated/prisma"
-import { PrismaPg } from "@prisma/adapter-pg"
-import pg from "pg"
+import { prisma } from "@/lib/prisma"
 import { Resend } from 'resend'
 import { headers } from 'next/headers'
 
@@ -26,12 +24,6 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = MAX_R
 }
 
 export async function GET(req: Request) {
-  const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
   if (!process.env.RESEND_API_KEY) {
     console.error('RESEND_API_KEY is missing')
     return NextResponse.json({ error: 'Missing API key' }, { status: 500 })

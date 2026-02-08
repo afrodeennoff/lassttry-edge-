@@ -4,6 +4,7 @@ import pg from 'pg'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
+  pool: pg.Pool | undefined
 }
 
 const forceIPv4ConnectionString = (connectionString: string): string => {
@@ -23,23 +24,23 @@ const forceIPv4ConnectionString = (connectionString: string): string => {
   }
 }
 
-const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
+// Runtime should prefer pooled DATABASE_URL (Supabase pooler).
+// DIRECT_URL is intended for migrations/admin operations.
+const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL || ''
+const parsedPoolMax = Number.parseInt(process.env.PG_POOL_MAX ?? '', 10)
+const poolMax = Number.isFinite(parsedPoolMax) && parsedPoolMax > 0 ? parsedPoolMax : 5
 
 const poolConfig: pg.PoolConfig = {
   connectionString: forceIPv4ConnectionString(connectionString),
-  max: 10,
+  max: poolMax,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 15000,
 }
 
-const pool = new pg.Pool(poolConfig)
+const pool = globalForPrisma.pool ?? new pg.Pool(poolConfig)
 
 pool.on('error', (err) => {
   console.error('[Prisma] Unexpected error on idle client', err)
-})
-
-pool.on('connect', () => {
-  console.log('[Prisma] New client connected to database')
 })
 
 const adapter = new PrismaPg(pool)
@@ -49,4 +50,5 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma 
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.pool = pool

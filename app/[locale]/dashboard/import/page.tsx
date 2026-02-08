@@ -8,7 +8,8 @@ import {
   storeTradovateToken,
 } from "../components/import/tradovate/actions";
 import { useI18n } from "@/locales/client";
-import { useSyncContext } from "@/context/sync-context";
+import { useSyncContext } from "@/context/sync-context"
+import { useData } from "@/context/data-provider"
 import {
   Card,
   CardContent,
@@ -25,6 +26,7 @@ export default function ImportCallbackPage() {
   const searchParams = useSearchParams();
   const tradovateStore = useTradovateSyncStore();
   const { tradovate } = useSyncContext();
+  const { refreshAllData } = useData();
   const t = useI18n();
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
@@ -158,6 +160,7 @@ export default function ImportCallbackPage() {
         // Refresh synchronizations so context has the latest accounts
         try {
           await tradovate.loadAccounts();
+          await refreshAllData({ force: true });
         } catch (loadError) {
           console.warn("Failed to refresh Tradovate synchronizations", loadError);
         }

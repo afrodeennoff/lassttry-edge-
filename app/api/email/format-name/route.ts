@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@/prisma/generated/prisma"
-import { PrismaPg } from "@prisma/adapter-pg"
-import pg from "pg"
+import { prisma } from "@/lib/prisma"
 import { openai } from "@ai-sdk/openai"
 import { generateText, Output } from "ai"
 import { z } from "zod"
-
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-})
-
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
 
 // Schema for the AI response
 const nameInferenceSchema = z.object({
@@ -181,8 +172,6 @@ Return the inferred names with confidence levels:
       },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -224,7 +213,5 @@ export async function GET(req: NextRequest) {
       },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

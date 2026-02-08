@@ -2,15 +2,29 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Area,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip
+} from 'recharts'
 
 const mockData = [
-  { name: 'S1', eqs: 82, discipline: 90, pnl: 400 },
-  { name: 'S2', eqs: 95, discipline: 98, pnl: -210 },
-  { name: 'S3', eqs: 42, discipline: 30, pnl: 1400 },
-  { name: 'S4', eqs: 88, discipline: 85, pnl: -150 },
-  { name: 'S5', eqs: 92, discipline: 95, pnl: 650 },
-  { name: 'S6', eqs: 96, discipline: 94, pnl: 800 },
+  { time: '09:30', price: 4312, ema: 4308, volume: 32 },
+  { time: '10:00', price: 4326, ema: 4313, volume: 45 },
+  { time: '10:30', price: 4318, ema: 4315, volume: 38 },
+  { time: '11:00', price: 4337, ema: 4320, volume: 58 },
+  { time: '11:30', price: 4345, ema: 4328, volume: 62 },
+  { time: '12:00', price: 4332, ema: 4330, volume: 41 },
+  { time: '12:30', price: 4348, ema: 4334, volume: 54 },
+  { time: '13:00', price: 4358, ema: 4341, volume: 59 },
+  { time: '13:30', price: 4349, ema: 4344, volume: 43 },
+  { time: '14:00', price: 4367, ema: 4350, volume: 67 },
 ]
 
 const logs = [
@@ -61,7 +75,7 @@ export default function AnalysisDemo() {
             viewport={{ once: true }}
             className="text-zinc-500 text-sm max-w-sm md:max-w-md leading-relaxed border-l-2 border-zinc-800 pl-6"
           >
-            Our AI models don't just record your trades. They <strong className="text-white">predict failure points</strong> before they happen and intervene in real-time.
+            Our AI models don&apos;t just record your trades. They <strong className="text-white">predict failure points</strong> before they happen and intervene in real-time.
           </motion.div>
         </div>
 
@@ -73,40 +87,98 @@ export default function AnalysisDemo() {
           className="grid lg:grid-cols-3 bg-[#080808] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
         >
           {/* Main Chart Area */}
-          <div className="lg:col-span-2 p-8 md:p-10 relative bg-gradient-to-b from-[#0a0a0a] to-[#080808]">
-            {/* Scanning Line Effect */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="w-[1px] h-full bg-teal-500/10 absolute top-0 left-0 animate-[scan_4s_linear_infinite] shadow-[0_0_30px_rgba(45,212,191,0.1)]"></div>
-            </div>
+          <div className="lg:col-span-2 p-8 md:p-10 relative bg-gradient-to-b from-[#0b0b0d] to-[#08080a]">
 
             <div className="flex flex-wrap items-center justify-between gap-6 mb-12 relative z-10">
               <div className="space-y-1">
-                <h4 className="font-mono text-[10px] uppercase text-zinc-500 tracking-[0.2em]">Neural Confidence</h4>
+                <h4 className="font-mono text-[10px] uppercase text-zinc-500 tracking-[0.2em]">Market Structure</h4>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-bold tracking-tighter text-white">94.2%</span>
-                  <span className="text-xs text-teal-500 font-mono bg-teal-500/10 px-2 py-0.5 rounded">HIGH_FIDELITY</span>
+                  <span className="text-4xl font-bold tracking-tighter text-white">4,367.00</span>
+                  <span className="text-xs text-teal-500 font-mono bg-teal-500/10 px-2 py-0.5 rounded">+1.27%</span>
                 </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-400">
+                <span className="rounded border border-zinc-700 px-2 py-1 text-white">1D</span>
+                <span className="rounded border border-zinc-800 px-2 py-1">1W</span>
+                <span className="rounded border border-zinc-800 px-2 py-1">1M</span>
               </div>
             </div>
 
             <div className="h-[300px] w-full relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockData}>
+                <ComposedChart data={mockData}>
                   <defs>
-                    <linearGradient id="eqsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.15} />
+                    <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
-                  <XAxis dataKey="name" stroke="#52525b" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#52525b' }} />
-                  <YAxis stroke="#52525b" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#52525b' }} />
-                  <Tooltip
-                    cursor={{ stroke: '#2dd4bf', strokeWidth: 1, strokeDasharray: '4 4' }}
-                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', fontSize: '11px', borderRadius: '6px', color: '#f4f4f5', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' }}
+                  <CartesianGrid strokeDasharray="2 2" stroke="#23232a" />
+                  <XAxis
+                    dataKey="time"
+                    stroke="#52525b"
+                    fontSize={10}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#71717a' }}
                   />
-                  <Area type="monotone" dataKey="eqs" stroke="#2dd4bf" strokeWidth={2} fill="url(#eqsGradient)" animationDuration={2000} />
-                </AreaChart>
+                  <YAxis
+                    yAxisId="price"
+                    stroke="#52525b"
+                    fontSize={10}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#71717a' }}
+                    domain={['dataMin - 10', 'dataMax + 10']}
+                  />
+                  <YAxis yAxisId="volume" hide orientation="right" />
+                  <Tooltip
+                    cursor={{ stroke: '#3f3f46', strokeWidth: 1 }}
+                    contentStyle={{
+                      backgroundColor: '#0b0b0f',
+                      border: '1px solid #27272a',
+                      fontSize: '11px',
+                      borderRadius: '6px',
+                      color: '#f4f4f5'
+                    }}
+                  />
+                  <Bar
+                    yAxisId="volume"
+                    dataKey="volume"
+                    fill="#334155"
+                    opacity={0.35}
+                    radius={[2, 2, 0, 0]}
+                    barSize={9}
+                    animationDuration={700}
+                  />
+                  <Area
+                    yAxisId="price"
+                    type="monotone"
+                    dataKey="price"
+                    stroke="none"
+                    fill="url(#priceGradient)"
+                    animationDuration={1200}
+                  />
+                  <Line
+                    yAxisId="price"
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#2dd4bf"
+                    strokeWidth={2}
+                    dot={false}
+                    animationDuration={1200}
+                  />
+                  <Line
+                    yAxisId="price"
+                    type="monotone"
+                    dataKey="ema"
+                    stroke="#94a3b8"
+                    strokeWidth={1.5}
+                    strokeDasharray="6 4"
+                    dot={false}
+                    animationDuration={1200}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>

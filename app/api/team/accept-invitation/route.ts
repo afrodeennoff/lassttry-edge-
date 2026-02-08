@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server"
-import { PrismaClient } from "@/prisma/generated/prisma"
-import { PrismaPg } from "@prisma/adapter-pg"
-import pg from "pg"
+import { prisma } from "@/lib/prisma"
 import { createClient } from '@/server/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
-  const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-
-  const adapter = new PrismaPg(pool)
-  const prisma = new PrismaClient({ adapter })
-
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

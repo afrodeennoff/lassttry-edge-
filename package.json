@@ -15,6 +15,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
+    "loadtest:k6": "k6 run scripts/loadtest/k6-smoke.js",
     "postinstall": "prisma generate",
     "test:payment": "vitest --config vitest.payment.config.ts",
     "test:payment:ui": "vitest --config vitest.payment.config.ts --ui",

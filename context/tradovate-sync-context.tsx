@@ -35,7 +35,7 @@ export function TradovateSyncContextProvider({ children }: { children: ReactNode
   const [enableAutoSync, setEnableAutoSync] = useState(false)
 
   const t = useI18n()
-  const { refreshTradesOnly } = useData()
+  const { refreshAllData } = useData()
 
   // Normalize dates returned from API
   const normalizeSynchronization = useCallback(
@@ -148,7 +148,7 @@ export function TradovateSyncContextProvider({ children }: { children: ReactNode
         await loadAccounts()
 
         if (!options?.skipRefresh) {
-          await refreshTradesOnly({ force: false })
+          await refreshAllData({ force: true })
         }
 
         return { error: false, message: successMessage, savedCount }
@@ -175,7 +175,7 @@ export function TradovateSyncContextProvider({ children }: { children: ReactNode
       console.error('Sync error:', error)
       return { success: false, message: errorMsg }
     }
-  }, [accounts, t, refreshTradesOnly, loadAccounts])
+  }, [accounts, t, refreshAllData, loadAccounts])
 
   // Perform sync for all accounts
   const performSyncForAllAccounts = useCallback(async () => {
@@ -211,7 +211,7 @@ export function TradovateSyncContextProvider({ children }: { children: ReactNode
       }
 
       // Final thorough refresh
-      await refreshTradesOnly({ force: true })
+      await refreshAllData({ force: true })
 
       if (totalNewTrades > 0) {
         toast.success(t('tradovateSync.bulk.complete', { successCount, totalNewTrades }), { id: toastId })
@@ -225,7 +225,7 @@ export function TradovateSyncContextProvider({ children }: { children: ReactNode
     } finally {
       setIsAutoSyncing(false)
     }
-  }, [isAutoSyncing, accounts, performSyncForAccount, t, refreshTradesOnly])
+  }, [isAutoSyncing, accounts, performSyncForAccount, t, refreshAllData])
 
   // Auto-sync checking
   const checkAndPerformSyncs = useCallback(async () => {
