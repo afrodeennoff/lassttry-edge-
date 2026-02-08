@@ -134,6 +134,7 @@ export async function saveTradesAction(
       return {
         ...trade,
         userId: userId,
+        accountNumber: typeof trade.accountNumber === 'string' ? trade.accountNumber.trim() : '',
         entryPrice: new Decimal(trade.entryPrice),
         closePrice: new Decimal(trade.closePrice),
         pnl: new Decimal(trade.pnl),
@@ -142,9 +143,53 @@ export async function saveTradesAction(
       }
     })
 
-    const result = await prisma.trade.createMany({
-      data: userAssignedTrades,
-      skipDuplicates: true
+    const missingAccountNumberTrades = userAssignedTrades.filter(
+      trade => !trade.accountNumber || trade.accountNumber.length === 0
+    )
+    if (missingAccountNumberTrades.length > 0) {
+      return {
+        error: 'INVALID_DATA',
+        numberOfTradesAdded: 0,
+        details: 'One or more trades are missing account numbers'
+      }
+    }
+
+    const uniqueAccountNumbers = Array.from(
+      new Set(userAssignedTrades.map(trade => trade.accountNumber))
+    )
+
+    const result = await prisma.$transaction(async tx => {
+      const existingAccounts = await tx.account.findMany({
+        where: {
+          userId,
+          number: { in: uniqueAccountNumbers }
+        },
+        select: { number: true }
+      })
+
+      const existingAccountNumbers = new Set(existingAccounts.map(account => account.number))
+      const missingAccountNumbers = uniqueAccountNumbers.filter(
+        accountNumber => !existingAccountNumbers.has(accountNumber)
+      )
+
+      if (missingAccountNumbers.length > 0) {
+        logger.info('[saveTrades] Creating missing accounts for imported trades', {
+          userId,
+          count: missingAccountNumbers.length
+        })
+        await tx.account.createMany({
+          data: missingAccountNumbers.map(accountNumber => ({
+            number: accountNumber,
+            userId
+          })),
+          skipDuplicates: true
+        })
+      }
+
+      return tx.trade.createMany({
+        data: userAssignedTrades,
+        skipDuplicates: true
+      })
     })
 
     if (result.count === 0) {

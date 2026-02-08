@@ -40,10 +40,8 @@ export default function Home() {
           </div>
         </TabsContent>
 
-        <TabsContent value="chart" className="mt-0 rounded-3xl border border-border/60 bg-card/75 p-3 shadow-sm backdrop-blur-sm sm:p-4">
-          <div className="rounded-2xl border border-border/70 bg-background/70 p-3 sm:p-4">
-            <ChartTheFuturePanel />
-          </div>
+        <TabsContent value="chart" className="mt-0">
+          <ChartTheFuturePanel />
         </TabsContent>
 
         <TabsContent value="widgets" className="mt-0 rounded-3xl border border-border/60 bg-card/75 p-3 shadow-sm backdrop-blur-sm sm:p-4">

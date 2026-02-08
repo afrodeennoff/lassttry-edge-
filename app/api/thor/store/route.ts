@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       })
     )
 
-    const result = await saveTradesAction(trades as Trade[])
+    const result = await saveTradesAction(trades as Trade[], { userId: user.id })
 
     // Handle duplicate trades as success, but return errors for other cases
     if (result.error && result.error !== 'DUPLICATE_TRADES') {

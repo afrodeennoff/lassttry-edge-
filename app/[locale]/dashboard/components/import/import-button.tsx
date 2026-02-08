@@ -121,20 +121,17 @@ export default function ImportButton() {
       console.log("[ImportButton] Saving trades:", newTrades);
       const result = await saveTradesAction(newTrades);
 
-      // Optimistically merge new trades into local store to avoid full refetch
-      const newIds = new Set(newTrades.map((t) => t.id));
-      const mergedTrades = [
-        ...newTrades,
-        ...trades.filter((t) => !newIds.has(t.id)),
-      ];
-      setTradesStore(mergedTrades);
-
-      // Keep server cache fresh (server action will update tags); avoid full refresh
-      await refreshTradesOnly({ force: false });
       if (result.error) {
         if (result.error === "DUPLICATE_TRADES") {
           toast.error(t("import.error.duplicateTrades"), {
             description: t("import.error.duplicateTradesDescription"),
+          });
+        } else if (result.error === "INVALID_DATA") {
+          toast.error(t("import.error.accountRequired"), {
+            description:
+              typeof result.details === "string"
+                ? result.details
+                : t("import.error.accountRequiredDescription"),
           });
         } else if (result.error === "NO_TRADES_ADDED") {
           toast.error(t("import.error.noTradesAdded"), {
@@ -148,6 +145,18 @@ export default function ImportButton() {
         // Don't proceed further if there's an error
         return;
       }
+
+      // Only merge into local store after successful persistence
+      const newIds = new Set(newTrades.map((t) => t.id));
+      const mergedTrades = [
+        ...newTrades,
+        ...trades.filter((t) => !newIds.has(t.id)),
+      ];
+      setTradesStore(mergedTrades);
+
+      // Keep server cache fresh (server action will update tags); avoid full refresh
+      await refreshTradesOnly({ force: false });
+
       // Show success message
       toast.success(t("import.success"), {
         description: t("import.successDescription", {
