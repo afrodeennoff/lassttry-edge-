@@ -729,20 +729,31 @@ export async function handleTradovateCallback(code: string, state: string): Prom
     // Calculate expiration time
     const expiresAt = formatDateForAPI(new Date(Date.now() + (tokens.expires_in * 1000)))
 
-    // Get account information from the token to determine accountId
-    // API provides an endpoint https://demo.tradovateapi.com/v1/auth/me
-    const propfirm = await getPropfirmName(tokens.access_token)
+    // Resolve a stable account identity from Tradovate user profile.
+    // `propfirm` is not unique per account and caused sync rows to be overwritten.
+    const tradovateUsername = await getTradovateUsername(tokens.access_token)
+    const accountId = tradovateUsername?.trim() || `tradovate-${Date.now()}`
+
+    // Keep propfirm resolution for diagnostics only.
+    const propfirm = await getPropfirmName(tokens.access_token).catch(() => "unknown")
+
     // Store token in database
     const storeResult = await storeTradovateToken(
       tokens.access_token,
       expiresAt,
       'demo', //Environment default to demo for now
-      propfirm //accountId
+      accountId
     )
     if (storeResult.error) {
       logger.warn('Failed to store token in database:', storeResult.error)
       // Continue anyway - token is still valid for this session
     }
+
+    logger.info('Tradovate OAuth token stored', {
+      accountId,
+      propfirm,
+      userId: user.id,
+    })
 
     return {
       accessToken: tokens.access_token,
@@ -1641,5 +1652,4 @@ export async function updateDailySyncTimeAction(
     return { success: false, error: 'Failed to update daily sync time' }
   }
 }
-
 

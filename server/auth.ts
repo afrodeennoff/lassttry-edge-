@@ -39,7 +39,7 @@ function handleAuthError(error: any): never {
       'Authentication service is temporarily unavailable. The service returned an invalid response. Please try again in a few moments.'
     )
   }
-  
+
   // Re-throw other errors as-is
   throw error
 }
@@ -47,9 +47,38 @@ function handleAuthError(error: any): never {
 export async function createClient() {
   const cookieStore = await cookies()
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    if (process.env.NODE_ENV !== 'production') {
+      return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-anon-key',
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll()
+            },
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) =>
+                  cookieStore.set(name, value, options)
+                )
+              } catch {
+                // The `setAll` method was called from a Server Component.
+              }
+            },
+          },
+        }
+      )
+    }
+    throw new Error('Missing Supabase environment variables')
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
         getAll() {
@@ -146,20 +175,20 @@ export async function signInWithPasswordAction(
   try {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    
+
     // If sign-in fails, try to create account (user might not exist)
     if (error) {
       // Check if error indicates invalid credentials (could be user doesn't exist or wrong password)
-      if (error.message.includes('Invalid login credentials') || 
-          error.message.includes('invalid_credentials') ||
-          error.message.includes('Email not confirmed')) {
-        
+      if (error.message.includes('Invalid login credentials') ||
+        error.message.includes('invalid_credentials') ||
+        error.message.includes('Email not confirmed')) {
+
         // Try to sign up - if user exists, this will fail and we'll know it's a wrong password
         const websiteURL = await getWebsiteURL()
         const callbackParams = new URLSearchParams()
         if (next) callbackParams.set('next', next)
         if (locale) callbackParams.set('locale', locale)
-        
+
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -167,53 +196,53 @@ export async function signInWithPasswordAction(
             emailRedirectTo: `${websiteURL}api/auth/callback/${callbackParams.toString() ? `?${callbackParams.toString()}` : ''}`,
           },
         })
-        
+
         if (signUpError) {
           // Check if it's a password validation error (should be shown separately)
-          const isPasswordValidationError = 
+          const isPasswordValidationError =
             signUpError.message.toLowerCase().includes('password should contain') ||
             signUpError.message.toLowerCase().includes('password must contain') ||
             signUpError.message.toLowerCase().includes('password requirements') ||
             signUpError.message.toLowerCase().includes('password is too short') ||
             signUpError.message.toLowerCase().includes('password must be at least')
-          
+
           // If it's a password validation error, throw as-is so they can be displayed
           if (isPasswordValidationError) {
             throw new Error(signUpError.message)
           }
-          
+
           // If sign up fails, it means user already exists
           // Since sign-in also failed with "Invalid login credentials", it could mean:
           // 1. User exists but has no password set (created via magic link) - needs to set password
           // 2. User exists and has password - wrong password was provided
-          
+
           // Check if error indicates user already registered (not just any error)
-          const isUserAlreadyRegistered = 
+          const isUserAlreadyRegistered =
             signUpError.message.toLowerCase().includes('user already registered') ||
             signUpError.message.toLowerCase().includes('already registered') ||
             signUpError.message.toLowerCase().includes('email address is already registered') ||
             signUpError.message.toLowerCase().includes('user already exists')
-          
+
           if (isUserAlreadyRegistered) {
             // User exists but password sign-in failed - likely no password set
             // Send password reset email to allow them to set a password
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
               redirectTo: `${websiteURL}api/auth/callback?type=recovery${callbackParams.toString() ? `&${callbackParams.toString()}` : ''}`,
             })
-            
+
             if (resetError) {
               // If reset fails, fall back to the original error message
               throw new Error('ACCOUNT_EXISTS_NO_PASSWORD: This account exists but doesn\'t have a password set. A password reset email has been sent to your email address. Please check your inbox to set a password.')
             }
-            
+
             // Successfully sent reset email
             throw new Error('ACCOUNT_EXISTS_NO_PASSWORD: This account exists but doesn\'t have a password set. A password reset email has been sent to your email address. Please check your inbox to set a password.')
           }
-          
+
           // For other sign-up errors, assume wrong password (user exists with password)
           throw new Error('INVALID_CREDENTIALS: The password is incorrect. Please try again or use "Forgot password" to reset it.')
         }
-        
+
         // Sign up succeeded
         // If email confirmation is disabled, Supabase automatically signs the user in
         // Check if user is already signed in (session exists)
@@ -227,7 +256,7 @@ export async function signInWithPasswordAction(
           }
           return { success: true, next }
         }
-        
+
         // If email confirmation is enabled, user needs to confirm email first
         // Try to sign in - this will fail if email is not confirmed
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
@@ -238,7 +267,7 @@ export async function signInWithPasswordAction(
           }
           throw new Error(signInError.message)
         }
-        
+
         // Continue with normal flow after successful sign-in
         try {
           const { data: { user } } = await supabase.auth.getUser()
@@ -249,10 +278,10 @@ export async function signInWithPasswordAction(
           // Non-fatal; still proceed
           console.error('[signInWithPasswordAction] ensureUserInDatabase failed:', e)
         }
-        
+
         return { success: true, next }
       }
-      
+
       // For other errors, throw as-is
       throw new Error(error.message)
     }
@@ -298,7 +327,7 @@ export async function signUpWithPasswordAction(
     if (error) {
       throw new Error(error.message)
     }
-    
+
     // If email confirmation is disabled, user is automatically signed in
     if (data.user && data.session) {
       try {
@@ -308,7 +337,7 @@ export async function signUpWithPasswordAction(
         console.error('[signUpWithPasswordAction] ensureUserInDatabase failed:', e)
       }
     }
-    
+
     return { success: true, next }
   } catch (error: any) {
     handleAuthError(error)
@@ -438,7 +467,7 @@ export async function ensureUserInDatabase(user: User, locale?: string) {
         },
       });
       console.log('[ensureUserInDatabase] SUCCESS: New user created successfully');
-      
+
       // Create default dashboard layout for new user
       try {
         const { createDefaultDashboardLayout } = await import('@/server/database');
@@ -448,7 +477,7 @@ export async function ensureUserInDatabase(user: User, locale?: string) {
         console.error('[ensureUserInDatabase] WARNING: Failed to create default dashboard layout:', layoutError);
         // Don't throw here - user creation succeeded, layout can be created later
       }
-      
+
       return newUser;
     } catch (createError) {
       if (createError instanceof Error &&
@@ -464,7 +493,7 @@ export async function ensureUserInDatabase(user: User, locale?: string) {
   } catch (error) {
     // Re-throw NEXT_REDIRECT errors immediately (these are normal Next.js redirects)
     if (error instanceof Error && (
-      error.message === 'NEXT_REDIRECT' || 
+      error.message === 'NEXT_REDIRECT' ||
       ('digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT'))
     )) {
       throw error;
@@ -639,14 +668,14 @@ export async function getUserIdentities() {
   try {
     const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
-    
+
     if (error || !user) {
       throw new Error('User not authenticated')
     }
 
     // Get user's identities using the proper method
     const { data: identities, error: identitiesError } = await supabase.auth.getUserIdentities()
-    
+
     if (identitiesError) {
       throw new Error(identitiesError.message)
     }

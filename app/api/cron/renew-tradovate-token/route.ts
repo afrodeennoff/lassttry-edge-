@@ -107,9 +107,9 @@ export async function GET(request: NextRequest) {
  */
 async function renewUserToken(synchronization: any): Promise<boolean> {
   try {
-    const apiBaseUrl = synchronization.environment === 'demo'
-      ? 'https://demo.tradovateapi.com'
-      : 'https://live.tradovateapi.com';
+    // This app uses Tradovate demo endpoints for OAuth/sync flows.
+    // `Synchronization` has no persisted `environment` field, so default to demo.
+    const apiBaseUrl = 'https://demo.tradovateapi.com';
 
     console.log(`[CRON] Attempting token renewal for account ${synchronization.accountId}`);
 
@@ -122,51 +122,29 @@ async function renewUserToken(synchronization: any): Promise<boolean> {
     if (!renewal.ok) {
       const errorText = await renewal.text();
       console.error(`[CRON] Failed to renew token for account ${synchronization.accountId}: ${errorText}`);
-      // Remove invalid/expired token
-      await prisma.user.update({
-        where: { id: synchronization.userId },
-        data: {
-          synchronizations: {
-            update: {
-              where: { id: synchronization.id },
-              data: { token: null, tokenExpiresAt: null }
-            }
-          }
-        }
-      });
+      // Only clear token on explicit auth failures.
+      // For transient provider/network errors, keep current token.
+      if (renewal.status === 401 || renewal.status === 403) {
+        await prisma.synchronization.update({
+          where: { id: synchronization.id },
+          data: { token: null, tokenExpiresAt: null },
+        });
+      }
       return false;
     }
 
     const renewalData = await renewal.json();
 
     // Update database
-    await prisma.user.update({
-      where: { id: synchronization.userId },
-      data: {
-        synchronizations: {
-          update: {
-            where: { id: synchronization.id },
-            data: { token: renewalData.accessToken, tokenExpiresAt: new Date(renewalData.expirationTime) }
-          }
-        }
-      }
+    await prisma.synchronization.update({
+      where: { id: synchronization.id },
+      data: { token: renewalData.accessToken, tokenExpiresAt: new Date(renewalData.expirationTime) },
     });
 
     return true;
   } catch (error) {
     console.error(`[CRON] Error renewing token for account ${synchronization.accountId}:`, error);
-    // On unexpected error, also expire the token to force re-auth
-    await prisma.user.update({
-      where: { id: synchronization.userId },
-      data: {
-        synchronizations: {
-          update: {
-            where: { id: synchronization.id },
-            data: { token: null, tokenExpiresAt: null }
-          }
-        }
-      }
-    });
+    // Do not clear token on transient runtime errors.
     return false;
   }
 }

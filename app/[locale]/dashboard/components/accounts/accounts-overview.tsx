@@ -866,30 +866,33 @@ export function AccountsOverview({ size }: { size: WidgetSize }) {
   }, [accounts, selectedAccountForTable])
 
   const { filteredAccounts, unconfiguredAccounts } = useMemo(() => {
-    const uniqueAccounts = new Set(trades.map(trade => trade.accountNumber))
     // Find the hidden group
     const hiddenGroup = groups.find(g => g.name === "Hidden Accounts")
     const hiddenAccountNumbers = hiddenGroup ? new Set(hiddenGroup.accounts.map(a => a.number)) : new Set()
 
-    const configuredAccounts: Account[] = []
-    const unconfiguredAccounts: string[] = []
+    const selectedAccountNumbers =
+      accountNumbers.length > 0 ? new Set(accountNumbers) : null
 
-    Array.from(uniqueAccounts)
-      .filter(accountNumber =>
-        (accountNumbers.length === 0 || accountNumbers.includes(accountNumber)) &&
-        !hiddenAccountNumbers.has(accountNumber)
-      )
-      .forEach(accountNumber => {
-        const dbAccount = accounts.find(acc => acc.number === accountNumber)
+    const isVisibleAccount = (accountNumber: string) => {
+      if (!accountNumber) return false
+      if (hiddenAccountNumbers.has(accountNumber)) return false
+      if (selectedAccountNumbers && !selectedAccountNumbers.has(accountNumber)) return false
+      return true
+    }
 
-        if (dbAccount) {
-          // Account is configured - use it with all its pre-computed metrics
-          configuredAccounts.push(dbAccount)
-        } else {
-          // Account exists in trades but not configured in database
-          unconfiguredAccounts.push(accountNumber)
-        }
-      })
+    // Show configured accounts even when current trade page/date window has no rows for them.
+    const configuredAccounts = accounts.filter(account =>
+      isVisibleAccount(account.number ?? "")
+    )
+    const configuredAccountNumbers = new Set(
+      configuredAccounts.map(account => account.number)
+    )
+
+    const unconfiguredAccounts = Array.from(
+      new Set(trades.map(trade => trade.accountNumber))
+    ).filter(accountNumber =>
+      isVisibleAccount(accountNumber) && !configuredAccountNumbers.has(accountNumber)
+    )
 
     return { filteredAccounts: configuredAccounts, unconfiguredAccounts }
   }, [trades, accounts, accountNumbers, groups])

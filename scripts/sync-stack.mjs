@@ -59,7 +59,12 @@ function baselineAllMigrations() {
 
 run("npx", ["prisma", "generate"], "Prisma client generated");
 
-if (process.env.DATABASE_URL) {
+const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+
+if (databaseUrl) {
+  // Inject the database URL into process.env if it was found via fallbacks
+  process.env.DATABASE_URL = databaseUrl;
+
   const deploy = runCapture("npx", ["prisma", "migrate", "deploy"]);
 
   if (deploy.status === 0) {
@@ -74,5 +79,5 @@ if (process.env.DATABASE_URL) {
     process.exit(deploy.status);
   }
 } else {
-  console.log("[sync-stack] DATABASE_URL is not set; skipped prisma migrate deploy");
+  console.log("[sync-stack] No DATABASE_URL found (checked DATABASE_URL, POSTGRES_PRISMA_URL, POSTGRES_URL); skipped prisma migrate deploy");
 }

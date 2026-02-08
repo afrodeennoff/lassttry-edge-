@@ -6,7 +6,10 @@ import { createClient } from '@supabase/supabase-js'
 import { generateTradingAnalysis } from "@/app/api/email/weekly-summary/[userid]/actions/analysis"
 import { getUserData, computeTradingStats } from "@/app/api/email/weekly-summary/[userid]/actions/user-data"
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '', {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -45,7 +48,7 @@ export async function generateAnalysis(content: WeeklyRecapContent) {
       ...content,
       dailyPnL: [...content.dailyPnL].sort((a, b) => compareDates(a.date, b.date))
     }
-    
+
     const analysis = await generateTradingAnalysis(
       sortedContent.dailyPnL,
       'fr' // Default to French for now, can be made dynamic based on user preferences
@@ -112,7 +115,7 @@ export async function renderEmail(content: WeeklyRecapContent, analysis: { resul
 export async function loadInitialContent(email?: string, userId?: string) {
   // If no userId is provided, use the default admin user
   const targetUserId = userId || process.env.ALLOWED_ADMIN_USER_ID
-  
+
   if (!targetUserId) {
     throw new Error('No user ID provided and no default admin user configured')
   }

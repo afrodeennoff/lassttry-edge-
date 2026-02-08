@@ -1,7 +1,10 @@
 'use server'
 
 import { createClient, User } from '@supabase/supabase-js'
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '', {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -33,7 +36,7 @@ export async function getUserStats() {
       page++
     }
   }
-  
+
   // Group users by day of creation
   const dailyUsers = allUsers.reduce((acc, user) => {
     const day = user.created_at.slice(0, 10) // YYYY-MM-DD format
@@ -60,7 +63,7 @@ export async function getUserStats() {
   }
 }
 
-export async function getFreeUsers(){
+export async function getFreeUsers() {
   console.log('Starting getFreeUsers function')
 
   // Get all trades with their user IDs

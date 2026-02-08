@@ -374,6 +374,35 @@ export const DataProvider: React.FC<{
   const [tagFilter, setTagFilter] = useState<TagFilter>({ tags: [] });
   const [isFirstConnection, setIsFirstConnection] = useState(false);
 
+  const fetchAllTrades = useCallback(
+    async (userId: string | null = null, force: boolean = false): Promise<PrismaTrade[]> => {
+      const allTrades: PrismaTrade[] = [];
+      let page = 1;
+      let hasMore = true;
+      const pageSize = 500;
+
+      while (hasMore) {
+        const response = await getTradesAction(userId, page, pageSize, force && page === 1);
+        const pageTrades = Array.isArray(response?.trades)
+          ? (response.trades as PrismaTrade[])
+          : [];
+
+        allTrades.push(...pageTrades);
+        hasMore = Boolean(response?.metadata?.hasMore) && pageTrades.length > 0;
+        page += 1;
+
+        // Guard against a bad pagination loop.
+        if (page > 200) {
+          console.warn("[DataProvider] Stopped trade pagination after 200 pages");
+          break;
+        }
+      }
+
+      return allTrades;
+    },
+    []
+  );
+
   // Load data from the server
   const loadData = useCallback(async () => {
     // Prevent multiple simultaneous loads
@@ -417,8 +446,8 @@ export const DataProvider: React.FC<{
       }
 
       if (adminView) {
-        const paginatedTrades = await getTradesAction(adminView.userId as string, 1, 50, false);
-        setTrades(paginatedTrades.trades as PrismaTrade[]);
+        const allTrades = await fetchAllTrades(adminView.userId as string, false);
+        setTrades(allTrades);
         // RESET ALL OTHER STATES
         setUser(null);
         setSubscription(null);
@@ -481,8 +510,7 @@ export const DataProvider: React.FC<{
         if (cachedTrades && Array.isArray(cachedTrades) && cachedTrades.length > 0) {
           setTrades(cachedTrades);
         } else {
-          const paginatedTrades = await getTradesAction(userId, 1, 50, false);
-          const safeTrades = Array.isArray(paginatedTrades.trades) ? paginatedTrades.trades : [];
+          const safeTrades = await fetchAllTrades(userId, false);
           const tradesToUse =
             safeTrades.length > 0 ? safeTrades : generateMockTrades(userId);
           setTrades(tradesToUse);
@@ -492,8 +520,7 @@ export const DataProvider: React.FC<{
         }
       } else {
         const userId = await getUserId();
-        const paginatedTrades = await getTradesAction();
-        const safeTrades = Array.isArray(paginatedTrades.trades) ? paginatedTrades.trades : [];
+        const safeTrades = await fetchAllTrades(null, false);
         const tradesToUse =
           process.env.NODE_ENV === "development" && userId && safeTrades.length === 0
             ? generateMockTrades(userId)
@@ -538,6 +565,7 @@ export const DataProvider: React.FC<{
     isSharedView,
     params?.slug,
     timezone,
+    fetchAllTrades,
     supabaseUser,
     isLoading,
     setIsLoading,
@@ -624,8 +652,7 @@ export const DataProvider: React.FC<{
           }
         }
 
-        const paginatedTrades = await getTradesAction(userId, 1, 50, force);
-        const safeTrades = Array.isArray(paginatedTrades.trades) ? paginatedTrades.trades : [];
+        const safeTrades = await fetchAllTrades(userId, force);
         const tradesToUse =
           process.env.NODE_ENV === "development" && safeTrades.length === 0
             ? generateMockTrades(userId)
@@ -644,7 +671,7 @@ export const DataProvider: React.FC<{
         if (withLoading) setIsLoading(false);
       }
     },
-    [supabaseUser?.id, setTrades]
+    [supabaseUser?.id, setTrades, fetchAllTrades]
   );
 
   const refreshUserDataOnly = useCallback(

@@ -382,9 +382,14 @@ export async function updateTradesAction(tradesIds: string[], update: Partial<Tr
 }
 
 export async function updateTradeCommentAction(tradeId: string, comment: string | null) {
+  const userId = await getUserId()
+  if (!userId) {
+    throw new Error('User not found')
+  }
+
   try {
     await prisma.trade.update({
-      where: { id: tradeId },
+      where: { id: tradeId, userId },
       data: { comment }
     })
     revalidatePath('/')
@@ -395,9 +400,14 @@ export async function updateTradeCommentAction(tradeId: string, comment: string 
 }
 
 export async function updateTradeVideoUrlAction(tradeId: string, videoUrl: string | null) {
+  const userId = await getUserId()
+  if (!userId) {
+    throw new Error('User not found')
+  }
+
   try {
     await prisma.trade.update({
-      where: { id: tradeId },
+      where: { id: tradeId, userId },
       data: { videoUrl }
     })
     revalidatePath('/')
